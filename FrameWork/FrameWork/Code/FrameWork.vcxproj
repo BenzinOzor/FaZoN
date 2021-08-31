@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Retail|Win32">
+      <Configuration>Retail</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Retail|x64">
+      <Configuration>Retail</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{1C147141-A28A-4876-96D4-49821AA357C2}</ProjectGuid>
+    <RootNamespace>FrameWork</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Retail|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PropertySheet.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PropertySheet.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Retail|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PropertySheet.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PropertySheet.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PropertySheet.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PropertySheet.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)FrameWork\$(ProjectName)\Bin\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)FrameWork\$(ProjectName)\Intermediate\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_d</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)FrameWork\$(ProjectName)\Bin\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)FrameWork\$(ProjectName)\Intermediate\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_r</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Retail|Win32'">
+    <OutDir>$(SolutionDir)FrameWork\$(ProjectName)\Bin\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)FrameWork\$(ProjectName)\Intermediate\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_r</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)FrameWork\$(ProjectName)\Bin\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)FrameWork\$(ProjectName)\Intermediate\FrameWork\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_d</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)FrameWork\$(ProjectName)\Bin\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)FrameWork\$(ProjectName)\Intermediate\FrameWork\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_r</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'">
+    <OutDir>$(SolutionDir)FrameWork\$(ProjectName)\Bin\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)FrameWork\$(ProjectName)\Intermediate\FrameWork\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_r</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>FRAMEWORK_EXPORTS;FZN_DEBUG;FZN_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\LuaPlus\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\TinyXML2\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\Fmod\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\SFML\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fmod_vc.lib;tinyxml2d.lib;sfml-audio-d.lib;sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;Opengl32.lib;LuaPlus5.1_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AssemblyDebug>true</AssemblyDebug>
+    </Link>
+    <PostBuildEvent>
+      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(SolutionDir) FrameWork $(ProjectName) $(Configuration) $(TargetName)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>FRAMEWORK_EXPORTS;FZN_DEBUG;FZN_CONSOLE;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\TinyXML2\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\Fmod\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\SFML\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fmod64_vc.lib;tinyxml2d.lib;sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyFrameWorkLibs.bat" "$(SolutionDir)" "$(ProjectName)" "$(Configuration)" "$(TargetName)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>FRAMEWORK_EXPORTS;FZN_RELEASE;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\LuaPlus\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\TinyXML2\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\Fmod\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\SFML\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fmod_vc.lib;tinyxml2.lib;sfml-audio.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;Opengl32.lib;LuaPlus5.1_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(SolutionDir) FrameWork $(ProjectName) $(Configuration) $(TargetName)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Retail|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>FRAMEWORK_EXPORTS;FZN_RELEASE;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\LuaPlus\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\TinyXML2\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\Fmod\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\SFML\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fmod_vc.lib;tinyxml2.lib;sfml-audio.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;Opengl32.lib;LuaPlus5.1_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(SolutionDir) FrameWork $(ProjectName) $(Configuration) $(TargetName)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>FRAMEWORK_EXPORTS;FZN_RELEASE;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\TinyXML2\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\Fmod\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\SFML\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fmod64_vc.lib;tinyxml2_r.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyFrameWorkLibs.bat" "$(SolutionDir)" "$(ProjectName)" "$(Configuration)" "$(TargetName)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>FRAMEWORK_EXPORTS;FZN_RELEASE;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\TinyXML2\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\Fmod\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\SFML\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fmod64_vc.lib;tinyxml2_r.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyFrameWorkLibs.bat" "$(SolutionDir)" "$(ProjectName)" "$(Configuration)" "$(TargetName)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="Externals\ImGui\imconfig.h" />
+    <ClInclude Include="Externals\ImGui\imgui-SFML.h" />
+    <ClInclude Include="Externals\ImGui\imgui-SFML_export.h" />
+    <ClInclude Include="Externals\ImGui\imgui.h" />
+    <ClInclude Include="Externals\ImGui\imgui_internal.h" />
+    <ClInclude Include="Externals\ImGui\imstb_rectpack.h" />
+    <ClInclude Include="Externals\ImGui\imstb_textedit.h" />
+    <ClInclude Include="Externals\ImGui\imstb_truetype.h" />
+    <ClInclude Include="FZN\Defines.h" />
+    <ClInclude Include="FZN\Display\AnimatedProgressBar.h" />
+    <ClInclude Include="FZN\Display\Animation.h" />
+    <ClInclude Include="FZN\Audio\AudioObject.h" />
+    <ClInclude Include="FZN\Audio\Channel.h" />
+    <ClInclude Include="FZN\Audio\Music.h" />
+    <ClInclude Include="FZN\Audio\Sound.h" />
+    <ClInclude Include="FZN\Display\Anm2.h" />
+    <ClInclude Include="FZN\Display\BitmapFont.h" />
+    <ClInclude Include="FZN\Display\BitmapText.h" />
+    <ClInclude Include="FZN\Game\BehaviorTree\BTBasicElements.h" />
+    <ClInclude Include="FZN\Game\BehaviorTree\BTComposites.h" />
+    <ClInclude Include="FZN\Game\BehaviorTree\BTDecorators.h" />
+    <ClInclude Include="FZN\Includes.h" />
+    <ClInclude Include="FZN\Tools\Callbacks.h" />
+    <ClInclude Include="FZN\Tools\Event.h" />
+    <ClInclude Include="FZN\Tools\HermiteCubicSpline.h" />
+    <ClInclude Include="FZN\Tools\Logging.h" />
+    <ClInclude Include="FZN\Tools\Math.h" />
+    <ClInclude Include="FZN\Tools\Shaders.h" />
+    <ClInclude Include="FZN\Tools\Tools.h" />
+    <ClInclude Include="FZN\DataStructure\FixedSizeAllocator.h" />
+    <ClInclude Include="FZN\DataStructure\Vector.h" />
+    <ClInclude Include="FZN\DataStructure\Map.h" />
+    <ClInclude Include="FZN\DataStructure\Map.inl" />
+    <ClInclude Include="FZN\Tools\Random.h" />
+    <ClInclude Include="FZN\Game\GameObjectAI\GameObjectAI.h" />
+    <ClInclude Include="FZN\Game\GameObject\GameObject.h" />
+    <ClInclude Include="FZN\Managers\AIManager.h" />
+    <ClInclude Include="FZN\Managers\AnimManager.h" />
+    <ClInclude Include="FZN\Managers\AudioManager.h" />
+    <ClInclude Include="FZN\Managers\DataManager.h" />
+    <ClInclude Include="FZN\Managers\FazonCore.h" />
+    <ClInclude Include="FZN\Managers\InputManager.h" />
+    <ClInclude Include="FZN\Managers\MessageManager.h" />
+    <ClInclude Include="FZN\Managers\SteeringManager.h" />
+    <ClInclude Include="FZN\Managers\WindowManager.h" />
+    <ClInclude Include="FZN\Game\Message\Message.h" />
+    <ClInclude Include="FZN\Multitasking\CriticalSection.h" />
+    <ClInclude Include="FZN\Multitasking\Semaphore.h" />
+    <ClInclude Include="FZN\Game\PathFinding\STLAstar.h" />
+    <ClInclude Include="FZN\Display\ProgressBar.h" />
+    <ClInclude Include="FZN\Game\StateMachine\StateMachine.h" />
+    <ClInclude Include="FZN\Game\Steering\SteeringBehavior.h" />
+    <ClInclude Include="FZN\Game\Steering\SteeringBehaviors.h" />
+    <ClInclude Include="FZN\Game\Steering\SteeringFormations.h" />
+    <ClInclude Include="FZN\Game\Steering\SteeringEntity.h" />
+    <ClInclude Include="FZN\Game\Steering\SteeringObject.h" />
+    <ClInclude Include="FZN\Display\TraceRect.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Externals\ImGui\imgui-SFML.cpp" />
+    <ClCompile Include="Externals\ImGui\imgui.cpp" />
+    <ClCompile Include="Externals\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="Externals\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="Externals\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="Externals\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="FZN\Display\AnimatedProgressBar.cpp" />
+    <ClCompile Include="FZN\Display\Animation.cpp" />
+    <ClCompile Include="FZN\Audio\AudioObject.cpp" />
+    <ClCompile Include="FZN\Audio\Channel.cpp" />
+    <ClCompile Include="FZN\Audio\Music.cpp" />
+    <ClCompile Include="FZN\Audio\Sound.cpp" />
+    <ClCompile Include="FZN\Display\Anm2.cpp" />
+    <ClCompile Include="FZN\Display\BitmapFont.cpp" />
+    <ClCompile Include="FZN\Display\BitmapText.cpp" />
+    <ClCompile Include="FZN\Game\BehaviorTree\BTBasicElements.cpp" />
+    <ClCompile Include="FZN\Game\BehaviorTree\BTComposites.cpp" />
+    <ClCompile Include="FZN\Game\BehaviorTree\BTDecorators.cpp" />
+    <ClCompile Include="FZN\Tools\HermiteCubicSpline.cpp" />
+    <ClCompile Include="FZN\Tools\Logging.cpp" />
+    <ClCompile Include="FZN\Tools\Math.cpp" />
+    <ClCompile Include="FZN\Tools\Tools.cpp" />
+    <ClCompile Include="FZN\Tools\Random.cpp" />
+    <ClCompile Include="FZN\Game\GameObjectAI\GameObjectAI.cpp" />
+    <ClCompile Include="FZN\Game\GameObject\GameObject.cpp" />
+    <ClCompile Include="FZN\Managers\AIManager.cpp" />
+    <ClCompile Include="FZN\Managers\AnimManager.cpp" />
+    <ClCompile Include="FZN\Managers\AudioManager.cpp" />
+    <ClCompile Include="FZN\Managers\DataManager.cpp" />
+    <ClCompile Include="FZN\Managers\FazonCore.cpp" />
+    <ClCompile Include="FZN\Managers\InputManager.cpp" />
+    <ClCompile Include="FZN\Managers\MessageManager.cpp" />
+    <ClCompile Include="FZN\Managers\SteeringManager.cpp" />
+    <ClCompile Include="FZN\Managers\WindowManager.cpp" />
+    <ClCompile Include="FZN\Game\Message\Message.cpp" />
+    <ClCompile Include="FZN\Multitasking\CriticalSection.cpp" />
+    <ClCompile Include="FZN\Multitasking\Semaphore.cpp" />
+    <ClCompile Include="FZN\Display\ProgressBar.cpp" />
+    <ClCompile Include="FZN\Game\StateMachine\StateMachine.cpp" />
+    <ClCompile Include="FZN\Game\Steering\SteeringBehavior.cpp" />
+    <ClCompile Include="FZN\Game\Steering\SteeringBehaviors.cpp" />
+    <ClCompile Include="FZN\Game\Steering\SteeringFormations.cpp" />
+    <ClCompile Include="FZN\Game\Steering\SteeringEntity.cpp" />
+    <ClCompile Include="FZN\Game\Steering\SteeringObject.cpp" />
+    <ClCompile Include="FZN\Display\TraceRect.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FZN\DataStructure\FixedSizeAllocator.inl" />
+    <None Include="FZN\DataStructure\Vector.inl" />
+    <None Include="FZN\Game\PathFinding\STLAstar.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Externals\ImGui\LICENSE.txt" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -22,6 +22,8 @@
 *.pdb
 *.ilk
 
+/FrameWork/DllLauncher/Intermediate
+
 /FrameWork/FrameWork/Bin
 /FrameWork/FrameWork/Dependencies/Libs/FrameWork
 /FrameWork/FrameWork/Intermediate
@@ -33,4 +35,3 @@
 
 /FrameWork/FrameWork/Dependencies/DynamicLibs/Release/FrameWork_r.dll
 /FrameWork/FrameWorkWrapper/Dependencies/DynamicLibs/Release/FrameWorkWrapper_r.dll
-
