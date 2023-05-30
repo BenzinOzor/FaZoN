@@ -382,7 +382,7 @@ namespace fzn
 
 		if( g_pFZN_DataMgr->LoadXMLFile( resFile, DATAPATH( SOUNDS_FILE_NAME ) ) )
 		{
-			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Failure : %s.", resFile.ErrorName() );
+			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Failure : %s.", resFile.ErrorStr() );
 			return;
 		}
 

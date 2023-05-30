@@ -145,7 +145,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\LuaPlus\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\TinyXML2\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\Fmod\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\SFML\$(Configuration)\;$(SolutionDir)FrameWork\ExternalWrapper\Dependencies\Libs\ExternalWrapper\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>fmod_vc.lib;tinyxml2d.lib;sfml-audio-d.lib;sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;Opengl32.lib;LuaPlus5.1_d.lib;ExternalWrapper_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>fmod_vc.lib;tinyxml2d.lib;sfml-audio-d.lib;sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;Opengl32.lib;ExternalWrapper_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AssemblyDebug>true</AssemblyDebug>
     </Link>
     <PostBuildEvent>

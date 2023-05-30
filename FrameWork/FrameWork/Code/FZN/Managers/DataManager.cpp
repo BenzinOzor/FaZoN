@@ -847,7 +847,7 @@ namespace fzn
 
 		if( _resourceFile == nullptr || g_pFZN_DataMgr->LoadXMLFile( resFile, _resourceFile ) )
 		{
-			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Failure : %s.", resFile.ErrorName() );
+			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Failure : %s.", resFile.ErrorStr() );
 			m_bResourceFileExists = false;
 			return;
 		}
