@@ -1,0 +1,3 @@
+[submodule "Sample/Demo"]
+	path = Sample/Demo
+	url = https://github.com/BenzinOzor/Demo.git
