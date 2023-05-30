@@ -22,16 +22,31 @@
 *.pdb
 *.ilk
 
+/.vs
+
+/FrameWork/DllLauncher/Bin
 /FrameWork/DllLauncher/Intermediate
 
 /FrameWork/FrameWork/Bin
+/FrameWork/FrameWork/Dependencies/DynamicLibs/Debug/FrameWork_d.dll
+/FrameWork/FrameWork/Dependencies/DynamicLibs/Release/FrameWork_r.dll
 /FrameWork/FrameWork/Dependencies/Libs/FrameWork
 /FrameWork/FrameWork/Intermediate
+
+/FrameWork/ExternalWrapper/Bin
+/FrameWork/ExternalWrapper/Intermediate
+
 /FrameWork/FrameWorkWrapper/Bin
-/FrameWork/FrameWorkWrapper/Intermediate
-
-/FrameWork/FrameWork/Dependencies/DynamicLibs/Debug/FrameWork_d.dll
 /FrameWork/FrameWorkWrapper/Dependencies/DynamicLibs/Debug/FrameWorkWrapper_d.dll
-
-/FrameWork/FrameWork/Dependencies/DynamicLibs/Release/FrameWork_r.dll
 /FrameWork/FrameWorkWrapper/Dependencies/DynamicLibs/Release/FrameWorkWrapper_r.dll
+/FrameWork/FrameWorkWrapper/Intermediate
+/FrameWork/FileEncrypter/bin
+/FrameWork/ExternalWrapper/Dependencies/DynamicLibs/Debug/ExternalWrapper_d.dll
+/FrameWork/ExternalWrapper/Dependencies/DynamicLibs/Release/ExternalWrapper_r.dll
+/FrameWork/ExternalWrapper/Dependencies/Libs/ExternalWrapper
+/FrameWork/FileEncrypter/Dependencies/DynamicLibs/Debug/FileEncrypter.dll
+/FrameWork/FileEncrypter/Dependencies/DynamicLibs/Release/FileEncrypter.dll
+/FrameWork/FrameWork/Dependencies/Includes/SFML
+/FrameWork/ProjectCreator/bin
+/FrameWork/ProjectCreator/obj
+/FrameWork/FileEncrypter/obj
