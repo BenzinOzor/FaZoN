@@ -7,10 +7,15 @@
 #ifndef _ENGINETOOLS_H_
 #define _ENGINETOOLS_H_
 
+#include <array>
+
+#include <Externals/ImGui/imgui.h>
+
 #include <tinyXML2/tinyxml2.h>
 #include <SFML/Config.hpp>
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Rect.hpp>
+#include <SFML/Graphics/Shape.hpp>
 
 #include "FZN/Defines.h"
 
@@ -23,10 +28,30 @@ namespace sf
 	class Text;
 }
 
+struct ImFont;
+
 namespace fzn
 {
 	namespace Tools
 	{
+		static const ImVec4 InvalidImGuiColor = { -1.f, -1.f, -1.f, -1.f };
+		struct ImGuiFormatOptions
+		{
+			std::string m_sBeginTag						= "%%";
+			std::string m_sEndTag						= "%%";
+			std::string m_sTagOptionsEnd				= ":";
+			std::string m_sTagOptionsSeparator			= ";";
+			std::string m_sTagOptionParameterBegin		= "(";
+			std::string m_sTagOptionParameterEnd		= ")";
+			std::string m_sTagOptionParameterSeparator	= ",";
+
+			std::string m_sOption_Bold					= "b";
+			std::string m_sOption_Color					= "c";
+
+			ImFont*		m_pFontRegular	= nullptr;
+			ImFont*		m_pFontBold		= nullptr;
+		};
+
 		FZN_EXPORT sf::FloatRect	ConvertIntRectToFloat( const sf::IntRect& _oIntRect );
 		FZN_EXPORT sf::IntRect		ConvertFloatRectToInt( const sf::FloatRect& _oIntRect );
 		FZN_EXPORT sf::FloatRect	ConvertRectangleShapeToFloatRect( const sf::RectangleShape& _oShape );
@@ -89,38 +114,46 @@ namespace fzn
 		//Parameters : Concerned circleShapes
 		//Return value : The two shapes are in collision (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		FZN_EXPORT INT8 CollisionCircleCircle( const sf::CircleShape& _circle1, const sf::CircleShape& _circle2 );
+		FZN_EXPORT bool CollisionCircleCircle( const sf::CircleShape& _circle1, const sf::CircleShape& _circle2 );
+		FZN_EXPORT bool CollisionCircleCircle( const sf::CircleShape& _circle1, const sf::Vector2f& _vCircle2Pos, const float& _fCircle2Radius );
+		FZN_EXPORT bool CollisionCircleCircle( const sf::Vector2f& _vCircle1Pos, const float& _fCircle1Radius, const sf::Vector2f& _vCircle2Pos, const float& _fCircle2Radius );
+		FZN_EXPORT bool CollisionCirclePoint( const sf::CircleShape& _circle1, const sf::Vector2f& _vPointPos );
 		FZN_EXPORT sf::Vector2f AABBCircleCollisionResponse( const sf::RectangleShape& _rectangle, const sf::CircleShape& _circle, const sf::Vector2f& _vCircleDirection );
-		FZN_EXPORT sf::Vector2f AABBCircleCollisionOverlap( const sf::RectangleShape& _rectangle, const sf::CircleShape& _circle );
+		FZN_EXPORT sf::Vector2f AABBCircleCollisionOverlap( const sf::RectangleShape& _oRectangle, const sf::CircleShape& _oCircle );
+		FZN_EXPORT sf::Vector2f AABBCircleCollisionOverlap( const sf::FloatRect& _oRectangle, const sf::CircleShape& _oCircle );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Collision test between an AABB (rectangleShape) and a circleShape
 		//Parameter 1 : RectangleShape
 		//Parameter 2 : CircleShape
 		//Return value : The two shapes are in collision (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		FZN_EXPORT INT8 CollisionAABBCircle( const sf::RectangleShape& _rectangle, const sf::CircleShape& _circle );
+		FZN_EXPORT bool CollisionAABBCircle( const sf::RectangleShape& _rectangle, const sf::CircleShape& _circle );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Collision test between an AABB (floatRect) and a circleShape
 		//Parameter 1 : floatRect
 		//Parameter 2 : CircleShape
 		//Return value : The two shapes are in collision (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		FZN_EXPORT INT8 CollisionAABBCircle( const sf::FloatRect& _floatRect, const sf::CircleShape& _circle );
+		FZN_EXPORT bool CollisionAABBCircle( const sf::FloatRect& _floatRect, const sf::CircleShape& _circle );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Collision test between two AABB (rectangleShape)
 		//Parameters : RectangleShapes
 		//Return value : The two shapes are in collision (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		FZN_EXPORT INT8 CollisionAABBAABB( const sf::RectangleShape& _rect1, const sf::RectangleShape& _rect2 );
-		FZN_EXPORT INT8 CollisionAABBAABB( const sf::RectangleShape& _rect1, const sf::RectangleShape& _rect2, const sf::Vector2f& _vBox2Direction  );
+		FZN_EXPORT bool CollisionAABBAABB( const sf::RectangleShape& _rect1, const sf::RectangleShape& _rect2 );
+		FZN_EXPORT bool CollisionAABBAABB( const sf::RectangleShape& _rect1, const sf::RectangleShape& _rect2, const sf::Vector2f& _vBox2Direction  );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Collision test between two AABB (rectangleShape and floatRect)
 		//Parameter 1 : RectangleShape
 		//Parameter 2 : Float Rect
 		//Return value : The two shapes are in collision (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		FZN_EXPORT INT8 CollisionAABBAABB( const sf::RectangleShape& _rect1, const sf::FloatRect& _rect2 );
+		FZN_EXPORT bool CollisionAABBAABB( const sf::RectangleShape& _rect1, const sf::FloatRect& _rect2 );
 
+		FZN_EXPORT bool LineIntersectsCircle( const sf::Vector2f& _vLineP1, const sf::Vector2f& _vLineP2, const sf::CircleShape& _oCircle );
+
+		FZN_EXPORT bool CollisionOBBPoint( const sf::Shape& _daOBB, const sf::Vector2f& _vPoint );
+		FZN_EXPORT bool CollisionOBBPoint( const std::vector< sf::Vector2f >& _daOBB, const sf::Vector2f& _vPoint );
 
 		/////////////////CLOCK FUNCTIONS/////////////////
 
@@ -218,8 +251,17 @@ namespace fzn
 		//Parameter 3 : Characters size
 		//Parameter 4 : Color of the string
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		FZN_EXPORT void DrawString( const char* _string, const sf::Vector2f& _position, UINT _characterSize, sf::Color _color = sf::Color::White );
-		FZN_EXPORT void DrawString( const char* _string, const sf::Vector2f& _position, UINT _characterSize, sf::Color _color = sf::Color::White, int _iWindowId = 0 );
+		FZN_EXPORT void DrawString( const char* _string, const sf::Vector2f& _position, unsigned int _characterSize, sf::Color _color = sf::Color::White );
+		FZN_EXPORT void DrawString( const char* _string, const sf::Vector2f& _position, unsigned int _characterSize, sf::Color _color = sf::Color::White, int _iWindowId = 0 );
+
+		FZN_EXPORT void FormatImGuiText( const std::string& _sText, const ImGuiFormatOptions* _pFormatOptions = nullptr );
+		FZN_EXPORT void BoldImGuiText( const std::string& _sText );
+		FZN_EXPORT void CustomFontImGuiText( const std::string& _sText, ImFont* _pFont );
+		FZN_EXPORT ImVec4 GetImColorFromString( const std::string& _sColor, const ImGuiFormatOptions* _pFormatOptions = nullptr );
+		FZN_EXPORT std::string GetColorTag( const ImVec4& _rColor, const ImGuiFormatOptions* _pFormatOptions = nullptr );
+		FZN_EXPORT bool IsColorValid( const ImVec4& _rColor );
+
+		FZN_EXPORT size_t FindWholeWord( const std::string& _sText, const std::string& _sWord, size_t _Off );
 	} //namespace Tools
 } //namespace fzn
 

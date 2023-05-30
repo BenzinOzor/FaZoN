@@ -1,0 +1,9 @@
+<Animation Name="BnZ" ImagePath="BnZ.png" Loop="true" ReverseReading="false">
+	<Frames Time="0.1" Width="80" Height="160" Count="7" Column="4" />
+</Animation>
+<Animation Name="Wumpa" ImagePath="wumpa.png" Loop="true" ReverseReading="false">
+	<Frames Time="0.05" Width="37" Height="34" Count="14" Column="14" />
+</Animation>
+<Animation Name="WalkRight" ImagePath="WalkRight.png" Loop="true" ReverseReading="false">
+	<Frames Time="0.066" Width="32" Height="32" Count="10" Column="8" />
+</Animation>

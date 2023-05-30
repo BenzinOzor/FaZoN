@@ -1,0 +1,20 @@
+<Actions Count="5">
+	<Action Name="Flip">
+		 <Input Type="Keyboard" Map="F"/> 
+	</Action>
+	<Action Name="Left">
+		<Input Type="Keyboard" Map="Q"/>
+		<Input Type="Keyboard" Map="Left"/>
+	</Action>
+	<Action Name="Right">
+		<Input Type="Keyboard" Map="D"/>
+		<Input Type="Keyboard" Map="Right"/>
+	</Action>
+	<Action Name="Jump">
+		<Input Type="Keyboard" Map="Space"/>
+	</Action>
+	<Action Name="A2">
+		<Input Type="JoystickAxis" Map="X"/>
+		<Input Type="JoystickAxis" Map="PovX"/>
+	</Action>
+</Actions>

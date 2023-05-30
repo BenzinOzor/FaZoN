@@ -11,6 +11,8 @@
 
 #include "FZN/Defines.h"
 
+#pragma warning( push )
+#pragma warning( disable: 4251 )
 
 namespace fzn
 {
@@ -145,5 +147,7 @@ namespace fzn
 		int							m_iCurrentChild;
 	};
 } //namespace fzn
+
+#pragma warning( pop )
 
 #endif //_BTBASICS_H_

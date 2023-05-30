@@ -69,6 +69,9 @@ namespace fzn
 				}
 			}
 		}
+
+		if( m_eState == Animation::Playing )
+			_SetCurrentValueSprites();
 	}
 
 	AnimatedProgressBar& AnimatedProgressBar::operator=( const Anm2& _oAnimation )
@@ -157,6 +160,16 @@ namespace fzn
 		m_eDirection = _eDirection;
 	}
 
+	float AnimatedProgressBar::GetCurrentValue() const
+	{
+		return m_fCurrentValue;
+	}
+
+	float AnimatedProgressBar::GetMaxValue() const
+	{
+		return m_fMaxValue;
+	}
+
 	void AnimatedProgressBar::_SetCurrentValueSprites()
 	{
 		if( m_pGaugeLayer == nullptr )
@@ -172,7 +185,7 @@ namespace fzn
 			if( m_eDirection == ProgressBar::Direction::eRightToLeft )
 			{
 				oForegroundRect.left = m_oMaxGaugeSize.width - oForegroundRect.width;
-				m_pGaugeLayer->m_oSprite.setPosition( m_vPosition + sf::Vector2f( 0.f, m_oMaxGaugeSize.width - oForegroundRect.width ) );
+				m_pGaugeLayer->m_oSprite.setPosition( m_vPosition + sf::Vector2f( 0.f, (float)( m_oMaxGaugeSize.width - oForegroundRect.width ) ) );
 			}
 		}
 		else
@@ -182,7 +195,7 @@ namespace fzn
 			if( m_eDirection == ProgressBar::Direction::eBottomToTop )
 			{
 				oForegroundRect.top = ( m_oMaxGaugeSize.height - oForegroundRect.height ) + m_oMaxGaugeSize.top;
-				m_pGaugeLayer->m_oSprite.setPosition( m_vPosition + sf::Vector2f( 0.f, m_oMaxGaugeSize.height - oForegroundRect.height ) );
+				m_pGaugeLayer->m_oSprite.setPosition( m_vPosition + sf::Vector2f( 0.f, (float)( m_oMaxGaugeSize.height - oForegroundRect.height ) ) );
 			}
 		}
 

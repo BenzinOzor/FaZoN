@@ -7,6 +7,11 @@
 #include "FZN/Includes.h"
 #include "FZN/Managers/WindowManager.h"
 #include "FZN/Managers/DataManager.h"
+
+#include <Externals/ImGui/imgui.h>
+#include <Externals/ImGui/imgui_internal.h>
+#include <Externals/ImGui/imgui-SFML.h>
+
 #include <iomanip>
 #include <sstream>
 
@@ -23,7 +28,7 @@ namespace fzn
 
 		FZN_EXPORT sf::IntRect ConvertFloatRectToInt( const sf::FloatRect& _oIntRect )
 		{
-			return sf::IntRect( _oIntRect.left, _oIntRect.top, _oIntRect.width, _oIntRect.height );
+			return sf::IntRect( (int)_oIntRect.left, (int)_oIntRect.top, (int)_oIntRect.width, (int)_oIntRect.height );
 		}
 
 		FZN_EXPORT sf::FloatRect ConvertRectangleShapeToFloatRect( const sf::RectangleShape& _oShape )
@@ -93,7 +98,7 @@ namespace fzn
 			if( _bCapitalizeFirstLetter && sRet[ 0 ] >= 'a' && sRet[ 0 ] <= 'z' )
 				sRet[ 0 ] -= ( 'a' - 'A' );
 
-			for( int iChar = 1; iChar < sRet.size(); )
+			for( int iChar = 1; iChar < (int)sRet.size(); )
 			{
 				if( sRet[ iChar ] >= 'A' && sRet[ iChar ] <= 'Z' )
 				{
@@ -269,15 +274,35 @@ namespace fzn
 		//Parameters : Concerned circleShapes
 		//Return value : The two shapes are in collision (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 CollisionCircleCircle( const sf::CircleShape& _c1, const sf::CircleShape& _c2 )
+		bool CollisionCircleCircle( const sf::CircleShape& _c1, const sf::CircleShape& _c2 )
 		{
 			sf::Vector2f vCircle1Pos = _c1.getPosition() - _c1.getOrigin() + sf::Vector2f( _c1.getRadius(), _c1.getRadius() );
 			sf::Vector2f vCircle2Pos = _c2.getPosition() - _c2.getOrigin() + sf::Vector2f( _c2.getRadius(), _c2.getRadius() );
-			sf::Vector2f vDist = vCircle2Pos - vCircle1Pos;
+			
+			return CollisionCircleCircle( vCircle1Pos, _c1.getRadius(), vCircle2Pos, _c2.getRadius() );
+		}
 
-			if( Math::VectorLengthSq( vDist ) <= Math::Square( _c1.getRadius() + _c2.getRadius() ) )
-				return true;
-			else return false;
+		bool CollisionCircleCircle( const sf::CircleShape& _circle1, const sf::Vector2f& _vCircle2Pos, const float& _fCircle2Radius )
+		{
+			sf::Vector2f vCircle1Pos = _circle1.getPosition() - _circle1.getOrigin() + sf::Vector2f( _circle1.getRadius(), _circle1.getRadius() );
+			
+			return CollisionCircleCircle( vCircle1Pos, _circle1.getRadius(), _vCircle2Pos, _fCircle2Radius );
+		}
+
+		bool CollisionCircleCircle( const sf::Vector2f& _vCircle1Pos, const float& _fCircle1Radius, const sf::Vector2f& _vCircle2Pos, const float& _fCircle2Radius )
+		{
+			sf::Vector2f vDist = _vCircle2Pos - _vCircle1Pos;
+
+			return Math::VectorLengthSq( vDist ) <= Math::Square( _fCircle1Radius + _fCircle2Radius );
+		}
+
+		bool CollisionCirclePoint( const sf::CircleShape& _circle1, const sf::Vector2f& _vPointPos )
+		{
+			sf::Vector2f vCircle1Pos = _circle1.getPosition() - _circle1.getOrigin() + sf::Vector2f( _circle1.getRadius(), _circle1.getRadius() );
+
+			sf::Vector2f vDist = _vPointPos - vCircle1Pos;
+
+			return Math::VectorLengthSq( vDist ) <= Math::Square( _circle1.getRadius() );
 		}
 
 		sf::Vector2f AABBCircleCollisionResponse( const sf::RectangleShape& _rectangle, const sf::CircleShape& _circle, const sf::Vector2f& _vCircleDirection )
@@ -323,18 +348,22 @@ namespace fzn
 				return { -_vCircleDirection.x, 0.f };
 		}
 
-		sf::Vector2f AABBCircleCollisionOverlap( const sf::RectangleShape& _rectangle, const sf::CircleShape& _circle )
+		sf::Vector2f AABBCircleCollisionOverlap( const sf::RectangleShape& _oRectangle, const sf::CircleShape& _oCircle )
 		{
-			float fRadius = _circle.getRadius();
+			return AABBCircleCollisionOverlap( _oRectangle.getGlobalBounds(), _oCircle );
+		}
 
-			sf::Vector2f circle( _circle.getPosition() - _circle.getOrigin() + sf::Vector2f( fRadius, fRadius ) );
-			sf::FloatRect rectBounds = _rectangle.getGlobalBounds();
+		sf::Vector2f AABBCircleCollisionOverlap( const sf::FloatRect& _oRectangle, const sf::CircleShape& _oCircle )
+		{
+			float fRadius = _oCircle.getRadius();
 
-			float rectHalfHeight = rectBounds.height * 0.5f;
-			float rectHalfWidth = rectBounds.width * 0.5f;
+			sf::Vector2f circle( _oCircle.getPosition() - _oCircle.getOrigin() + sf::Vector2f( fRadius, fRadius ) );
 
-			float circleDistX = fabs( circle.x - ( rectBounds.left + rectHalfWidth ) );
-			float circleDistY = fabs( circle.y - ( rectBounds.top + rectHalfHeight ) );
+			float rectHalfHeight = _oRectangle.height * 0.5f;
+			float rectHalfWidth = _oRectangle.width * 0.5f;
+
+			float circleDistX = fabs( circle.x - ( _oRectangle.left + rectHalfWidth ) );
+			float circleDistY = fabs( circle.y - ( _oRectangle.top + rectHalfHeight ) );
 
 			if( circleDistX > ( rectHalfWidth + fRadius ) || circleDistY > ( rectHalfHeight + fRadius ) )
 				return { 0.f, 0.f };
@@ -351,12 +380,12 @@ namespace fzn
 			if( bCollision == false )
 				return { 0.f, 0.f };
 
-			const sf::Vector2f vCircleTopLeft = _circle.getPosition() - _circle.getOrigin();
+			const sf::Vector2f vCircleTopLeft = _oCircle.getPosition() - _oCircle.getOrigin();
 
-			const float fOverlapRight = std::min( rectBounds.left + rectBounds.width, vCircleTopLeft.x + fRadius * 2.f );
-			const float fOverlapLeft = std::max( rectBounds.left, vCircleTopLeft.x );
-			const float fOverlapBottom = std::min( rectBounds.top + rectBounds.height, vCircleTopLeft.y + fRadius * 2.f );
-			const float fOverlapTop = std::max( rectBounds.top, vCircleTopLeft.y );
+			const float fOverlapRight = std::min( _oRectangle.left + _oRectangle.width, vCircleTopLeft.x + fRadius * 2.f );
+			const float fOverlapLeft = std::max( _oRectangle.left, vCircleTopLeft.x );
+			const float fOverlapBottom = std::min( _oRectangle.top + _oRectangle.height, vCircleTopLeft.y + fRadius * 2.f );
+			const float fOverlapTop = std::max( _oRectangle.top, vCircleTopLeft.y );
 
 			return { fOverlapRight - fOverlapLeft, fOverlapBottom - fOverlapTop };
 		}
@@ -367,7 +396,7 @@ namespace fzn
 		//Parameter 2 : CircleShape
 		//Return value : The two shapes are in collision (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 CollisionAABBCircle( const sf::RectangleShape& _rect, const sf::CircleShape& _circle )
+		bool CollisionAABBCircle( const sf::RectangleShape& _rect, const sf::CircleShape& _circle )
 		{
 			float fRadius = _circle.getRadius();
 
@@ -397,7 +426,7 @@ namespace fzn
 		//Parameter 2 : CircleShape
 		//Return value : The two shapes are in collision (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 CollisionAABBCircle( const sf::FloatRect& _rect, const sf::CircleShape& _circle )
+		bool CollisionAABBCircle( const sf::FloatRect& _rect, const sf::CircleShape& _circle )
 		{
 			float fRadius = _circle.getRadius();
 
@@ -425,7 +454,7 @@ namespace fzn
 		//Parameters : RectangleShapes
 		//Return value : The two shapes are in collision (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 CollisionAABBAABB( const sf::RectangleShape& _rect1, const sf::RectangleShape& _rect2 )
+		bool CollisionAABBAABB( const sf::RectangleShape& _rect1, const sf::RectangleShape& _rect2 )
 		{
 			sf::Vector2f rect1 = _rect1.getPosition() - _rect1.getOrigin();
 			sf::Vector2f rect1Size = _rect1.getSize();
@@ -435,7 +464,7 @@ namespace fzn
 			return ( rect1.x < rect2.x + rect2Size.x && rect1.x + rect1Size.x > rect2.x && rect1.y < rect2.y + rect2Size.y && rect1.y + rect1Size.y > rect2.y );
 		}
 
-		INT8 CollisionAABBAABB( const sf::RectangleShape& _rect1, const sf::RectangleShape& _rect2, const sf::Vector2f& _vBox2Direction )
+		bool CollisionAABBAABB( const sf::RectangleShape& _rect1, const sf::RectangleShape& _rect2, const sf::Vector2f& _vBox2Direction )
 		{
 			sf::FloatRect oRect2;
 			
@@ -453,12 +482,94 @@ namespace fzn
 		//Parameter 2 : Float Rect
 		//Return value : The two shapes are in collision (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 CollisionAABBAABB( const sf::RectangleShape& _rect1, const sf::FloatRect& _rect2 )
+		bool CollisionAABBAABB( const sf::RectangleShape& _rect1, const sf::FloatRect& _rect2 )
 		{
 			sf::Vector2f rect1 = _rect1.getPosition();
 			sf::Vector2f rect1Size = _rect1.getSize();
 
 			return ( rect1.x < _rect2.left + _rect2.width && rect1.x + rect1Size.x > _rect2.left && rect1.y < _rect2.top + _rect2.height && rect1.y + rect1Size.y > _rect2.top );
+		}
+
+		bool LineIntersectsCircle( const sf::Vector2f& _vLineP1, const sf::Vector2f& _vLineP2, const sf::CircleShape& _oCircle )
+		{
+			float fRadius = _oCircle.getRadius();
+
+			const sf::Vector2f vCirclePos( _oCircle.getPosition() - _oCircle.getOrigin() + sf::Vector2f( fRadius, fRadius ) );
+
+			if( Math::VectorLengthSq( vCirclePos - _vLineP1 ) <= Math::Square( fRadius ) )
+				return true;
+			
+			if( Math::VectorLengthSq( vCirclePos - _vLineP2 ) <= Math::Square( fRadius ) )
+				return true;
+
+			const sf::Vector2f vLine = _vLineP2 - _vLineP1;
+			const sf::Vector2f vLineToCircle = Math::VectorNormalization( vCirclePos - _vLineP1 );
+
+			const float fDot = Math::VectorDot( vLine, vLineToCircle );
+
+			if( fDot < 0.f )
+				return false;
+
+			sf::Vector2f vProjection = _vLineP1 + vLineToCircle * fDot;
+
+			if( Math::VectorLengthSq( vProjection - vCirclePos ) <= Math::Square( fRadius ) )
+				return true;
+
+			return false;
+		}
+
+		float Cross2D( const sf::Vector2f& _vA, const sf::Vector2f& _vB, const sf::Vector2f& _vPoint )
+		{
+			return ( _vB.x - _vA.x ) * ( _vPoint.y - _vA.y ) - ( _vB.y - _vA.y ) * ( _vPoint.x - _vA.x );
+		}
+
+		bool CollisionOBBPoint( const sf::Shape& _daOBB, const sf::Vector2f& _vPoint )
+		{
+			if( _daOBB.getPointCount() < 3 )
+				return false;
+
+			const sf::Transform& rTransform = _daOBB.getTransform();
+
+			float fLastCross = Cross2D( rTransform.transformPoint( _daOBB.getPoint( 0 ) ), rTransform.transformPoint( _daOBB.getPoint( 1 ) ), _vPoint );
+			int iOBBNextPoint = 0;
+
+			for( int iOBBPoint = 1; iOBBPoint < _daOBB.getPointCount(); ++iOBBPoint )
+			{
+				iOBBNextPoint = ( iOBBPoint + 1 ) % _daOBB.getPointCount();
+				float fCross = Cross2D( rTransform.transformPoint( _daOBB.getPoint( iOBBPoint ) ), rTransform.transformPoint( _daOBB.getPoint( iOBBNextPoint ) ), _vPoint );
+
+				// If the multiplication results in a negative number, the two values have an opposite sign and so, the point is out of the bounding box.
+				if( fCross * fLastCross < 0.f )
+					return false;
+
+				if( fCross != 0.f )
+					fLastCross = fCross;
+			}
+
+			return true;
+		}
+
+		bool CollisionOBBPoint( const std::vector< sf::Vector2f >& _daOBB, const sf::Vector2f& _vPoint )
+		{
+			if( _daOBB.size() < 3 )
+				return false;
+
+			float fLastCross = Cross2D( _daOBB[ 0 ], _daOBB[ 1 ], _vPoint );
+			int iOBBNextPoint = 0;
+
+			for( int iOBBPoint = 1; iOBBPoint < _daOBB.size(); ++iOBBPoint )
+			{
+				iOBBNextPoint = ( iOBBPoint + 1 ) % _daOBB.size();
+				float fCross = Cross2D( _daOBB[ iOBBPoint ], _daOBB[ iOBBNextPoint ], _vPoint );
+
+				// If the multiplication results in a negative number, the two values have an opposite sign and so, the point is out of the bounding box.
+				if( fCross * fLastCross < 0.f )
+					return false;
+
+				fLastCross = fCross;
+			}
+
+			return true;
 		}
 
 		/////////////////CLOCK FUNCTIONS/////////////////
@@ -603,7 +714,6 @@ namespace fzn
 			return sOut;
 		}
 
-
 		/////////////////DISPLAY FUNCTIONS/////////////////
 
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -663,7 +773,7 @@ namespace fzn
 		//Parameter 3 : Characters size
 		//Parameter 4 : Color of the string
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		void DrawString( const char* _string, const sf::Vector2f& _position, UINT _characterSize, sf::Color _color )
+		void DrawString( const char* _string, const sf::Vector2f& _position, unsigned int _characterSize, sf::Color _color )
 		{
 			sf::Text text( _string, *g_pFZN_DataMgr->LoadFont( "defaultFont", DATAPATH( "Display/Fonts/defaultFont.ttf" ) ) );
 			text.setPosition( _position );
@@ -673,7 +783,7 @@ namespace fzn
 			g_pFZN_WindowMgr->Draw( text );
 		}
 
-		void DrawString( const char* _string, const sf::Vector2f& _position, UINT _characterSize, sf::Color _color, int iWindowId /*= MainWindow*/ )
+		void DrawString( const char* _string, const sf::Vector2f& _position, unsigned int _characterSize, sf::Color _color, int iWindowId /*= MainWindow*/ )
 		{
 			sf::Text text( _string, *g_pFZN_DataMgr->LoadFont( "defaultFont", DATAPATH( "Display/Fonts/defaultFont.ttf" ) ) );
 			text.setPosition( _position );
@@ -682,5 +792,342 @@ namespace fzn
 
 			g_pFZN_WindowMgr->Draw( text, iWindowId );
 		}
+
+		void DrawImGuiTextWithOptions( const ImGuiFormatOptions& _rFormatOptions, const std::string& _sTagContent, bool& _bSameLine, int& _iChar, int _iCharOffset, int _iOptionsEndIndex )
+		{
+			std::string sOptions = _sTagContent.substr( 0, _iOptionsEndIndex );
+			std::string sText = _sTagContent.substr( _iOptionsEndIndex + 1 );
+
+			_bSameLine = true;
+
+			bool bBold = false;
+			ImVec4 oColor( -1.f, -1.f, -1.f, -1.f );
+
+			int iSeparatorIndex = std::string::npos;
+			size_t iOptionIndex = std::string::npos;
+			std::string sOption = "";
+
+			do
+			{
+				iSeparatorIndex = sOptions.find_first_of( _rFormatOptions.m_sTagOptionsSeparator );
+
+				if( iSeparatorIndex == std::string::npos )
+				{
+					sOption = sOptions;
+					sOptions.clear();
+				}
+				else
+				{
+					sOption = sOptions.substr( 0, iSeparatorIndex );
+					sOptions = sOptions.substr( iSeparatorIndex + 1 );
+				}
+
+				if( sOption.empty() == false )
+				{
+					if( sOption == _rFormatOptions.m_sOption_Bold )
+						bBold = true;
+					else if( sOption.find( _rFormatOptions.m_sOption_Color ) != std::string::npos )
+					{
+						const size_t iOptionBeginOffset = _rFormatOptions.m_sOption_Color.size() + _rFormatOptions.m_sTagOptionParameterBegin.size();
+						std::string sRGB = sOption.substr( iOptionBeginOffset, sOption.size() - _rFormatOptions.m_sTagOptionParameterEnd.size() );
+						
+						oColor = GetImColorFromString( sRGB, &_rFormatOptions );
+					}
+				}
+
+			} while( sOptions.empty() == false );
+
+
+			if( _bSameLine )
+				ImGui::SameLine();
+
+
+			if( bBold && _rFormatOptions.m_pFontBold != nullptr )
+				ImGui::PushFont( _rFormatOptions.m_pFontBold );
+
+			if( IsColorValid( oColor ) )
+				ImGui::PushStyleColor( ImGuiCol_::ImGuiCol_Text, oColor );
+				
+			ImGui::Text( sText.c_str() );
+
+			if( IsColorValid( oColor ) )
+				ImGui::PopStyleColor( 1 );
+
+			if( bBold && _rFormatOptions.m_pFontBold != nullptr )
+				ImGui::PopFont();
+
+			_iChar += _iCharOffset;
+		}
+
+		void FormatImGuiText( const std::string& _sText, const ImGuiFormatOptions* _pFormatOptions /*= nullptr*/ )
+		{
+			if( _sText.empty() )
+				return;
+
+			auto CheckTag = []( const std::string& _sTag, const std::string& _sText, int _iCurrentChar )
+			{
+				int iTagChar = 0;
+				int iChar = _iCurrentChar;
+
+				while( iTagChar < _sTag.size() && iChar < _sText.size() )
+				{
+					if( _sText[ iChar ] != _sTag[ iTagChar ] )
+						return false;
+
+					++iTagChar;
+					++iChar;
+				};
+
+				// If iTagChar reached the end of the tag, it means the given string matches the tag.
+				return iTagChar == _sTag.size();
+			};
+
+			auto DrawImGuiText = [] ( const std::string& _sText, int _iChar, int _iSubStringBegin, bool _bSameLine, std::string& _sSubString )
+			{
+				if( _iChar > 0 )
+				{
+					_sSubString = _sText.substr( _iSubStringBegin, _iChar - _iSubStringBegin );
+
+					if( _bSameLine )
+						ImGui::SameLine();
+
+					ImGui::Text( _sSubString.c_str() );
+				}
+			};
+
+			float fSpacing = ImGui::GetStyle().ItemSpacing.x;
+			ImGui::GetStyle().ItemSpacing.x = 0.f;
+
+			std::string sText = _sText;
+			std::string sSubString( "" );
+			int iSubstringBegin = 0;
+			bool bSameLine = false;
+
+			const sf::Texture* pTexture = nullptr;
+			const ImGuiFormatOptions& rFormatOptions = _pFormatOptions != nullptr ? *_pFormatOptions : WindowManager::s_ImGuiFormatOptions;
+
+			int iChar = 0;
+			while( iChar < (int)sText.size() )
+			{
+				if( CheckTag( rFormatOptions.m_sBeginTag, sText, iChar ) )
+				{
+					int iGlyphEnd = sText.find( rFormatOptions.m_sEndTag, iChar + rFormatOptions.m_sBeginTag.size() );
+
+					if( iGlyphEnd < 0 )
+					{
+						++iChar;
+						continue;
+					}
+
+					std::string sTagContent = sText.substr( iChar + rFormatOptions.m_sBeginTag.size(), iGlyphEnd - ( iChar + rFormatOptions.m_sEndTag.size() ) );
+
+					int iTagOption = sTagContent.find_first_of( rFormatOptions.m_sTagOptionsEnd );
+					int iCharOffset = sTagContent.length() + rFormatOptions.m_sBeginTag.size() + rFormatOptions.m_sEndTag.size();
+
+					DrawImGuiText( sText, iChar, iSubstringBegin, bSameLine, sSubString );
+
+					if( iTagOption != std::string::npos )
+					{
+						if( iChar == 0 )
+							ImGui::Text("");
+
+						DrawImGuiTextWithOptions( rFormatOptions, sTagContent, bSameLine, iChar, iCharOffset, iTagOption );
+					}
+					else
+					{
+						pTexture = g_pFZN_DataMgr->GetTexture( sTagContent );
+
+						if( pTexture != nullptr )
+						{
+							ImGui::SameLine();
+							ImGui::Image( *pTexture );
+
+							iChar += iCharOffset;
+
+							if( CheckTag( "\\n", sText, iChar ) )
+							{
+								bSameLine = false;
+								iChar += 2;
+								continue;
+							}
+							else
+								bSameLine = true;
+						}
+						else
+						{
+							sText.erase( iChar, iCharOffset );
+
+							if( sTagContent.empty() == false )
+								sText.insert( iChar, sTagContent );
+
+							iChar += ( iCharOffset - ( rFormatOptions.m_sBeginTag.size() + rFormatOptions.m_sEndTag.size() ) );
+							continue;
+						}
+					}
+
+					iSubstringBegin = iChar;
+				}
+				else if( CheckTag( "\\n", sText, iChar ) )
+				{
+					DrawImGuiText( sText, iChar, iSubstringBegin, bSameLine, sSubString );
+
+					bSameLine = false;
+
+					iChar += 2;
+					iSubstringBegin = iChar;
+					continue;
+				}
+				else
+					++iChar;
+			};
+
+			DrawImGuiText( sText, iChar, iSubstringBegin, bSameLine, sSubString );
+
+			ImGui::GetStyle().ItemSpacing.x = fSpacing;
+		}
+
+		void BoldImGuiText( const std::string& _sText )
+		{
+			CustomFontImGuiText( _sText, WindowManager::s_ImGuiFormatOptions.m_pFontBold );
+		}
+
+		void CustomFontImGuiText( const std::string& _sText, ImFont* _pFont )
+		{
+			if( _pFont == nullptr )
+			{
+				ImGui::Text( _sText.c_str() );
+				return;
+			}
+
+			ImGui::PushFont( _pFont );
+
+			ImGui::Text( _sText.c_str() );
+
+			ImGui::PopFont();
+		}
+
+		ImVec4 GetImColorFromString( const std::string& _sColor, const ImGuiFormatOptions* _pFormatOptions /*= nullptr*/ )
+		{
+			auto GetColorFromString = []( const std::string& _sColor )
+			{
+				if( _sColor.empty() )
+					return -1.f;
+
+				float fColor = atof( _sColor.c_str() );
+
+				if( fColor > 1.f )
+					fColor /= 255.f;
+
+				return fColor;
+			};
+
+			auto GetNextColor = [&]( std::string& _sRGB, const ImGuiFormatOptions& _rFormatOptions, float _fDefaultValue )
+			{
+				if( _sRGB.empty() )
+					return _fDefaultValue;
+
+				size_t iSeparatorIndex = _sRGB.find_first_of( _rFormatOptions.m_sTagOptionParameterSeparator );
+
+				if( iSeparatorIndex != std::string::npos )
+				{
+					std::string sColor = _sRGB.substr( 0, iSeparatorIndex );
+					_sRGB = _sRGB.substr( iSeparatorIndex + 1 );
+
+					return GetColorFromString( sColor );
+				}
+				
+				// Last parameter of the color.
+				std::string sColor = _sRGB;
+				iSeparatorIndex = _sRGB.find_first_of( _rFormatOptions.m_sTagOptionParameterEnd );
+
+				if( iSeparatorIndex != std::string::npos )
+					std::string sColor = _sRGB.substr( 0, iSeparatorIndex );
+
+				_sRGB.clear();
+				return GetColorFromString( sColor );
+			};
+
+			ImVec4 oColor( -1.f, -1.f, -1.f, -1.f );
+
+			if( _sColor.empty() )
+				return oColor;
+
+			std::string sRGB{ _sColor };
+			std::string sColor{ "" };
+			const ImGuiFormatOptions& rFormatOptions = _pFormatOptions != nullptr ? *_pFormatOptions : WindowManager::s_ImGuiFormatOptions;
+
+			oColor.x = GetNextColor( sRGB, rFormatOptions, -1.f );
+			oColor.y = GetNextColor( sRGB, rFormatOptions, -1.f );
+			oColor.z = GetNextColor( sRGB, rFormatOptions, -1.f );
+			oColor.w = GetNextColor( sRGB, rFormatOptions, 1.f );
+
+			return oColor;
+		}
+
+		std::string GetColorTag( const ImVec4& _rColor, const ImGuiFormatOptions* _pFormatOptions /*= nullptr */ )
+		{
+			if( fzn::Tools::IsColorValid( _rColor ) == false )
+				return "";
+
+			const ImGuiFormatOptions& rFormatOptions = _pFormatOptions != nullptr ? *_pFormatOptions : WindowManager::s_ImGuiFormatOptions;
+
+			std::string sColorTag = rFormatOptions.m_sOption_Color;
+
+			sColorTag += rFormatOptions.m_sTagOptionParameterBegin;
+			sColorTag += fzn::Tools::Sprintf( "%.2f%s%.2f%s%.2f", _rColor.x, rFormatOptions.m_sTagOptionParameterSeparator.c_str(), _rColor.y, rFormatOptions.m_sTagOptionParameterSeparator.c_str(), _rColor.z );
+			sColorTag += rFormatOptions.m_sTagOptionParameterEnd;
+
+			return sColorTag;
+		}
+
+		bool IsColorValid( const ImVec4& _rColor )
+		{
+			if( _rColor.x < 0.f || _rColor.y < 0.f || _rColor.z < 0.f || _rColor.w < 0.f )
+				return false;
+
+			return true;
+		}
+
+		size_t FindWholeWord( const std::string& _sText, const std::string& _sWord, size_t _Off )
+		{
+			if( _sText.empty() || _sWord.empty() )
+				return std::string::npos;
+
+			auto IsIgnoredCharacter = []( const char& _rChar )
+			{
+				if( _rChar == '.' || _rChar == ',' || _rChar == '-' )
+					return true;
+
+				return false;
+			};
+
+			size_t iWord = _sText.find( _sWord, _Off );
+			size_t iOffsetedWord = 0;
+
+			bool bBeforeWordValid = false;
+			bool bAfterWordValid = false;
+
+			while( iWord != std::string::npos )
+			{
+				if( iWord == 0 || _sText[ iWord - 1 ] == ' ' || IsIgnoredCharacter( _sText[ iWord - 1 ] ) )
+					bBeforeWordValid = true;
+
+				iOffsetedWord = iWord + _sWord.size();
+				if( iOffsetedWord >= _sText.size() || _sText[ iOffsetedWord ] == ' ' || IsIgnoredCharacter( _sText[ iOffsetedWord ] ) )
+					bAfterWordValid = true;
+
+				if( bBeforeWordValid && bAfterWordValid )
+					return iWord;
+
+				bBeforeWordValid = false;
+				bAfterWordValid = false;
+
+				iWord += _sWord.size();
+				iWord = _sText.find( _sWord, iWord );
+			}
+
+			return std::string::npos;
+		}
+
 	} //namespace Tools
 } //namespace fzn

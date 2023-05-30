@@ -6,6 +6,8 @@
 
 #include <filesystem>
 
+#include <ExternalWrapper/EWFileEncrypter.h>
+
 #include "FZN/Includes.h"
 #include "FZN/Display/Animation.h"
 #include "FZN/Display/Anm2.h"
@@ -18,6 +20,12 @@
 
 
 FZN_EXPORT fzn::DataManager* g_pFZN_DataMgr = nullptr;
+
+#define ResourceLoadFctLambda( Fct ) [&]( const std::string& a, const std::string& b ) -> std::any { return Fct( a, b ); }
+#define ResourceLoadFctLambdaFmod( Fct1, Fct2 ) [&]( const std::string& a, const std::string& b ) -> std::any { if( g_pFZN_Core->IsUsingFMOD() ) return Fct1( a, b ); return Fct2( a, b, USINGCRYPTEDFILES ); }
+#define ResourceUnloadFctLambda( Fct ) [&]( const std::string& a ) { Fct( a ); }
+#define ResourceUnloadFctLambdaFmod( Fct1, Fct2 ) [&]( const std::string& a ) { if( g_pFZN_Core->IsUsingFMOD() ) Fct1( a ); Fct2( a ); }
+
 
 namespace fzn
 {
@@ -36,6 +44,23 @@ namespace fzn
 		g_pFZN_DataMgr = this;
 
 		_LoadShaders();
+
+		m_mapResourceLoadFcts.insert( { "Picture", [&]( const std::string& a, const std::string& b ) -> std::any { return DataManager::LoadTexture( a,b, USINGCRYPTEDFILES ); } } );
+		m_mapResourceLoadFcts.insert( { "Animation", ResourceLoadFctLambda( DataManager::LoadAnimation ) } );
+		m_mapResourceLoadFcts.insert( { "Anm2", [&]( const std::string& a, const std::string& b ) -> std::any { DataManager::LoadAnm2s( a,b ); return 0;} } );
+		m_mapResourceLoadFcts.insert( { "Font", ResourceLoadFctLambda( DataManager::LoadFont ) } );
+		m_mapResourceLoadFcts.insert( { "BmpFont", ResourceLoadFctLambda( DataManager::LoadBitmapFont ) } );
+		m_mapResourceLoadFcts.insert( { "Shader", ResourceLoadFctLambda( DataManager::LoadShader ) } );
+		m_mapResourceLoadFcts.insert( { "Sound", ResourceLoadFctLambdaFmod( DataManager::LoadSound, DataManager::LoadSoundBuffer ) } );
+		m_mapResourceLoadFcts.insert( { "Music", ResourceLoadFctLambdaFmod( DataManager::LoadMusic, DataManager::LoadSfMusic ) } );
+
+		m_mapResourceUnloadFcts.insert( { "Picture", ResourceUnloadFctLambda( DataManager::UnloadTexture ) } );
+		m_mapResourceUnloadFcts.insert( { "Animation", ResourceUnloadFctLambda( DataManager::UnloadAnimation ) } );
+		m_mapResourceUnloadFcts.insert( { "Anm2", ResourceUnloadFctLambda( DataManager::UnloadAnm2 ) } );
+		m_mapResourceUnloadFcts.insert( { "Font", ResourceUnloadFctLambda( DataManager::UnloadFont ) } );
+		m_mapResourceUnloadFcts.insert( { "BmpFont", ResourceUnloadFctLambda( DataManager::UnloadBitmapFont ) } );
+		m_mapResourceUnloadFcts.insert( { "Sound", ResourceUnloadFctLambdaFmod( DataManager::UnloadSound, DataManager::UnloadSoundBuffer ) } );
+		m_mapResourceUnloadFcts.insert( { "Music", ResourceUnloadFctLambdaFmod( DataManager::UnloadMusic, DataManager::UnloadSfMusic ) } );
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -71,8 +96,8 @@ namespace fzn
 		MapSfMusics::iterator sfMusItEnd = m_mapSfMusics.end();
 		for( ; sfMusIt != sfMusItEnd ; sfMusIt++ )
 		{
-			delete sfMusIt->second;
-			sfMusIt->second = nullptr;
+			delete sfMusIt->second.m_pMusic;
+			sfMusIt->second.m_pMusic = nullptr;
 		}
 
 		MapSoundBuffers::iterator soundBuffersIt = m_mapSoundBuffers.begin();
@@ -159,18 +184,22 @@ namespace fzn
 	//Parameter 2 : Path to the texture
 	//Return value : Loaded (or allready existing) texture
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	sf::Texture* DataManager::LoadTexture( const std::string& _szName, const std::string& _path )
+	sf::Texture* DataManager::LoadTexture( const std::string& _szName, const std::string& _path, bool _bCryptedFile /*= USINGCRYPTEDFILES*/ )
 	{
 		MapTextures::iterator it = m_mapTextures.find( _szName );
 
 		if( it == m_mapTextures.end() )
 		{
+			if( _bCryptedFile )
+				return _LoadCryptedTexture( _szName, _path );
+
 			sf::Texture* tmpTexture = new sf::Texture;
 			tmpTexture->loadFromFile( _path );
 			tmpTexture->setSmooth( m_bSmoothTextures );
 
 			FZN_LOG( "Loading texture \"%s\" at \"%s\".", _szName.c_str(), _path.c_str() );
 
+			_SendFileLoadedEvent();
 			return m_mapTextures[_szName] = tmpTexture;
 		}
 
@@ -278,9 +307,9 @@ namespace fzn
 
 		tinyxml2::XMLDocument oAnmFile;
 
-		if( _sFile.size() == 0 || oAnmFile.LoadFile( _sFile.c_str() ) )
+		if( g_pFZN_DataMgr->LoadXMLFile( oAnmFile, _sFile ) )
 		{
-			FZN_COLOR_LOG( DBG_MSG_COL_RED, "Failure : %s", oAnmFile.ErrorName() );
+			FZN_COLOR_LOG( DBG_MSG_COL_RED, "Failure : %s", oAnmFile.ErrorStr() );
 			return;
 		}
 
@@ -494,20 +523,25 @@ namespace fzn
 			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "\"%s\" not found.", _szName.c_str() );
 	}
 
-	sf::Music* DataManager::LoadSfMusic( const std::string& _name, const std::string& _path )
+	sf::Music* DataManager::LoadSfMusic( const std::string& _name, const std::string& _path, bool _bCryptedFile /*= USINGCRYPTEDFILES*/ )
 	{
 		MapSfMusics::iterator it = m_mapSfMusics.find( _name );
 
 		if( it == m_mapSfMusics.end() )
 		{
-			m_mapSfMusics[ _name ] = new sf::Music;
-			m_mapSfMusics[ _name ]->openFromFile( _path );
+			if( _bCryptedFile )
+				return _LoadCryptedSfMusic( _name, _path );
+
+			m_mapSfMusics[ _name ].m_pMusic = new sf::Music;
+			m_mapSfMusics[ _name ].m_pMusic->openFromFile( _path );
 
 			FZN_LOG( "Loading sf music \"%s\" at \"%s\".", _name.c_str(), _path.c_str() );
-			return m_mapSfMusics[ _name ];
+
+			_SendFileLoadedEvent();
+			return m_mapSfMusics[ _name ].m_pMusic;
 		}
 
-		return it->second;
+		return it->second.m_pMusic;
 	}
 
 	sf::Music* DataManager::GetSfMusic( const std::string& _name, bool _bHandleError /*= true*/ )
@@ -515,7 +549,7 @@ namespace fzn
 		MapSfMusics::iterator it = m_mapSfMusics.find( _name );
 
 		if( it != m_mapSfMusics.end() )
-			return it->second;
+			return it->second.m_pMusic;
 
 		if( _bHandleError )
 			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "%s - \"%s\" not found.", __FUNCTION__, _name.c_str() );
@@ -528,8 +562,8 @@ namespace fzn
 
 		if( it != m_mapSfMusics.end() )
 		{
-			delete it->second;
-			it->second = nullptr;
+			delete it->second.m_pMusic;
+			it->second.m_pMusic = nullptr;
 			m_mapSfMusics.erase( it );
 
 			FZN_LOG( "Unloading sf music \"%s\".", _name.c_str() );
@@ -538,16 +572,21 @@ namespace fzn
 			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "\"%s\" not found.", _name.c_str() );
 	}
 
-	sf::SoundBuffer* DataManager::LoadSoundBuffer( const std::string& _name, const std::string& _path )
+	sf::SoundBuffer* DataManager::LoadSoundBuffer( const std::string& _name, const std::string& _path, bool _bCryptedFile /*= USINGCRYPTEDFILES*/ )
 	{
 		MapSoundBuffers::iterator it = m_mapSoundBuffers.find( _name );
 
 		if( it == m_mapSoundBuffers.end() )
 		{
+			if( _bCryptedFile )
+				return _LoadCryptedSoundBuffer( _name, _path );
+
 			m_mapSoundBuffers[ _name ] = new sf::SoundBuffer;
 			m_mapSoundBuffers[ _name ]->loadFromFile( _path );
 
 			FZN_LOG( "Loading sound buffer \"%s\" at \"%s\".", _name.c_str(), _path.c_str() );
+
+			_SendFileLoadedEvent();
 			return m_mapSoundBuffers[ _name ];
 		}
 
@@ -691,25 +730,31 @@ namespace fzn
 
 	/////////////////OTHER FUNCTIONS/////////////////
 
-	CustomBitmapGlyph* DataManager::GetBitmapGlyph( const std::string& _name, bool _bHandleError /*= true*/ )
+	CustomBitmapGlyph* DataManager::GetBitmapGlyph( const std::string& _sName, const std::string& _sTag, bool _bHandleError /*= true*/ )
 	{
-		MapBitmapGylphs::iterator it = m_mapBitmapGlyphs.find( _name );
+		BitmapGylphs::iterator it = std::find_if( m_oBitmapGlyphs.begin(), m_oBitmapGlyphs.end(), [ _sName, _sTag ]( const CustomBitmapGlyph& oGlyph )
+		{
+			return oGlyph.m_sName == _sName &&  oGlyph.m_sTag == _sTag;
+		} );
 
-		if( it != m_mapBitmapGlyphs.end() )
-			return &it->second;
+		if( it != m_oBitmapGlyphs.end() )
+			return &(*it);
 
 		if( _bHandleError )
-			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "\"%s\" not found.", _name.c_str() );
+			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Bitmap glyph \"%s\"%s not found.", _sName.c_str(), _sTag.empty() ? "" : Tools::Sprintf( " (%s)", _sTag.c_str() ).c_str() );
 		return nullptr;
 	}
 
 
-	sf::Shader* DataManager::LoadShader( const std::string& _sName, const std::string& _sPath )
+	sf::Shader* DataManager::LoadShader( const std::string& _sName, const std::string& _sPath, bool _bCryptedFile /*= USINGCRYPTEDFILES*/ )
 	{
 		MapShaders::iterator it = m_mapShaders.find( _sName );
 
 		if( it == m_mapShaders.end() )
 		{
+			if( _bCryptedFile )
+				return _LoadCryptedShader( _sName, _sPath );
+
 			const std::string sVert = _sPath + ".vert";
 			const std::string sFrag = _sPath + ".frag";
 
@@ -717,6 +762,7 @@ namespace fzn
 
 			if( m_mapShaders[ _sName ].loadFromFile( sVert, sFrag ) )
 			{
+				_SendFileLoadedEvent();
 				return &m_mapShaders[ _sName ];
 			}
 
@@ -755,22 +801,51 @@ namespace fzn
 	}
 
 
+	std::string DataManager::LoadTextFile( const std::string& _sPath, bool _bCryptedFile /*= USINGCRYPTEDFILES*/ )
+	{
+		if( _bCryptedFile )
+		{
+			std::vector< unsigned char > oDecryptedData = _DecryptFile( _sPath, true );
+			std::string sContent = ( (char*)&( oDecryptedData[ 0 ] ) );
+
+			return sContent;
+		}
+		
+		return "";
+	}
+
+	tinyxml2::XMLError DataManager::LoadXMLFile( tinyxml2::XMLDocument& _oFile, const std::string& _sPath, bool _bCryptedFile /*= USINGCRYPTEDFILES*/ )
+	{
+		if( _bCryptedFile == false )
+			return _oFile.LoadFile( _sPath.c_str() );
+
+		if( _sPath.empty() )
+			return tinyxml2::XMLError::XML_ERROR_FILE_NOT_FOUND;
+
+		std::string sXML = LoadTextFile( _sPath, _bCryptedFile );
+
+		return _oFile.Parse( sXML.c_str() );
+	}
+
+	bool DataManager::LoadSfImage( sf::Image& _oImage, const std::string& _sPath, bool _bCryptedFile /*= USINGCRYPTEDFILES */ )
+	{
+		if( _bCryptedFile == false )
+			return _oImage.loadFromFile( _sPath );
+
+		std::vector< unsigned char >	oDecryptedData	= _DecryptFile( _sPath );
+		unsigned char*					pFirstByte		= (unsigned char*)( &oDecryptedData[ 0 ] );
+
+		return _oImage.loadFromMemory( pFirstByte, oDecryptedData.size() * sizeof( unsigned char ) );
+	}
+
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	//Loads the resource file
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	void DataManager::LoadResourceFile( const char* _resourceFile /*= DATAPATH( "XMLFiles/Resources" )*/, bool _bLocalResourceFile /*= true*/ )
 	{
 		tinyxml2::XMLDocument resFile;
-		std::string groupName( "" );
-		std::string resourcePath( "" );
-		std::string sCategoryPathBackup( "" ), sTypePathBackup( "" ), sResourcePathBackUp( "" );
-		std::string sTmpPath = "";
-		Resource tmpResource;
-		ResourceGroup* tmpResGrp;
 
-		MapResourceGroups::iterator itResGrp;
-
-		if( _resourceFile == nullptr || resFile.LoadFile( _resourceFile ) )
+		if( _resourceFile == nullptr || g_pFZN_DataMgr->LoadXMLFile( resFile, _resourceFile ) )
 		{
 			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Failure : %s.", resFile.ErrorName() );
 			m_bResourceFileExists = false;
@@ -779,140 +854,15 @@ namespace fzn
 
 		m_bResourceFileExists = true;
 
-		tinyxml2::XMLElement* allResources = resFile.FirstChildElement( "resources" );
-		tinyxml2::XMLElement* category = allResources->FirstChildElement( "display" );
-		tinyxml2::XMLElement* type = category->FirstChildElement( "pictures" );
-		tinyxml2::XMLElement* resource = type->FirstChildElement( "picture" );
+		tinyxml2::XMLElement* pResources = resFile.FirstChildElement( "Resources" );
 
-
-		sTmpPath = Tools::XMLStringAttribute( allResources, "path" );
-
-		if( sTmpPath.empty() == false )
-			resourcePath += sTmpPath;
-
-		if( _bLocalResourceFile == false )
+		if( pResources == nullptr )
 		{
-			std::filesystem::path oResourceFilePath = _resourceFile;
-
-			size_t iPos = std::string( oResourceFilePath.string() ).find( "Data/" );
-
-			if( iPos != std::string::npos )
-			{
-				std::string sDataFolderPath = oResourceFilePath.string().substr( 0, iPos + 5 );
-				oResourceFilePath = sDataFolderPath;
-
-				if( oResourceFilePath.is_absolute() == false )
-				{
-					resourcePath = std::filesystem::absolute( oResourceFilePath ).string();
-				}
-				else
-					resourcePath = oResourceFilePath.string();
-
-				Tools::ConvertSlashesInWindowsPath( resourcePath );
-			}
+			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Failure : \"Resources\" tag not found." );
+			return;
 		}
 
-		tinyxml2::XMLElement* pBitmapGlyphFiles = allResources->FirstChildElement( "BitmapGlyphFiles" );
-
-		if( pBitmapGlyphFiles != nullptr )
-		{
-			tinyxml2::XMLElement* pBitmapGlyphFile = pBitmapGlyphFiles->FirstChildElement( "BitmapGlyphFile" );
-
-			while( pBitmapGlyphFile != nullptr )
-			{
-				const std::string sFilePath = Tools::XMLStringAttribute( pBitmapGlyphFile, "path" );
-
-				if( sFilePath.empty() )
-				{
-					FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Bitmap glyph file has no path !" );
-					pBitmapGlyphFile = pBitmapGlyphFile->NextSiblingElement();
-					continue;
-				}
-				else
-					_LoadBitmapGlyphFile( resourcePath + sFilePath );
-
-				pBitmapGlyphFile = pBitmapGlyphFile->NextSiblingElement();
-			}
-		}
-
-
-		sCategoryPathBackup = resourcePath;
-
-		while( category != nullptr )
-		{
-			sTmpPath = Tools::XMLStringAttribute( category, "path" );
-
-			if( sTmpPath.empty() == false )
-				resourcePath += sTmpPath;
-
-			sTypePathBackup = resourcePath;
-
-			type = category->FirstChildElement();
-
-			while( type != nullptr )
-			{
-				sTmpPath = Tools::XMLStringAttribute( type, "path" );
-
-				if( sTmpPath.empty() == false )
-					resourcePath += sTmpPath;
-
-				sResourcePathBackUp = resourcePath;
-
-				resource = type->FirstChildElement();
-				
-				while( resource != nullptr )
-				{
-					sTmpPath = Tools::XMLStringAttribute( resource, "path" );
-
-					if( sTmpPath.empty() == false )
-						resourcePath += sTmpPath;
-
-					const std::string sGroupNameExists = Tools::XMLStringAttribute( resource, "groupName" );
-
-					if( sGroupNameExists.empty() == false )
-					{
-						groupName = sGroupNameExists;
-
-						const std::string sName = Tools::XMLStringAttribute( resource, "name" );
-
-						if( sName.empty() == false )
-							tmpResource.name = sName;
-
-						tmpResource.path = resourcePath;
-						tmpResource.type = resource->Name();
-
-						itResGrp = m_mapResourceGroups.find( groupName );
-						if( itResGrp == m_mapResourceGroups.end() )
-						{
-							tmpResGrp = new ResourceGroup;
-							tmpResGrp->m_sName = groupName;
-							tmpResGrp->m_bLoaded = false;
-							tmpResGrp->m_oResources.push_back( Resource( tmpResource ) );
-							m_mapResourceGroups[groupName] = tmpResGrp;
-						}
-						else 
-							itResGrp->second->m_oResources.push_back( Resource( tmpResource ) );
-
-						tmpResource.Reset();
-					}
-					else
-						LoadResourceFromXML( resource, resourcePath );
-
-					resource = resource->NextSiblingElement();
-					resourcePath = sResourcePathBackUp;
-				}
-				type = type->NextSiblingElement();
-
-				resourcePath = sTypePathBackup;
-				//resourcePath.resize( resourcePath.size() - 1 );
-				//resourcePath = resourcePath.substr( 0, resourcePath.find_last_of( "/" ) + 1 );
-			}
-			category = category->NextSiblingElement();
-
-			resourcePath = sCategoryPathBackup;
-			//resourcePath.resize( resourcePath.size() - 1 );
-			//resourcePath = resourcePath.substr( 0, resourcePath.find_last_of( "/" ) + 1 );
-		}
+		_LookForResources( pResources, Tools::XMLStringAttribute( pResources, "Path" ) );
 
 		m_bResourceFileLoaded = true;
 	}
@@ -934,6 +884,12 @@ namespace fzn
 			if( it != m_mapResourceGroups.end() )
 			{
 				FZN_LOG( "Loading resource group \"%s\".", _group );
+
+				Event oEvent( Event::eBeginFileLoading );
+
+				oEvent.m_oFileLoading.m_iNbFilesToLoad = it->second->m_oResources.size();
+
+				g_pFZN_Core->PushEvent( oEvent );
 
 				for( const Resource& oResource : it->second->m_oResources )
 					LoadResourceFromXML( oResource );
@@ -1043,20 +999,20 @@ namespace fzn
 
 			break;
 		}
-		case ResourceType::eBitmapGlyph:
+		/*case ResourceType::eBitmapGlyph:
 		{
 			if( GetBitmapGlyph( _sResourceName, false ) != nullptr )
 				return true;
 
 			break;
-		}
+		}*/
 		}
 
 		for( MapResourceGroups::const_iterator itResourceGroup = m_mapResourceGroups.cbegin(); itResourceGroup != m_mapResourceGroups.cend(); ++itResourceGroup )
 		{
 			for( const Resource& oResource : itResourceGroup->second->m_oResources )
 			{
-				if( oResource.name == _sResourceName )
+				if( oResource.m_sName == _sResourceName )
 					return true;
 			}
 		}
@@ -1070,6 +1026,89 @@ namespace fzn
 	//=========================================================
 
 
+	/////////////////CRYPTED DATA LOADING/////////////////
+
+	sf::Texture* DataManager::_LoadCryptedTexture( const std::string& _sName, const std::string& _sPath )
+	{
+		FZN_LOG( "Loading texture \"%s\" at \"%s\".", _sName.c_str(), _sPath.c_str() );
+
+		std::vector< unsigned char >	oDecryptedData	= _DecryptFile( _sPath );
+		unsigned char*					pFirstByte		= (unsigned char*)( &oDecryptedData[ 0 ] );
+
+		sf::Texture* pTexture = new sf::Texture;
+
+		if( pTexture->loadFromMemory( pFirstByte, oDecryptedData.size() * sizeof( unsigned char ) ) )
+		{
+			pTexture->setSmooth( m_bSmoothTextures );
+			_SendFileLoadedEvent();
+			return m_mapTextures[ _sName ] = pTexture;
+		}
+		
+		delete pTexture;
+		return nullptr;
+	}
+
+	sf::Music* DataManager::_LoadCryptedSfMusic( const std::string& _sName, const std::string& _sPath )
+	{
+		FZN_LOG( "Loading sf music \"%s\" at \"%s\".", _sName.c_str(), _sPath.c_str() );
+
+
+		m_mapSfMusics[ _sName ].m_oData	= _DecryptFile( _sPath );
+		unsigned char* pFirstByte		= (unsigned char*)( &m_mapSfMusics[ _sName ].m_oData[ 0 ] );
+
+		m_mapSfMusics[ _sName ].m_pMusic = new sf::Music;
+
+		if( m_mapSfMusics[ _sName ].m_pMusic->openFromMemory( pFirstByte, m_mapSfMusics[ _sName ].m_oData.size() * sizeof( unsigned char ) ) )
+		{
+			_SendFileLoadedEvent();
+			return m_mapSfMusics[ _sName ].m_pMusic;
+		}
+
+		delete m_mapSfMusics[ _sName ].m_pMusic;
+		m_mapSfMusics.erase( _sName );
+		return nullptr;
+	}
+
+	sf::SoundBuffer* DataManager::_LoadCryptedSoundBuffer( const std::string& _sName, const std::string& _sPath )
+	{
+		FZN_LOG( "Loading sound buffer \"%s\" at \"%s\".", _sName.c_str(), _sPath.c_str() );
+
+		std::vector< unsigned char >	oDecryptedData	= _DecryptFile( _sPath );
+		unsigned char*					pFirstByte		= (unsigned char*)( &oDecryptedData[ 0 ] );
+
+		sf::SoundBuffer* pSoundBuffer = new sf::SoundBuffer;
+
+		if( pSoundBuffer->loadFromMemory( pFirstByte, oDecryptedData.size() * sizeof( unsigned char ) ) )
+		{
+			_SendFileLoadedEvent();
+			return m_mapSoundBuffers[ _sName ] = pSoundBuffer;
+		}
+		
+		delete pSoundBuffer;
+		return nullptr;
+	}
+
+	sf::Shader* DataManager::_LoadCryptedShader( const std::string& _sName, const std::string& _sPath )
+	{
+		const std::string sVert = _sPath + ".sdrv";
+		const std::string sFrag = _sPath + ".sdrf";
+
+		FZN_LOG( "Loading shader \"%s\" at \"%s\" and \"%s\".", _sName.c_str(), sVert.c_str(), sFrag.c_str() );
+		
+		const std::string sVertContent = LoadTextFile( sVert, true );
+		const std::string sFragContent = LoadTextFile( sFrag, true );
+
+		if( m_mapShaders[ _sName ].loadFromMemory( sVertContent, sFragContent ) )
+		{
+			_SendFileLoadedEvent();
+			return &m_mapShaders[ _sName ];
+		}
+		
+		FZN_LOG( "Couldn't load shader \"%s\".", _sName.c_str() );
+
+		return nullptr;
+	}
+
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	//Loads a resource in the map from the xml resource file
 	//Parameter : Node containing the informations on the resource to load
@@ -1077,52 +1116,7 @@ namespace fzn
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	void DataManager::LoadResourceFromXML( tinyxml2::XMLElement* _node, const std::string& _path )
 	{
-		if( strcmp( _node->Name(), "picture" ) == 0 )
-		{
-			LoadTexture( Tools::XMLStringAttribute( _node, "name" ), _path );
-			return;
-		}
-		else if( strcmp( _node->Name(), "animation" ) == 0 )
-		{
-			LoadAnimation( Tools::XMLStringAttribute( _node, "name" ), _path );
-			return;
-		}
-		else if( strcmp( _node->Name(), "anm2" ) == 0 )
-		{
-			LoadAnm2s( Tools::XMLStringAttribute( _node, "name" ), _path );
-			return;
-		}
-		else if( strcmp( _node->Name(), "font" ) == 0 )
-		{
-			LoadFont( Tools::XMLStringAttribute( _node, "name" ), _path );
-			return;
-		}
-		else if( strcmp( _node->Name(), "bmpFont" ) == 0 )
-		{
-			LoadBitmapFont( Tools::XMLStringAttribute( _node, "name" ), _path );
-			return;
-		}
-		else if( strcmp( _node->Name(), "Shader" ) == 0 )
-		{
-			LoadShader( Tools::XMLStringAttribute( _node, "name" ), _path );
-			return;
-		}
-		else if( strcmp( _node->Name(), "sound" ) == 0 )
-		{
-			if( g_pFZN_Core->IsUsingFMOD() )
-				LoadSound( Tools::XMLStringAttribute( _node, "name" ), _path );
-			else
-				LoadSoundBuffer( Tools::XMLStringAttribute( _node, "name" ), _path );
-			return;
-		}
-		else if( strcmp( _node->Name(), "music" ) == 0 )
-		{
-			if( g_pFZN_Core->IsUsingFMOD() )
-				LoadMusic( Tools::XMLStringAttribute( _node, "name" ), _path );
-			else
-				LoadSfMusic( Tools::XMLStringAttribute( _node, "name" ), _path );
-			return;
-		}
+		_FindAndLoadResource( _node->Name(), Tools::XMLStringAttribute( _node, "Name" ), _path );
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1132,52 +1126,17 @@ namespace fzn
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	void DataManager::LoadResourceFromXML( const Resource& _oResource )
 	{
-		if( _oResource.type == "picture" )
-		{
-			LoadTexture( _oResource.name, _oResource.path );
-			return;
-		}
-		else if( _oResource.type == "animation" )
-		{
-			LoadAnimation( _oResource.name, _oResource.path );
-			return;
-		}
-		else if( _oResource.type == "anm2" )
-		{
-			LoadAnm2s( _oResource.name, _oResource.path );
-			return;
-		}
-		else if( _oResource.type == "font" )
-		{
-			LoadFont( _oResource.name, _oResource.path );
-			return;
-		}
-		else if( _oResource.type == "bmpFont" )
-		{
-			LoadBitmapFont( _oResource.name, _oResource.path );
-			return;
-		}
-		else if( _oResource.type == "Shader" )
-		{
-			LoadShader( _oResource.name, _oResource.path );
-			return;
-		}
-		else if( _oResource.type == "sound" )
-		{
-			if( g_pFZN_Core->IsUsingFMOD() )
-				LoadSound( _oResource.name, _oResource.path );
-			else
-				LoadSoundBuffer( _oResource.name, _oResource.path );
-			return;
-		}
-		else if( _oResource.type == "music" )
-		{
-			if( g_pFZN_Core->IsUsingFMOD() )
-				LoadMusic( _oResource.name, _oResource.path );
-			else
-				LoadSfMusic( _oResource.name, _oResource.path );
-			return;
-		}
+		_FindAndLoadResource( _oResource.m_sType, _oResource.m_sName, _oResource.m_sPath );
+	}
+
+	void DataManager::_FindAndLoadResource( const std::string& _sType, const std::string& _sName, const std::string& _sPath )
+	{
+		MapResourceLoadFcts::iterator it = m_mapResourceLoadFcts.find( _sType );
+
+		if( it != m_mapResourceLoadFcts.end() )
+			it->second( _sName, _sPath );
+		else
+			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Resource type \"%s\" doesn't exist ! Resource \"%s\" couldn't be loaded.", _sType.c_str(), _sName.c_str() );
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1186,54 +1145,19 @@ namespace fzn
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	void DataManager::UnloadResource( const Resource& _oResource )
 	{
-		if( _oResource.type == "picture" )
-		{
-			UnloadTexture( _oResource.name );
-			return;
-		}
-		else if( _oResource.type == "animation" )
-		{
-			UnloadAnimation( _oResource.name );
-			return;
-		}
-		else if( _oResource.type == "anm2" )
-		{
-			UnloadAnm2( _oResource.name );
-			return;
-		}
-		else if( _oResource.type == "font" )
-		{
-			UnloadFont( _oResource.name );
-			return;
-		}
-		else if( _oResource.type == "bmpFont" )
-		{
-			UnloadBitmapFont( _oResource.name );
-			return;
-		}
-		else if( _oResource.type == "sound" )
-		{
-			if( g_pFZN_Core->IsUsingFMOD() )
-				UnloadSound( _oResource.name );
-			else
-				UnloadSoundBuffer( _oResource.name );
-			return;
-		}
-		else if( _oResource.type == "music" )
-		{
-			if( g_pFZN_Core->IsUsingFMOD() )
-				UnloadMusic( _oResource.name );
-			else
-				UnloadSfMusic( _oResource.name );
-			return;
-		}
+		MapResourceUnloadFcts::iterator it = m_mapResourceUnloadFcts.find( _oResource.m_sType );
+
+		if( it != m_mapResourceUnloadFcts.end() )
+			it->second( _oResource.m_sName );
+		else
+			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Resource type \"%s\" doesn't exist ! Resource \"%s\" couldn't be unloaded.", _oResource.m_sType.c_str(), _oResource.m_sName.c_str() );
 	}
 
 	void DataManager::_LoadBitmapGlyphFile( const std::string& _sFile )
 	{
 		tinyxml2::XMLDocument resFile;
 
-		if( resFile.LoadFile( _sFile.c_str() ) )
+		if( g_pFZN_DataMgr->LoadXMLFile( resFile, _sFile ) )
 		{
 			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Failure : %s.", resFile.ErrorName() );
 			return;
@@ -1251,21 +1175,21 @@ namespace fzn
 
 		while( pGlyph != nullptr )
 		{
-			std::string sName = pGlyph->Attribute( "Name" );
-
 			CustomBitmapGlyph oGlyph;
+			oGlyph.m_sName	= Tools::XMLStringAttribute( pGlyph, "Name" );
+			oGlyph.m_sTag	= Tools::XMLStringAttribute( pGlyph, "Tag" );
+
+			oGlyph.m_oGlyph.m_fTop		= pGlyph->FloatAttribute( "Top" );
+			oGlyph.m_oGlyph.m_fLeft		= pGlyph->FloatAttribute( "Left" );
+			oGlyph.m_oGlyph.m_fWidth	= pGlyph->FloatAttribute( "Width" );
+			oGlyph.m_oGlyph.m_fHeight	= pGlyph->FloatAttribute( "Height" );
 
 			std::string sTexturePath = Tools::XMLStringAttribute( pGlyph, "TexturePath" );
 			std::string sTextureFile = Tools::XMLStringAttribute( pGlyph, "TextureName" );
 
-			oGlyph.second = g_pFZN_DataMgr->LoadTexture( sTextureFile, sTexturePath );
+			oGlyph.m_pTexture = g_pFZN_DataMgr->LoadTexture( sTextureFile, sTexturePath );
 
-			oGlyph.first.m_fTop		= pGlyph->FloatAttribute( "Top" );
-			oGlyph.first.m_fLeft	= pGlyph->FloatAttribute( "Left" );
-			oGlyph.first.m_fWidth	= pGlyph->FloatAttribute( "Width" );
-			oGlyph.first.m_fHeight	= pGlyph->FloatAttribute( "Height" );
-
-			m_mapBitmapGlyphs[ sName ] = oGlyph;
+			m_oBitmapGlyphs.push_back( oGlyph );
 
 			pGlyph = pGlyph->NextSiblingElement();
 		}
@@ -1276,4 +1200,79 @@ namespace fzn
 		m_mapShaders[ "ColorOverlay" ].loadFromMemory( Shaders::ColorOverlay_Vert, Shaders::ColorOverlay_Frag );
 	}
 
+	void DataManager::_SendFileLoadedEvent()
+	{
+		g_pFZN_Core->PushEvent( Event::eFileLoaded );
+	}
+
+	std::vector< unsigned char > DataManager::_DecryptFile( const std::string& _sPath, bool _bTextFile /*= false*/ )
+	{
+		std::vector< unsigned char > oRet;
+		EWFileEncrypter::CryptionTaskResult eResult = EWFileEncrypter::Decrypt_File( _sPath, oRet, _bTextFile );
+
+		if( eResult == EWFileEncrypter::CryptionTaskResult::eFileNotFound )
+			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Failure : File not found. (%s)", _sPath.c_str() );
+		else if( eResult == EWFileEncrypter::CryptionTaskResult::eRSAKeyMismatch )
+			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Failure : Decrypting key mismatch. (%s)", _sPath.c_str() );
+
+		return oRet;
+	}
+
+	void DataManager::_LookForResources( tinyxml2::XMLNode* _pNode, const std::string& _sCurrenntPath )
+	{
+		if( _pNode == nullptr )
+			return;
+
+		tinyxml2::XMLNode* pNode = _pNode->FirstChild();
+
+		while( pNode != nullptr )
+		{
+			tinyxml2::XMLElement* pElement = pNode->ToElement();
+
+			if( pElement == nullptr )
+			{
+				pNode = pNode->NextSibling();
+				continue;
+			}
+
+			std::string sPath = _sCurrenntPath + Tools::XMLStringAttribute( pElement, "Path" );
+
+			if( strcmp( pElement->Name(), "Folder" ) == 0 )
+				_LookForResources( pNode, sPath );
+			else
+				_AddResource( pElement, sPath );
+
+			pNode = pNode->NextSibling();
+		}
+	}
+
+	void DataManager::_AddResource( tinyxml2::XMLElement* _pElement, const std::string& _sCurrenntPath )
+	{
+		if( _pElement == nullptr )
+			return;
+
+		const std::string sResourceGroup = Tools::XMLStringAttribute( _pElement, "Group" );
+
+		if( sResourceGroup.empty() )
+			LoadResourceFromXML( _pElement, _sCurrenntPath );
+		else
+		{
+			MapResourceGroups::iterator itResGrp = m_mapResourceGroups.find( sResourceGroup );
+
+			std::vector< Resource >* pResourcesVector = nullptr;
+			if( itResGrp != m_mapResourceGroups.end() && itResGrp->second != nullptr )
+				pResourcesVector = &itResGrp->second->m_oResources;
+			else
+			{
+				ResourceGroup* pResGrp = new ResourceGroup();
+
+				pResGrp->m_sName = sResourceGroup;
+				pResGrp->m_bLoaded = false;
+				pResourcesVector = &pResGrp->m_oResources;
+				m_mapResourceGroups[ sResourceGroup ] = pResGrp;
+			}
+
+			pResourcesVector->push_back( { Tools::XMLStringAttribute( _pElement, "Name" ), _sCurrenntPath, _pElement->Name() } );
+		}
+	}
 } //namespace fzn

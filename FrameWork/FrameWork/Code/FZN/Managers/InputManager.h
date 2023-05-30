@@ -34,12 +34,66 @@ namespace fzn
 
 	struct ActionKey
 	{
-		std::string							m_sName = "";
-		int									m_iCategory = 0;
-		std::vector< sf::Keyboard::Key >	m_oKeys;
-		std::vector< sf::Mouse::Button >	m_oMouseButtons;
-		std::vector< INT8 >					m_oJoystickButtons;
-		std::vector< sf::Joystick::Axis >	m_oJoystickAxes;
+		struct Bind
+		{
+			Bind()
+			{
+				Reset();
+			}
+
+			Bind( const sf::Keyboard::Key& _eKey )
+				: m_eKey( _eKey )
+				, m_eMouseButton( sf::Mouse::ButtonCount )
+				, m_iJoystickButton( sf::Joystick::ButtonCount )
+				, m_eJoystickAxis( (sf::Joystick::Axis)sf::Joystick::AxisCount )
+				, m_bAxisDirection( true )
+			{}
+
+			Bind( const sf::Mouse::Button& _eMouseButton )
+				: m_eKey( sf::Keyboard::KeyCount )
+				, m_eMouseButton( _eMouseButton )
+				, m_iJoystickButton( sf::Joystick::ButtonCount )
+				, m_eJoystickAxis( (sf::Joystick::Axis)sf::Joystick::AxisCount )
+				, m_bAxisDirection( true )
+			{}
+
+			Bind( const INT8& _iJoystickButton )
+				: m_eKey( sf::Keyboard::KeyCount )
+				, m_eMouseButton( sf::Mouse::ButtonCount )
+				, m_iJoystickButton( _iJoystickButton )
+				, m_eJoystickAxis( (sf::Joystick::Axis)sf::Joystick::AxisCount )
+				, m_bAxisDirection( true )
+			{}
+
+			Bind( const sf::Joystick::Axis& _eJoystickAxis, bool _bAxisDirection )
+				: m_eKey( sf::Keyboard::KeyCount )
+				, m_eMouseButton( sf::Mouse::ButtonCount )
+				, m_iJoystickButton( sf::Joystick::ButtonCount )
+				, m_eJoystickAxis( _eJoystickAxis )
+				, m_bAxisDirection( _bAxisDirection )
+			{}
+
+			void Reset()
+			{
+				m_eKey				= sf::Keyboard::KeyCount;
+				m_eMouseButton		= sf::Mouse::ButtonCount;
+				m_iJoystickButton	= sf::Joystick::ButtonCount;
+				m_eJoystickAxis		= (sf::Joystick::Axis)sf::Joystick::AxisCount;
+				m_bAxisDirection	= true;
+			}
+
+			sf::Keyboard::Key	m_eKey;
+			sf::Mouse::Button	m_eMouseButton;
+			INT8				m_iJoystickButton;
+			sf::Joystick::Axis	m_eJoystickAxis;
+			bool				m_bAxisDirection;
+		};
+
+		std::string			m_sName = "";
+		int					m_iCategory = 0;
+		bool				m_bFullAxis = true;	// The action is using the complete axis (true) or only half of it.
+		std::vector< Bind > m_oKeyboardBinds;
+		std::vector< Bind > m_oControllerBinds;
 	};
 
 
@@ -75,6 +129,7 @@ namespace fzn
 			eJoystickAxis,
 			eNbTypes,
 		};
+		typedef sf::Uint8 BindTypeMask;
 
 		struct ActionKeyBindReplacementInfo
 		{
@@ -86,15 +141,23 @@ namespace fzn
 				m_bSameCategoryOnly = true;
 			}
 
-			std::string m_sActionKey = "";
-			int			m_iBindIndex = -1;
-			sf::Uint8	m_uBindTypeMask = 0;
-			bool		m_bSameCategoryOnly = true;
+			std::string		m_sActionKey = "";
+			int				m_iBindIndex = -1;
+			BindTypeMask	m_uBindTypeMask = 0;
+			bool			m_bSameCategoryOnly = true;
 		};
 
 		//=========================================================
 		//======================JoystickInfo===========================
 		//=========================================================
+
+		enum JoystickAxisDirection
+		{
+			eFull,
+			ePositive,
+			eNegative,
+			eNbAxisDirections
+		};
 
 		struct JoystickInfo
 		{
@@ -102,6 +165,7 @@ namespace fzn
 			INT8 basicStates[ sf::Joystick::ButtonCount ];				//Array containing all button basic states (up or down)
 			float axes[ sf::Joystick::AxisCount ];						//Array containing the state of each joystick axis
 			float basicAxes[ sf::Joystick::AxisCount ];					//Array containing all axis basic states 
+			InputManager::Status axisStates[ sf::Joystick::AxisCount ][ JoystickAxisDirection::eNbAxisDirections ];	//Array containing the state of each joystick axis (when treated as a button, 0/1 input)
 			sf::Joystick::Identification* informations = nullptr;		//Joystick identification (name, vendorID and productID)
 			float defaultAxisValues[ sf::Joystick::AxisCount ];			//Default values for each axis (can differ with the product)
 			float axesDeadZone = 10.f;									//Value under which positions will not be taken into consideration (abs value)
@@ -109,6 +173,7 @@ namespace fzn
 			INT8 buttonCount = 0;										//How many buttons are on the controller
 			INT8 ID = -1;												//Joystick ID
 			bool isConnected = false;									//The joystick is connected (true) or not
+			bool m_bNeedCalibration = false;
 		};
 
 
@@ -176,26 +241,27 @@ namespace fzn
 		//Parameter : Concerned actionKey
 		//Return value : The actionKey is pressed (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		bool IsKeyPressed( const char* _actionKey );
+		bool IsActionPressed( const char* _actionKey, bool _bIgnoreJoystickAxis = false );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Key press test (maintained down)
 		//Parameter : Concerned actionKey
 		//Return value : The actionKey is down (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		bool IsKeyDown( const char* _actionKey );
+		bool IsActionDown( const char* _actionKey, bool _bIgnoreJoystickAxis = false );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Release test (transition from Down to Up)
 		//Parameter : Concerned actionKey
 		//Return value : The actionKey is released (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		bool IsKeyReleased( const char* _actionKey );
+		bool IsActionReleased( const char* _actionKey, bool _bIgnoreJoystickAxis = false );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Key not pressed test (staying Up)
 		//Parameter : Concerned actionKey
 		//Return value : The actionKey is up (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		bool IsKeyUp( const char* _actionKey );
-		Status GetKeyState( const char* _actionKey );
+		bool IsActionUp( const char* _actionKey, bool _bIgnoreJoystickAxis = false );
+		Status GetActionState( const char* _actionKey, bool _bIgnoreJoystickAxis = false );
+		float GetActionValue( const char* _action );
 
 
 		/////////////////ACCESSORS/////////////////
@@ -442,10 +508,11 @@ namespace fzn
 		//Return value : An axis has moved (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		INT8 IsJoystickConnected();
+		int GetNumberOfConnectedJoysticks() const;
 		
-		CustomBitmapGlyph* GetBitmapGlyph( const std::string& _sActionOrKey, int _iIndex = 0 );
-		std::string GetActionGlyphString( const std::string& _sAction, bool _bAllKeys );
-		std::string GetActionKeyString( const std::string& _sActionOrKey, int _iIndex = 0 );
+		std::string GetActionGlyphString( const std::string& _sAction, bool _bKeyboard, bool _bAllKeys ) const;
+		CustomBitmapGlyph* GetBitmapGlyph( const std::string& _sActionOrKey, bool _bKeyboard, int _iIndex = 0 ) const;
+		std::string GetActionKeyString( const std::string& _sActionOrKey, bool _bKeyboard, int _iIndex = 0 ) const;
 		const std::vector< ActionKey >& GetActionKeys() const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Accessor on an existing actionKey by its name
@@ -454,7 +521,7 @@ namespace fzn
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		const ActionKey* GetActionKey( const std::string& _sActionKey ) const;
 		ActionKey* GetActionKey( const std::string& _sActionKey );
-		bool ReplaceActionKeyBind( const std::string& _sActionKey, const BindType& _eBind, int _iIndex, bool _bSameCategoryOnly = true );
+		bool ReplaceActionKeyBind( const std::string& _sActionKey, const BindTypeMask& _uBind, int _iIndex, bool _bSameCategoryOnly = true );
 		bool IsWaitingActionKeyBind() const;
 		bool IsWaitingInputForType( const BindType& _eBind ) const;
 		void ResetActionKeys();
@@ -464,6 +531,9 @@ namespace fzn
 		void SetInputSystem( InputSystems eSystem );
 		void AddInputToScan( sf::Keyboard::Key _eInput );
 		void AddInputToScan( sf::Mouse::Button _eInput );
+
+
+		bool IsUsingKeyboard() const;
 
 		/////////////////MEMBER VARIABLES/////////////////
 
@@ -516,27 +586,38 @@ namespace fzn
 		//Scanned keys states update
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		void UpdateScannedInputs();
+		void UpdateDeviceInUse();
 
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Set a key to the "Pressed" state, fill the last character and pass the Hit boolean to true
 		//Paramater : Concerned key
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		void SetKeyPressed( sf::Keyboard::Key _key );
+		void SetKeyReleased( sf::Keyboard::Key _key );
 
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Reads the XML file containing corresponding keys to each game action
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		void LoadActionKeysFromXML( std::vector< ActionKey >& _oActionKeysArray, const std::string& _sXMLPath );
+		void LoadActionKeysFromXML( std::vector< ActionKey >& _oActionKeysArray, const std::string& _sXMLPath, bool _bCrypted );
 		
 		void _AddKeyToActionKey( ActionKey& _oActionKey, const sf::Keyboard::Key& _eKey );
 		void _AddMouseButtonToActionKey( ActionKey& _oActionKey, const sf::Mouse::Button& _eMouseButton );
 		void _AddJoystickButtonToActionKey( ActionKey& _oActionKey, INT8 _iJoystickButton );
-		void _AddJoystickAxisToActionKey( ActionKey& _oActionKey, const sf::Joystick::Axis& _eJoystickAxis );
+		void _AddJoystickAxisToActionKey( ActionKey& _oActionKey, const sf::Joystick::Axis& _eJoystickAxis, bool _bDirection );
 		
 		bool _SetActionKeyBind_Key( const sf::Keyboard::Key& _eKey );
 		bool _SetActionKeyBind_MouseButton( const sf::Mouse::Button& _eMouseButton );
 		bool _SetActionKeyBind_JoystickButton( INT8 _iJoystickButton );
-		bool _SetActionKeyBind_JoystickAxis( const sf::Joystick::Axis& _eJoystickAxis );
+		bool _SetActionKeyBind_JoystickAxis( const sf::Joystick::Axis& _eJoystickAxis, float _fPosition );
+
+		const ActionKey* _GetActionKey( sf::Keyboard::Key _eKey ) const;
+		const ActionKey* _GetActionKey( sf::Mouse::Button _eMouseButton ) const;
+		const ActionKey* _GetActionKey( INT8 _iJoystickButton ) const;
+		const ActionKey* _GetActionKey( sf::Joystick::Axis _eAxis, bool _bDirection ) const;
+		void _SendActionsEvent( const ActionKey* _pActionKey, Status _eStatus );
+
+		std::string _GetActionKeyString( const std::string& _sActionOrKey, bool _bKeyboard, int _iIndex = 0 ) const;
+		std::string _GetDeviceTag( bool _bKeyboard ) const;
 
 		/////////////////CHARS MANAGEMENT/////////////////
 
@@ -545,59 +626,59 @@ namespace fzn
 		//Parameter : Concerned key
 		//Return value : Corresponding character
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		char GetFRKeyChar( sf::Keyboard::Key _key );
+		char GetFRKeyChar( const sf::Keyboard::Key& _key ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Returns the corresponding upper character to a key (FR Keyboard)
 		//Parameter : Concerned key
 		//Return value : Corresponding character
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		char GetFRKeyUpperChar( sf::Keyboard::Key _key );
+		char GetFRKeyUpperChar( const sf::Keyboard::Key& _key ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Returns the corresponding character to a key (EN Keyboard)
 		//Parameter : Concerned key
 		//Return value : Corresponding character
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		char GetENKeyChar( sf::Keyboard::Key _key );
+		char GetENKeyChar( const sf::Keyboard::Key& _key ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Returns the corresponding upper character to a key (EN Keyboard)
 		//Parameter : Concerned key
 		//Return value : Corresponding character
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		char GetENKeyUpperChar( sf::Keyboard::Key _key );
+		char GetENKeyUpperChar( const sf::Keyboard::Key& _key ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Returns the corresponding key to a string (FR Keyboard)
 		//Parameter : Concerned string
 		//Return value : Corresponding key
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		sf::Keyboard::Key StringToFRKey( std::string& _key );
+		sf::Keyboard::Key StringToFRKey( const std::string& _key ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Returns the corresponding key to a string (EN Keyboard)
 		//Parameter : Concerned string
 		//Return value : Corresponding key
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		sf::Keyboard::Key StringToENKey( std::string& _key );
-		std::string KeyToString( const sf::Keyboard::Key& _key );
+		sf::Keyboard::Key StringToENKey( const std::string& _key ) const;
+		std::string KeyToString( const sf::Keyboard::Key& _key ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Returns the corresponding mouse button to a string
 		//Parameter : Concerned string
 		//Return value : Corresponding mouse button
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		sf::Mouse::Button StringToMouseButton( std::string& _button );
-		std::string MouseButtonToString( const sf::Mouse::Button& _eButton );
+		sf::Mouse::Button StringToMouseButton( const std::string& _button ) const;
+		std::string MouseButtonToString( const sf::Mouse::Button& _eButton ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Returns the corresponding joystick button to a string
 		//Parameter : Concerned string
 		//Return value : Corresponding joystick button
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 StringToJoystickButton( std::string& _button );
-		std::string JoystickButtonToString( INT8 _iButton );
+		INT8 StringToJoystickButton( const std::string& _button ) const;
+		std::string JoystickButtonToString( const INT8& _iButton ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Returns the corresponding joystick axis to a string
 		//Parameter : Concerned string
 		//Return value : Corresponding joystick axis
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		sf::Joystick::Axis StringToJoystickAxis( std::string& _button );
-		std::string JoystickAxisToString( const sf::Joystick::Axis& _eAxis );
+		sf::Joystick::Axis StringToJoystickAxis( const std::string& _button, bool& _bDirection ) const;
+		std::string JoystickAxisToString( const sf::Joystick::Axis& _eAxis, bool _bFullAxis, bool _bAxisDirection ) const;
 
 
 		/////////////////MEMBER VARIABLES/////////////////
@@ -606,17 +687,19 @@ namespace fzn
 		std::vector< ActionKey >		m_oCustomActionKeys;
 		ActionKeyBindReplacementInfo	m_oActionKeyBindInfo;
 
+		bool							m_bUsingKeyboard;
+
 		/////////////////KEYBOARD/////////////////
 
-		Status m_keyStates[sf::Keyboard::KeyCount];											//Array containing all key states
-		INT8 m_keyBasicStates[sf::Keyboard::KeyCount];										//Array containing all key basic states (up or down)
-		char m_cLastChar;																	//Last character entered with the keyboard 
-		INT8 m_bKeyboardHit;																//Indicates if any of the keys has been pressed (true) or not
-		char( InputManager::*m_pGetKeyChar[2] )( sf::Keyboard::Key _key );					//Function pointer to the key char accessor (FR or EN)
-		char( InputManager::*m_pGetUpperKeyChar[2] )( sf::Keyboard::Key _key );				//Function pointer to the key upper char accessor (FR or EN)
-		sf::Keyboard::Key( InputManager::*m_pStringToKey[2] )( std::string& _key );			//Function pointer to the key upper char accessor (FR or EN)
-		HKL m_keyboardLayout;																//Container of the keyboard layout
-		INT8 m_bIsKeyboardFrench;															//Indicates if the keyboard layout is French (true) or not 
+		Status m_keyStates[sf::Keyboard::KeyCount];													//Array containing all key states
+		INT8 m_keyBasicStates[sf::Keyboard::KeyCount];												//Array containing all key basic states (up or down)
+		char m_cLastChar;																			//Last character entered with the keyboard 
+		INT8 m_bKeyboardHit;																		//Indicates if any of the keys has been pressed (true) or not
+		char( InputManager::*m_pGetKeyChar[2] )( const sf::Keyboard::Key& _key ) const;				//Function pointer to the key char accessor (FR or EN)
+		char( InputManager::*m_pGetUpperKeyChar[2] )( const sf::Keyboard::Key& _key ) const;		//Function pointer to the key upper char accessor (FR or EN)
+		sf::Keyboard::Key( InputManager::*m_pStringToKey[2] )( const std::string& _key ) const;		//Function pointer to the key upper char accessor (FR or EN)
+		HKL m_keyboardLayout;																		//Container of the keyboard layout
+		INT8 m_bIsKeyboardFrench;																	//Indicates if the keyboard layout is French (true) or not 
 
 		/////////////////MOUSE/////////////////
 
@@ -633,7 +716,8 @@ namespace fzn
 
 		INT8 m_bJoystickHit;																//Indicates if any button has been pressed (true) or not
 		INT8 m_bJoystickMoved;																//Indicates if any axis has been moved (true) or not
-		JoystickInfo m_joysticks[sf::Joystick::Count];										//Array containing all the informations on the controllers connected
+		JoystickInfo m_joysticks[sf::Joystick::Count];										//Array containing all the informations on the controllers connected*
+		static constexpr float JoystickAxisPressedThreshold = 75.f;
 
 		/////////////////ALTERNATIVE INPUT SYSTEM/////////////////
 
@@ -643,7 +727,5 @@ namespace fzn
 } //namespace fzn
 
 extern FZN_EXPORT fzn::InputManager* g_pFZN_InputMgr;
-
-void FctInputMgrEvent( void* _pData );
 
 #endif //_INPUTSMANAGER_H_

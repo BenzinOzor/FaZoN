@@ -9,10 +9,15 @@ set DstCategory=%4
 set DstProjectName=%5
 set Configuration=%6
 set TargetName=%7
+set CustomOutputDir=%8
 
 set SourcePath="%SolutionDir%%SrcCategory%\%SrcProjectName%\Bin\%Configuration%"
 set LibPath="%SolutionDir%%DstCategory%\%DstProjectName%\Dependencies\Libs\%SrcProjectName%\%Configuration%"
 set DllPath="%SolutionDir%%DstCategory%\%DstProjectName%\Bin\%Configuration%"
+
+if not "%CustomOutputDir%" == "" (
+    set SourcePath="%SolutionDir%%SrcCategory%\%SrcProjectName%\Bin\%CustomOutputDir%"
+)
 
 @echo =====================================
 @echo Copying %SrcProjectName% generated libs to %DstProjectName% dependencies and bin folder...
@@ -29,20 +34,30 @@ set DllPath="%SolutionDir%%DstCategory%\%DstProjectName%\Bin\%Configuration%"
 @echo Dll path : %DllPath%
 @echo ....................................
 
-if exist "%SourcePath%\%TargetName%.lib" (
-    if not exist %LibPath% ( 
-        mkdir %LibPath%
-        @echo creating %LibPath%
-        )
+if not exist "%SourcePath%" (
+    @echo SOURCE PATH %SourcePath% DOESN'T EXIST!
+) else (
 
-    xcopy "%SourcePath%\%TargetName%.lib" %LibPath% /y
-)
+    if exist "%SourcePath%\%TargetName%.lib" (
+        if not exist %LibPath% ( 
+            mkdir %LibPath%
+            @echo creating %LibPath%
+            )
+    
+        xcopy "%SourcePath%\%TargetName%.lib" %LibPath% /y
+    ) else (
+        @echo %SourcePath%\%TargetName%.lib NOT FOUND!
+    )
+    
+    if exist "%SourcePath%\%TargetName%.dll" (
+        if not exist "%DllPath%" ( 
+            mkdir "%DllPath%\"
+            @echo creating %DllPath%
+            )
+    
+        xcopy "%SourcePath%\%TargetName%.dll" "%DllPath%\" /y
+    ) else (
+        @echo %SourcePath%\%TargetName%.dll NOT FOUND!
+    )
 
-if exist "%SourcePath%\%TargetName%.dll" (
-    if not exist "%DllPath%" ( 
-        mkdir "%DllPath%\"
-        @echo creating %DllPath%
-        )
-
-    xcopy "%SourcePath%\%TargetName%.dll" "%DllPath%\" /y
 )

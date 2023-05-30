@@ -1,0 +1,39 @@
+<resources path="../../Data/">
+
+	<!--Display resources-->
+	<display path="Display/">
+
+		<!--Pictures-->
+		<pictures path="Pictures/">
+			<picture name="demoSprite" path="demoSprite.png" groupName="demo"/>
+		</pictures>
+
+		<!--Animations-->
+		<animations path="Animations/">
+			<animation name="BnZ" path="Anims.anm" groupName="demo"/>
+      <animation name="Wumpa" path="Anims.anm" groupName="demo"/>
+      <animation name="WalkRight" path="Anims.anm" groupName="demo"/>
+		</animations>
+
+		<!--Fonts-->
+		<fonts path="Fonts/">
+			<font name="defaultFont" path="defaultFont.ttf"/>
+		</fonts>
+	</display>
+
+	<!--Audio resources-->
+	<audio path="Audio/">
+
+		<!--Sounds-->
+		<sounds path="Sounds/">
+      <sound name="demoSound" path="demoSound.ogg" groupName="demo"/>
+      <sound name="Passage" path="Passage.ogg" groupName="demo"/>   
+		</sounds>
+
+		<!--Musics-->
+		<musics path="Musics/">
+			<music name="demoMusic" path="demoMusic.ogg" groupName="demo"/>
+		</musics>
+
+	</audio>
+</resources>

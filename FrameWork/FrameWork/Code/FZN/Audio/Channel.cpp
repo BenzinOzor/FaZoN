@@ -79,7 +79,7 @@ namespace fzn
 	/// Indicates whether or not the Channel is available to take a sound to play.
 	/// @return	If true, the Channel is available.
 	//-------------------------------------------------------------------------------------------------
-	INT8 Channel::IsChannelAvailable()
+	bool Channel::IsChannelAvailable()
 	{
 		bool bChannelPlaying = false;
 		m_channel->isPlaying(&bChannelPlaying);
@@ -111,7 +111,7 @@ namespace fzn
 	/// Indicates whether or not the Channel is playing.
 	/// @return	If true, th Channel is playing a sound.
 	//-------------------------------------------------------------------------------------------------
-	INT8 Channel::IsPlaying()
+	bool Channel::IsPlaying()
 	{
 		bool bIsPlaying = false;
 		m_channel->isPlaying(&bIsPlaying);

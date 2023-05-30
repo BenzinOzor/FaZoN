@@ -36,40 +36,40 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Retail|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -138,19 +138,26 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ConformanceMode>false</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;$(SolutionDir)FrameWork\ExternalWrapper\Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>FRAMEWORK_EXPORTS;FZN_DEBUG;FZN_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\LuaPlus\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\TinyXML2\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\Fmod\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\SFML\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>fmod_vc.lib;tinyxml2d.lib;sfml-audio-d.lib;sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;Opengl32.lib;LuaPlus5.1_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\LuaPlus\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\TinyXML2\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\Fmod\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\SFML\$(Configuration)\;$(SolutionDir)FrameWork\ExternalWrapper\Dependencies\Libs\ExternalWrapper\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fmod_vc.lib;tinyxml2d.lib;sfml-audio-d.lib;sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;Opengl32.lib;LuaPlus5.1_d.lib;ExternalWrapper_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AssemblyDebug>true</AssemblyDebug>
     </Link>
     <PostBuildEvent>
-      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(SolutionDir) FrameWork $(ProjectName) $(Configuration) $(TargetName)</Command>
+      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(SolutionDir) FrameWork $(ProjectName) $(Configuration) $(TargetName)
+call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(SolutionDir) FrameWork $(ProjectName) $(Configuration) ExternalWrapper_d</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyDllsToBinaries.bat" $(SolutionDir) FrameWork ExternalWrapper FrameWork $(ProjectName) $(Configuration)</Command>
+    </PreBuildEvent>
+    <PreLinkEvent>
+      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyDllsToBinaries.bat" $(SolutionDir) FrameWork ExternalWrapper FrameWork $(ProjectName) $(Configuration)</Command>
+    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -177,19 +184,26 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;$(SolutionDir)FrameWork\ExternalWrapper\Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>FRAMEWORK_EXPORTS;FZN_RELEASE;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\LuaPlus\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\TinyXML2\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\Fmod\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\SFML\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>fmod_vc.lib;tinyxml2.lib;sfml-audio.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;Opengl32.lib;LuaPlus5.1_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\LuaPlus\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\TinyXML2\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\Fmod\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\SFML\$(Configuration)\;$(SolutionDir)FrameWork\ExternalWrapper\Dependencies\Libs\ExternalWrapper\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fmod_vc.lib;tinyxml2.lib;sfml-audio.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;Opengl32.lib;LuaPlus5.1_r.lib;ExternalWrapper_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(SolutionDir) FrameWork $(ProjectName) $(Configuration) $(TargetName)</Command>
+      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(SolutionDir) FrameWork $(ProjectName) $(Configuration) $(TargetName)
+call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(SolutionDir) FrameWork $(ProjectName) $(Configuration) ExternalWrapper_r</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyDllsToBinaries.bat" $(SolutionDir) FrameWork ExternalWrapper FrameWork $(ProjectName) $(Configuration)</Command>
+    </PreBuildEvent>
+    <PreLinkEvent>
+      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyDllsToBinaries.bat" $(SolutionDir) FrameWork ExternalWrapper FrameWork $(ProjectName) $(Configuration)</Command>
+    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Retail|Win32'">
     <ClCompile>
@@ -199,19 +213,26 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;$(SolutionDir)FrameWork\ExternalWrapper\Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>FRAMEWORK_EXPORTS;FZN_RELEASE;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\LuaPlus\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\TinyXML2\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\Fmod\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\SFML\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\LuaPlus\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\TinyXML2\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\Fmod\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\SFML\$(Configuration)\;$(SolutionDir)FrameWork\ExternalWrapper\Dependencies\Libs\ExternalWrapper\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>fmod_vc.lib;tinyxml2.lib;sfml-audio.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;Opengl32.lib;LuaPlus5.1_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(SolutionDir) FrameWork $(ProjectName) $(Configuration) $(TargetName)</Command>
+      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(SolutionDir) FrameWork $(ProjectName) $(Configuration) $(TargetName)
+call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(SolutionDir) FrameWork $(ProjectName) $(Configuration) ExternalWrapper_r</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyDllsToBinaries.bat" $(SolutionDir) FrameWork ExternalWrapper FrameWork $(ProjectName) $(Configuration)</Command>
+    </PreBuildEvent>
+    <PreLinkEvent>
+      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyDllsToBinaries.bat" $(SolutionDir) FrameWork ExternalWrapper FrameWork $(ProjectName) $(Configuration)</Command>
+    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -277,8 +298,10 @@
     <ClInclude Include="FZN\Game\BehaviorTree\BTBasicElements.h" />
     <ClInclude Include="FZN\Game\BehaviorTree\BTComposites.h" />
     <ClInclude Include="FZN\Game\BehaviorTree\BTDecorators.h" />
+    <ClInclude Include="FZN\Game\StateMachine\FZNStateMachine.h" />
     <ClInclude Include="FZN\Includes.h" />
     <ClInclude Include="FZN\Tools\Callbacks.h" />
+    <ClInclude Include="FZN\Tools\DataCallback.h" />
     <ClInclude Include="FZN\Tools\Event.h" />
     <ClInclude Include="FZN\Tools\HermiteCubicSpline.h" />
     <ClInclude Include="FZN\Tools\Logging.h" />
@@ -333,6 +356,7 @@
     <ClCompile Include="FZN\Game\BehaviorTree\BTBasicElements.cpp" />
     <ClCompile Include="FZN\Game\BehaviorTree\BTComposites.cpp" />
     <ClCompile Include="FZN\Game\BehaviorTree\BTDecorators.cpp" />
+    <ClCompile Include="FZN\Game\StateMachine\FZNStateMachine.cpp" />
     <ClCompile Include="FZN\Tools\HermiteCubicSpline.cpp" />
     <ClCompile Include="FZN\Tools\Logging.cpp" />
     <ClCompile Include="FZN\Tools\Math.cpp" />
@@ -362,6 +386,7 @@
     <ClCompile Include="FZN\Display\TraceRect.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="cpp.hint" />
     <None Include="FZN\DataStructure\FixedSizeAllocator.inl" />
     <None Include="FZN\DataStructure\Vector.inl" />
     <None Include="FZN\Game\PathFinding\STLAstar.inl" />

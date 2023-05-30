@@ -7,6 +7,8 @@
 #ifndef _AUDIOOBJECT_H_
 #define _AUDIOOBJECT_H_
 
+#include "FZN/Defines.h"
+
 
 namespace FMOD { class Sound; }
 namespace fzn

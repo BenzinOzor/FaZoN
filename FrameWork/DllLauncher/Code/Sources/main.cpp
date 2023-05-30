@@ -1,8 +1,6 @@
-﻿#include <FZN/Tools/Logging.h>
-
+﻿#include <FZN/Includes.h>
 #include <stdio.h>
 #include <windows.h>
-
 
 int main( int argc, char* argv[] )
 {

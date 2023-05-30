@@ -49,7 +49,7 @@ namespace fzn
 	{
 		m_oControlPoints.clear();
 
-		for( int iControlPoint = 0 ; iControlPoint < _oPositions.size() ; ++iControlPoint )
+		for( int iControlPoint = 0 ; iControlPoint < (int)_oPositions.size() ; ++iControlPoint )
 			m_oControlPoints.push_back( SplineControlPoint( _oPositions[iControlPoint] ) );
 	}
 
@@ -127,7 +127,7 @@ namespace fzn
 		oLine[0].color = sf::Color::Red;
 		oLine[1].color = sf::Color::Red;
 
-		for( int iControlPoint = 0 ; iControlPoint < m_oControlPoints.size() ; ++iControlPoint )
+		for( int iControlPoint = 0 ; iControlPoint < (int)m_oControlPoints.size() ; ++iControlPoint )
 		{
 			oLine[0].position = m_oControlPoints[iControlPoint].m_vPosition;
 			oLine[1].position = oLine[0].position + m_oControlPoints[iControlPoint].m_vTangent;
@@ -222,7 +222,7 @@ namespace fzn
 		oLine[ 0 ].color = sf::Color::Red;
 		oLine[ 1 ].color = sf::Color::Red;
 
-		for( int iControlPoint = 0; iControlPoint < m_oControlPoints.size(); ++iControlPoint )
+		for( int iControlPoint = 0; iControlPoint < (int)m_oControlPoints.size(); ++iControlPoint )
 		{
 			oLine[ 0 ].position = m_oControlPoints[ iControlPoint ].m_vPosition;
 			oLine[ 1 ].position = oLine[ 0 ].position + m_oControlPoints[ iControlPoint ].m_vTangent;

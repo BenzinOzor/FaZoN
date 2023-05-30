@@ -199,7 +199,7 @@ namespace fzn
 
 		tinyxml2::XMLDocument infoAnim;
 
-		if( _path.size() == 0 || infoAnim.LoadFile( _path.c_str() ) )
+		if( g_pFZN_DataMgr->LoadXMLFile( infoAnim, _path ) )
 		{
 			FZN_COLOR_LOG( DBG_MSG_COL_RED, "Failure : %s", infoAnim.ErrorName() );
 			return;

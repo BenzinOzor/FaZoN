@@ -12,7 +12,8 @@ class FazonCore;
 
 
 
-#define DATAPATH(path)	g_pFZN_Core->GetDataPath( path ).c_str()					//Path to the datas
+#define DATAPATH(path)		g_pFZN_Core->GetDataPath( path ).c_str()					//Path to the datas
+#define USINGCRYPTEDFILES	g_pFZN_Core->IsUsingCryptedData()
 
 #include <SFML/Graphics/Rect.hpp>
 #include <vector>
@@ -25,7 +26,9 @@ class FazonCore;
 #include <SFML/System/Vector2.hpp>
 
 #include "FZN/Defines.h"
+#include "FZN/Managers/WindowManager.h"
 #include "FZN/Tools/Event.h"
+#include "FZN/Tools/DataCallback.h"
 
 namespace sf
 {
@@ -41,35 +44,21 @@ namespace fzn
 	class InputManager;
 	class MessageManager;
 	class SteeringManager;
-	class WindowManager;
 	typedef void(*CallBack)(void*);					//Function pointer
 
 
 	class FZN_EXPORT FazonCore : public sf::NonCopyable
 	{
 	public:
-		//Different possible callBacks
-		enum CallBacks : INT8
+		struct ProjectDesc
 		{
-			CB_Update,
-			CB_Display,
-			CB_Event,
-			CB_Nb
-		};
+			std::string		m_sName{ "" };
 
-		struct DataCallBack
-		{
-			DataCallBack() : pData( nullptr ), pFct( nullptr ), m_iPriority( 0 ) {}
-			DataCallBack( void* _pData, CallBack _pFct, int _iPriority = 0 ) { pData = _pData; pFct = _pFct; m_iPriority = _iPriority; }
-
-			bool operator==( const DataCallBack& _oCallback ) const
-			{
-				return pData == _oCallback.pData && pFct == _oCallback.pFct && m_iPriority == _oCallback.m_iPriority;
-			}
-
-			void* pData;
-			CallBack pFct;
-			int m_iPriority;
+			FZNProjectType	m_eProjectType{ FZNProjectType::COUNT_PROJECT_TYPES };
+			std::string		m_sSaveFolderName{ m_sName };
+			bool			m_bUseCryptedData{ false };
+			bool			m_bUseFMOD{ false };
+			std::string		m_sDataFolderPath{ "../../Data/" };
 		};
 
 		enum CoreModules : INT8
@@ -88,9 +77,10 @@ namespace fzn
 
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Creation and access on the singleton
-		//Return value : BnGCore unic instance
+		//Return value : FazonCore unic instance
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		static FazonCore* CreateInstance();
+		static FazonCore* CreateInstance( const ProjectDesc& _rDesc );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Destruction of the singleton
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -102,7 +92,7 @@ namespace fzn
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Update of the engine components
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		void Init( const std::string& _sDataFolderpath = "", const std::string& _lsSaveFolderName = "", bool _bUseFMOD = false );
+		void Init( const ProjectDesc& _oDesc );
 		void InitModule(CoreModules eModule);
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Update of the engine components
@@ -252,27 +242,38 @@ namespace fzn
 		INT8 IsAIModuleActivated();
 		bool IsUsingFMOD() const;
 
+		const std::string& GetProjectName() const;
+		bool IsUsingCryptedData() const;
+
 		std::string& GetDataFolder();
 		void SetDataFolder(const char* _path);
 		std::string GetDataPath(const char* _path);
 
 		void SetSaveFolderName( const std::string& _sFolderName );
+		const std::string& GetSaveFolderName() const;
 		std::string GetSaveFolderPath() const;
 		bool FileExists( const std::string& _sFilePath ) const;
 
-		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		//Adds a callBack function to the chosen vector
-		//Parameter 1 : Data pointer (class Type)
-		//Parameter 2 : Function pointer
-		//Parameter 3 : Chosen vector
-		//Return value : Function index in the vector
-		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		int AddCallBack(void* _pData, CallBack _pFct, CallBacks _eCallBackType = CallBacks::CB_Update, int _iWindow = 0, int _iPriority = 0 );
-		void RemoveCallBack( void* _pData, CallBack _pFct, CallBacks _eCallBackType = CallBacks::CB_Update, int _iWindow = 0 );
+		template< typename CallbackType >
+		void AddCallback( CallbackType* _pObject, typename DataCallback<CallbackType>::CallbackFct _pFct, DataCallbackType _eCallbackType, int _iPriority = 0, int _iWindow = -1 )
+		{
+			if( m_pWindowManager != nullptr )
+				m_pWindowManager->AddCallback< CallbackType >( _pObject, _pFct, _eCallbackType, _iPriority, _iWindow );
+			else
+				m_oCallbacksHolder.AddCallback< CallbackType >( _pObject, _pFct, _eCallbackType, _iPriority );
+		}
 
-		static bool				CallbackSorter( const DataCallBack& _CallbackA, const DataCallBack& _CallbackB );
+		template< typename CallbackType >
+		void RemoveCallback( CallbackType* _pObject, typename DataCallback<CallbackType>::CallbackFct _pFct, DataCallbackType _eCallbackType, int _iWindow = -1 )
+		{
+			if( m_pWindowManager != nullptr )
+				m_pWindowManager->RemoveCallback< CallbackType >( _pObject, _pFct, _eCallbackType, _iWindow );
+			else
+				m_oCallbacksHolder.RemoveCallback< CallbackType >( _pObject, _pFct, _eCallbackType );
+		}
 
 		void PushEvent( const Event& _oEvent );
+		void PushEvent( void* _pUserData );
 		const Event& GetEvent() const;
 
 
@@ -292,12 +293,17 @@ namespace fzn
 		void _TransferCallBacks( bool _bToWindowManager );
 
 		void _CreateSaveFolder();
+		void _CreateFolder( const std::string& _sPath );
 		void _ManageEvents();
 
 		/////////////////MEMBER VARIABLES/////////////////
 
 		static FazonCore* m_singleton;							//Unic instance
 		
+		std::string				m_sProjectName;
+		FZNProjectType			m_eProjectType;
+		bool					m_bUseCryptedData;
+
 		InputManager*			m_pInputManager;
 		DataManager*			m_pDataManager;
 		AnimManager*			m_pAnimManager;
@@ -307,8 +313,7 @@ namespace fzn
 		AIManager*				m_pAIManager;
 		MessageManager*			m_pMessageManager;
 		
-		std::vector<DataCallBack>	m_lCallBacks;
-		std::vector<DataCallBack>	m_oEventsCallback;
+		DataCallbacksHolder		m_oCallbacksHolder;
 		INT8					m_bExitApp;
 
 		int						m_iActivatedModulesNbr;		//Number of modules created.
@@ -325,8 +330,6 @@ namespace fzn
 		std::queue< Event >		m_oEvents;
 		Event					m_oCurrentEvent;
 	};
-
-	typedef std::vector<FazonCore::DataCallBack> CallBacksVector;
 } //namespace fzn
 
 extern FZN_EXPORT fzn::FazonCore* g_pFZN_Core;

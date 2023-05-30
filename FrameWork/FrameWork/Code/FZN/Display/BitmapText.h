@@ -58,6 +58,9 @@ namespace fzn
 		void					SetColorGlyphs( bool _bColor );
 		sf::FloatRect			GetBounds() const;
 
+		static Anchor			GetAnchorFromString( const std::string& _rAnchor );
+		static std::string		GetAnchorFromString( Anchor _eAnchor );
+
 	protected:
 		virtual void			draw( sf::RenderTarget& _oTarget, sf::RenderStates _oStates) const;
 

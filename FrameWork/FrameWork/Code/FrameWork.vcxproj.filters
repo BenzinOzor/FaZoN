@@ -186,6 +186,12 @@
     <ClInclude Include="FZN\Display\AnimatedProgressBar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FZN\Game\StateMachine\FZNStateMachine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FZN\Tools\DataCallback.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FZN\Managers\AIManager.cpp">
@@ -323,6 +329,9 @@
     <ClCompile Include="Externals\ImGui\imgui_tables.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FZN\Game\StateMachine\FZNStateMachine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="FZN\DataStructure\FixedSizeAllocator.inl">
@@ -334,6 +343,7 @@
     <None Include="FZN\Game\PathFinding\STLAstar.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Externals\ImGui\LICENSE.txt" />

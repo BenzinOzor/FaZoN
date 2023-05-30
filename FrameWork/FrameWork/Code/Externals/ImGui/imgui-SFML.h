@@ -70,6 +70,14 @@ namespace ImGui
         const sf::Color& tintColor = sf::Color::White,
         const sf::Color& borderColor = sf::Color::Transparent);
 
+    // Image overloads for sf::RenderTexture
+    IMGUI_SFML_API void Image( const sf::RenderTexture& texture,
+        const sf::Color& tintColor = sf::Color::White,
+        const sf::Color& borderColor = sf::Color::Transparent );
+    IMGUI_SFML_API void Image( const sf::RenderTexture& texture, const sf::Vector2f& size,
+        const sf::Color& tintColor = sf::Color::White,
+        const sf::Color& borderColor = sf::Color::Transparent );
+
     IMGUI_SFML_API void Image(const sf::Sprite& sprite,
         const sf::Color& tintColor = sf::Color::White,
         const sf::Color& borderColor = sf::Color::Transparent);

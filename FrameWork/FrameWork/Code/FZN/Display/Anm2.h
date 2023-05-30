@@ -182,7 +182,7 @@ namespace fzn
 				return m_oSprite.getPosition();
 			}
 
-			const sf::Color& GetCurrentColorOverlay( float _fSpeedRatio ) const;
+			sf::Color GetCurrentColorOverlay( float _fSpeedRatio ) const;
 
 			std::string					m_sName;
 			std::vector< FrameInfo >	m_oFrames;
@@ -210,7 +210,8 @@ namespace fzn
 				bool				IsValid() const;
 
 		virtual	Anm2&				operator=( const Anm2& _animation );
-				bool				ChangeAnimation( const Anm2* _pAnimation, const ChangeAnimationSettingsMask& _uSettings );
+				bool				ChangeAnimation( const std::string& _sAnimatedObject, const std::string& _sAnimation, const ChangeAnimationSettingsMask& _uSettings = 0 );
+				bool				ChangeAnimation( const Anm2* _pAnimation, const ChangeAnimationSettingsMask& _uSettings = 0 );
 
 				void				LoadFromXMLNode( tinyxml2::XMLElement* _pContent, tinyxml2::XMLElement* _pAnimation, const std::string& _sPath );
 
@@ -234,10 +235,12 @@ namespace fzn
 		virtual sf::Vector2f		GetPosition() const override;
 		virtual void				SetAlpha( sf::Uint8 _uAlpha ) override;
 		virtual void				SetColor( sf::Color _oColor, bool _bOverrideAlpha = false ) override;
+				void				SetLayerColor( const std::string& _sLayer, const sf::Color& _oColor, bool _bOverrideAlpha = false );
 		virtual void				ReplaceSpritesheet( int _iSpritesheetId, const std::string& _sSpritesheet, const std::string& _sSpritesheetPath = "", bool _bHandleError = true );
 				void				SetAnimationDuration( float _fDuration );
 				void				SetAnimationSpeedRatio( float _fSpeedRatio );
 				float				GetAnimationDuration() const;
+				bool				HasEnded() const;
 				float				GetAnimationCurrentTime() const;
 
 		//-------------------------------------------------------------------------------------------------

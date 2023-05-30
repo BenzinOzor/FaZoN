@@ -8,16 +8,19 @@
 #include <filesystem>
 #include <io.h>
 
+#include <ExternalWrapper/EWFileEncrypter.h>
+
 #include "FZN/Includes.h"
 #include "FZN/Managers/InputManager.h"
 #include "FZN/Managers/DataManager.h"
 #include "FZN/Managers/AnimManager.h"
-#include "FZN/Managers/WindowManager.h"
+//#include "FZN/Managers/WindowManager.h"
 #include "FZN/Managers/AudioManager.h"
 #include "FZN/Managers/SteeringManager.h"
 #include "FZN/Managers/MessageManager.h"
 #include "FZN/Managers/AIManager.h"
-#include "FZN/Managers/FazonCore.h" 
+#include "FZN/Managers/FazonCore.h"
+#include "FZN/Tools/Callbacks.h"
 
 #include <ShlObj_core.h>
 
@@ -35,22 +38,14 @@ namespace fzn
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	FazonCore::FazonCore()
 	{
+		m_sProjectName = "FaZoN";
+		m_bUseCryptedData = false;
+
 		m_sDataPath = "../../Data/";
 		m_sSaveFolderName = "FaZoN_App";
 
 		m_sSaveFolderPath = "";
-
-		CHAR   pDocumentPath[ MAX_PATH ];
-		HRESULT hr = SHGetFolderPathA( NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, pDocumentPath );
-
-		if( hr == 0 )
-		{
-			std::string sDocumentPath = pDocumentPath;
-
-			Tools::ConvertSlashesInWindowsPath( sDocumentPath );
-
-			m_sSaveFolderPath = sDocumentPath + "/My Games";
-		}
+		m_eProjectType = FZNProjectType::COUNT_PROJECT_TYPES;
 
 		m_iActivatedModulesNbr = 0;
 
@@ -91,12 +86,20 @@ namespace fzn
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	//Creation and access on the singleton
-	//Return value : BnGCore unic instance
+	//Return value : FazonCore unic instance
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	FazonCore* FazonCore::CreateInstance()
 	{
 		if( m_singleton == nullptr )
 			m_singleton = new FazonCore;
+
+		return m_singleton;
+	}
+	FazonCore* FazonCore::CreateInstance( const ProjectDesc& _rDesc )
+	{
+		CreateInstance();
+
+		m_singleton->Init( _rDesc );
 
 		return m_singleton;
 	}
@@ -119,13 +122,27 @@ namespace fzn
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	//Update of the engine components
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	void FazonCore::Init( const std::string& _sDataFolderpath /*= ""*/, const std::string& _sSaveFolderName /*= L""*/, bool _bUseFMOD /*= false*/ )
+	void FazonCore::Init( const ProjectDesc& _oDesc )
 	{
-		if( _sDataFolderpath.empty() == false )
-			SetDataFolder( _sDataFolderpath.c_str() );
+		m_sProjectName		= _oDesc.m_sName;
+		m_bUseCryptedData	= _oDesc.m_bUseCryptedData;
+		m_eProjectType		= _oDesc.m_eProjectType;
 
-		if( _sSaveFolderName.empty() == false )
-			SetSaveFolderName( _sSaveFolderName );
+		if( m_bUseCryptedData )
+			EWFileEncrypter::InitKeys( m_sProjectName );
+
+		if( _oDesc.m_sDataFolderPath.empty() == false )
+			SetDataFolder( _oDesc.m_sDataFolderPath.c_str() );
+
+		if( _oDesc.m_sSaveFolderName.empty() == false )
+			SetSaveFolderName( _oDesc.m_sSaveFolderName );
+
+		FZN_LOG( "FaZoN Core Init:" );
+		FZN_LOG( "Project name: %s", m_sProjectName.c_str() );
+		FZN_LOG( "Data folder: %s", GetDataFolder().c_str() );
+		FZN_LOG( "Save folder name: %s", m_sSaveFolderName.c_str() );
+		FZN_LOG( "Save folder path: %s", GetSaveFolderPath().c_str() );
+		FZN_LOG( "Use crypted data: %s", m_bUseCryptedData ? "Yes" : "No" );
 
 		_CreateSaveFolder();
 
@@ -157,7 +174,7 @@ namespace fzn
 
 		if( m_pAudioManager == nullptr )
 		{
-			m_pAudioManager = new AudioManager( _bUseFMOD );
+			m_pAudioManager = new AudioManager( _oDesc.m_bUseFMOD );
 			m_iActivatedModulesNbr++;
 		}
 	}
@@ -399,9 +416,7 @@ namespace fzn
 			{
 				Update();
 
-				int iCallBackSize = m_lCallBacks.size();
-				for( int iCB = 0 ; iCB < iCallBackSize ; ++iCB )
-					m_lCallBacks[iCB].pFct( m_lCallBacks[iCB].pData );
+				m_oCallbacksHolder.ExecuteCallbacks( DataCallbackType::Update );
 			}
 		}
 	}
@@ -745,6 +760,16 @@ namespace fzn
 		return m_pAudioManager->IsUsingFMOD();
 	}
 
+	const std::string& FazonCore::GetProjectName() const
+	{
+		return m_sProjectName;
+	}
+
+	bool FazonCore::IsUsingCryptedData() const
+	{
+		return m_bUseCryptedData;
+	}
+
 	std::string& FazonCore::GetDataFolder()
 	{
 		return m_sDataPath;
@@ -769,6 +794,11 @@ namespace fzn
 		m_sSaveFolderName = _sFolderName;
 	}
 
+	const std::string& FazonCore::GetSaveFolderName() const
+	{
+		return m_sSaveFolderName;
+	}
+
 	std::string FazonCore::GetSaveFolderPath() const
 	{
 		return m_sSaveFolderPath + "/" + m_sSaveFolderName;
@@ -779,70 +809,20 @@ namespace fzn
 		return std::filesystem::exists( _sFilePath );
 	}
 
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	//Adds a callBack function to the chosen vector
-	//Parameter 1 : Data pointer (class Type)
-	//Parameter 2 : Function pointer
-	//Parameter 3 : Chosen vector
-	//Return value : Function index in the vector
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	int FazonCore::AddCallBack( void* _pData, CallBack _pFct, CallBacks _eCallBackType /*= CallBacks::CB_Update*/, int _iWindow /*= 0*/, int _iPriority /*= 0*/ )
-	{
-		if( m_pWindowManager != nullptr )
-			return m_pWindowManager->AddCallBack( _pData, _pFct, _eCallBackType, _iWindow, _iPriority );
-		else
-		{
-			if( _eCallBackType == CallBacks::CB_Display )
-				return -1;
-
-			fzn::CallBacksVector& oVector = _eCallBackType == CallBacks::CB_Update ? m_lCallBacks : m_oEventsCallback;
-
-			DataCallBack tmp = { _pData, _pFct, _iPriority };
-			oVector.push_back( tmp );
-
-			std::sort( oVector.begin(), oVector.end(), CallbackSorter );
-
-			for( int iCallback = 0; iCallback < (int)oVector.size(); ++iCallback )
-			{
-				if( oVector[ iCallback ] == tmp )
-					return iCallback;
-			}
-
-			return -1;
-		}
-	}
-
-	void FazonCore::RemoveCallBack( void* _pData, CallBack _pFct, CallBacks _eCallBackType /*= CallBacks::CB_Update*/, int _iWindow /*= 0*/ )
-	{
-		if( m_pWindowManager != nullptr )
-			m_pWindowManager->RemoveCallBack( _pData, _pFct, _eCallBackType, _iWindow );
-		else
-		{
-			fzn::CallBacksVector& oVector = _eCallBackType == CallBacks::CB_Update ? m_lCallBacks : m_oEventsCallback;
-
-			std::vector<DataCallBack>::iterator itCallback = oVector.begin();
-
-			while( itCallback != oVector.end() )
-			{
-				if( itCallback->pData == _pData && itCallback->pFct == _pFct )
-				{
-					oVector.erase( itCallback );
-					itCallback = oVector.end();
-				}
-				else
-					itCallback++;
-			}
-		}
-	}
-
-	bool FazonCore::CallbackSorter( const DataCallBack& _CallbackA, const DataCallBack& _CallbackB )
-	{
-		return _CallbackA.m_iPriority < _CallbackB.m_iPriority;
-	}
-
 	void FazonCore::PushEvent( const Event& _oEvent )
 	{
 		m_oEvents.push( _oEvent );
+	}
+
+	void FazonCore::PushEvent( void* _pUserData )
+	{
+		if( _pUserData == nullptr )
+			return;
+
+		Event oEvent( Event::Type::eUserEvent );
+		oEvent.m_pUserData = _pUserData;
+
+		m_oEvents.push( oEvent );
 	}
 
 	const fzn::Event& FazonCore::GetEvent() const
@@ -857,31 +837,81 @@ namespace fzn
 
 		if( _bToWindowManager )
 		{
-			m_pWindowManager->m_oWindows[ m_pWindowManager->m_iMainWindow ]->m_oCallBacks[ CB_Update ] = m_lCallBacks;
-			m_pWindowManager->m_oWindows[ m_pWindowManager->m_iMainWindow ]->m_oCallBacks[ CB_Event ] = m_oEventsCallback;
+			m_pWindowManager->m_oWindows[ m_pWindowManager->m_iMainWindow ]->m_oCallbacksHolder = m_oCallbacksHolder;
 		}
-		else
+		else if( m_pWindowManager->m_oWindows.empty() == false )
 		{
-			m_lCallBacks = m_pWindowManager->m_oWindows[ m_pWindowManager->m_iMainWindow ]->m_oCallBacks[ CB_Update ];
-			m_oEventsCallback = m_pWindowManager->m_oWindows[ m_pWindowManager->m_iMainWindow ]->m_oCallBacks[ CB_Event ];
+			m_oCallbacksHolder = m_pWindowManager->m_oWindows[ m_pWindowManager->m_iMainWindow ]->m_oCallbacksHolder;
 		}
 	}
 
 	void FazonCore::_CreateSaveFolder()
 	{
+		if( m_sSaveFolderName.empty() )
+			return;
+
+		FZN_LOG( "Creating save folder..." );
+
+		if( m_sSaveFolderPath.empty() )
+		{
+			CHAR   pDocumentPath[MAX_PATH];
+			HRESULT hr = SHGetFolderPathA( NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, pDocumentPath );
+
+			if( hr == 0 )
+			{
+				std::string sDocumentPath = pDocumentPath;
+
+				Tools::ConvertSlashesInWindowsPath( sDocumentPath );
+
+				m_sSaveFolderPath = sDocumentPath;
+			}
+		}
+
+		if( m_eProjectType >= FZNProjectType::COUNT_PROJECT_TYPES )
+		{
+			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Project type not valid, please set it in the project description. Using \"Application\" by default." );
+			m_eProjectType = FZNProjectType::Application;
+		}
+		
+		switch( m_eProjectType )
+		{
+		case FZNProjectType::Game:
+			m_sSaveFolderPath += "/My Games/FaZoN Games";
+			break;
+		case FZNProjectType::Application:
+		default:
+			m_sSaveFolderPath += "/FaZoN Apps";
+			break;
+		};
+
 		std::string sCompletePath = GetSaveFolderPath();
 		for( unsigned int iChar = 0; iChar < sCompletePath.size(); ++iChar )
 		{
 			if( sCompletePath[ iChar ] == '/' )
 			{
 				std::string sFolderPath = sCompletePath.substr( 0, iChar );
-				if( _access_s( sFolderPath.c_str(), 0 ) == ENOENT )
-					_mkdir( sFolderPath.c_str() );
+				_CreateFolder( sFolderPath );
 			}
 		}
 
-		if( _access_s( sCompletePath.c_str(), 0 ) == ENOENT )
-			_mkdir( sCompletePath.c_str() );
+		_CreateFolder( sCompletePath );
+	}
+
+	void FazonCore::_CreateFolder( const std::string& _sPath )
+	{
+		errno_t iResult = _access_s( _sPath.c_str(), 0 );
+
+		if( iResult == ENOENT )
+		{
+			if( _mkdir( _sPath.c_str() ) != 0 )
+			{
+				char sError[255];
+				strerror_s( sError, 254, errno );
+				FZN_LOG( "mkdir error on %s: %s", _sPath.c_str(), sError );
+			}
+		}
+		else if( iResult == EACCES )
+			FZN_LOG( "Can't access %s", _sPath.c_str() );
 	}
 
 	void FazonCore::_ManageEvents()
@@ -894,10 +924,7 @@ namespace fzn
 			if( m_pWindowManager != nullptr )
 				m_pWindowManager->ProcessEventsCallBacks();
 			else
-			{
-				for( DataCallBack& oCallBack : m_oEventsCallback )
-					oCallBack.pFct( oCallBack.pData );
-			}
+				m_oCallbacksHolder.ExecuteCallbacks( DataCallbackType::Event );
 
 			if( m_oCurrentEvent.m_eType == Event::eUserEvent )
 				CheckNullptrDelete( m_oCurrentEvent.m_pUserData );

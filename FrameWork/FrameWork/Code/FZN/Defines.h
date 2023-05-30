@@ -2,6 +2,11 @@
 #define _FAZON_DEFINES_H_
 
 #include <utility>
+#include <string>
+#include <vector>
+
+#include <SFML/Config.hpp>
+
 
 #ifdef FRAMEWORK_EXPORTS
 #define FZN_EXPORT __declspec(dllexport)
@@ -26,10 +31,19 @@
 
 #define ToString( Arg )					#Arg
 
+typedef std::vector< std::string > StringVector;
+
 namespace sf
 {
 	class Texture;
 }
+
+enum class FZNProjectType : sf::Uint8
+{
+	Application,
+	Game,
+	COUNT_PROJECT_TYPES
+};
 
 struct BitmapGlyph
 {
@@ -40,6 +54,13 @@ struct BitmapGlyph
 	bool			m_bLowerCharacter = false;
 };
 
-typedef std::pair< BitmapGlyph, sf::Texture* > CustomBitmapGlyph;
+struct CustomBitmapGlyph
+{
+	std::string m_sName = "";
+	std::string m_sTag = "";
+
+	BitmapGlyph m_oGlyph;
+	sf::Texture* m_pTexture = nullptr;
+};
 
 #endif //_FAZON_DEFINES_H_

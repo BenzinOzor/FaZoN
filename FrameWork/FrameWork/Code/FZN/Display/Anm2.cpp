@@ -20,7 +20,7 @@ namespace fzn
 	const std::string Anm2::ANIMATION_END	= "AnimationEnd";
 
 
-	const sf::Color& Anm2::LayerInfo::GetCurrentColorOverlay( float _fSpeedRatio ) const
+	sf::Color Anm2::LayerInfo::GetCurrentColorOverlay( float _fSpeedRatio ) const
 	{
 		const FrameInfo& oCurrentFrameInfo = m_oFrames[ m_iFrameIndex ];
 
@@ -128,7 +128,12 @@ namespace fzn
 		return *this;
 	}
 
-	bool Anm2::ChangeAnimation( const Anm2* _pAnimation, const ChangeAnimationSettingsMask& _uSettings )
+	bool Anm2::ChangeAnimation( const std::string& _sAnimatedObject, const std::string& _sAnimation, const ChangeAnimationSettingsMask& _uSettings )
+	{
+		return ChangeAnimation( g_pFZN_DataMgr->GetAnm2( _sAnimatedObject, _sAnimation ), _uSettings );
+	}
+
+	bool Anm2::ChangeAnimation( const Anm2* _pAnimation, const ChangeAnimationSettingsMask& _uSettings /*= 0*/ )
 	{
 		if( _pAnimation == nullptr )
 			return false;
@@ -169,10 +174,10 @@ namespace fzn
 				m_fTimer = fTimer;
 				m_eState = eState;
 
-				for( int iLayer = 0; iLayer < m_oLayers.size(); ++iLayer )
+				for( int iLayer = 0; iLayer < (int)m_oLayers.size(); ++iLayer )
 					_ChangeAnimationLayerSetup( m_oLayers[ iLayer ], _pAnimation->m_oLayers[ iLayer ] );
 
-				for( int iSocket = 0; iSocket < m_oSockets.size(); ++iSocket )
+				for( int iSocket = 0; iSocket < (int)m_oSockets.size(); ++iSocket )
 					_ChangeAnimationLayerSetup( m_oSockets[ iSocket ], _pAnimation->m_oSockets[ iSocket ] );
 			}
 		}
@@ -187,7 +192,7 @@ namespace fzn
 			{
 				for( LayerInfo& oLayer : m_oLayers )
 				{
-					if( oLayer.m_iBaseTextureId < m_oBaseTextures.size() )
+					if( oLayer.m_iBaseTextureId < (int)m_oBaseTextures.size() )
 						oLayer.m_oSprite.setTexture( *m_oBaseTextures[ oLayer.m_iBaseTextureId ].second );
 				}
 			}
@@ -390,40 +395,46 @@ namespace fzn
 				fAnimationTimer = _GetLayerDurationToIndex( oLayer, _iFrameIndex );
 
 				_UpdateLayerInfos( oLayer );
+				break;
 			}
 		}
 
 		if( _bAdaptAnimationToLayer == false || fAnimationTimer < 0.f )
 			return;
 
-		for( LayerInfo& oLayer : m_oLayers )
+		auto GetLayerFrameIndexForTimer = []( const LayerInfo& _rLayer, float _fTimer ) -> int
 		{
-			if( oLayer.m_sName != _sLayer )
-			{
-				const float fTotalDuration = _GetLayerTotalDuration( oLayer );
-				const int iFrameIndex = (int)fzn::Math::Interpolate( 0.f, fTotalDuration, 0, oLayer.m_oFrames.size() - 1, fAnimationTimer );
+			float fPrevDuration = 0.f;
+			float fDuration = 0.f;
 
+			for( int iFrame = 0; iFrame < _rLayer.m_oFrames.size(); ++iFrame )
+			{
+				fDuration += _rLayer.m_oFrames[ iFrame ].m_fDuration;
+
+				if( fPrevDuration <= _fTimer && _fTimer < fDuration )
+					return iFrame;
+
+				fPrevDuration = fDuration;
+			}
+
+			return 0;
+		};
+
+		auto AdaptLayerVectorToNewTimer = [&]( LayerInfoVector& _rLayers, float _fTimer )
+		{
+			for( LayerInfo& oLayer : _rLayers )
+			{
 				const FrameInfo& oCurrentFrameInfo = oLayer.m_oFrames[ oLayer.m_iFrameIndex ];
 				oLayer.m_oSprite.setPosition( oLayer.m_oSprite.getPosition() - oCurrentFrameInfo.m_vPosition );
 
-				oLayer.m_iFrameIndex = iFrameIndex;
+				oLayer.m_iFrameIndex = GetLayerFrameIndexForTimer( oLayer, fAnimationTimer );
 
 				_UpdateLayerInfos( oLayer );
 			}
-		}
+		};
 
-		for( LayerInfo& oSocket : m_oSockets )
-		{
-			const float fTotalDuration = _GetLayerTotalDuration( oSocket );
-			const int iFrameIndex = (int)fzn::Math::Interpolate( 0.f, fTotalDuration, 0, oSocket.m_oFrames.size() - 1, fAnimationTimer );
-
-			const FrameInfo& oCurrentFrameInfo = oSocket.m_oFrames[ oSocket.m_iFrameIndex ];
-			oSocket.m_oSprite.setPosition( oSocket.m_oSprite.getPosition() - oCurrentFrameInfo.m_vPosition );
-
-			oSocket.m_iFrameIndex = iFrameIndex;
-
-			_UpdateLayerInfos( oSocket );
-		}
+		AdaptLayerVectorToNewTimer( m_oLayers, fAnimationTimer );
+		AdaptLayerVectorToNewTimer( m_oSockets, fAnimationTimer );
 	}
 
 	void Anm2::SetLayerVisible( const std::string& _sLayer, bool _bVisible )
@@ -583,6 +594,33 @@ namespace fzn
 		}
 	}
 
+	void Anm2::SetLayerColor( const std::string& _sLayer, const sf::Color& _oColor, bool _bOverrideAlpha /*= false */ )
+	{
+		if( m_oLayers.empty() )
+			return;
+
+		sf::Color oColor;
+
+		for( LayerInfo& oLayer : m_oLayers )
+		{
+			if( oLayer.m_sName != _sLayer )
+				continue;
+
+			if( _bOverrideAlpha )
+			{
+				oLayer.m_oSprite.setColor( _oColor );
+				continue;
+			}
+
+			oColor = oLayer.m_oSprite.getColor();
+			oColor.r = _oColor.r;
+			oColor.g = _oColor.g;
+			oColor.b = _oColor.b;
+
+			oLayer.m_oSprite.setColor( oColor );
+		}
+	}
+
 	void Anm2::ReplaceSpritesheet( int _iSpritesheetId, const std::string& _sSpritesheet, const std::string& _sSpritesheetPath /*= ""*/, bool _bHandleError /*= true*/ )
 	{
 		BaseTextures::iterator itTexture = m_oBaseTextures.find( _iSpritesheetId );
@@ -636,6 +674,11 @@ namespace fzn
 	float Anm2::GetAnimationDuration() const
 	{
 		return m_fDuration * m_fSpeedRatio;
+	}
+
+	bool Anm2::HasEnded() const
+	{
+		return m_eState != State::Playing && m_fTimer >= GetAnimationDuration();
 	}
 
 	float Anm2::GetAnimationCurrentTime() const
@@ -818,7 +861,7 @@ namespace fzn
 
 	void Anm2::AddTriggerSound( const std::string& _sTrigger, const std::string& _sSound, bool _bRemoveCallbackWhenCalled /*= false*/ )
 	{
-		if( _sTrigger.empty() || g_pFZN_AudioMgr->IsSoundValid( _sSound ) == false )
+		if( _sTrigger.empty() )
 			return;
 
 		if( _sTrigger == ANIMATION_START )
@@ -829,6 +872,12 @@ namespace fzn
 		else if( _sTrigger == ANIMATION_END )
 		{
 			AddAnimationEndSound( _sSound );
+			return;
+		}
+
+		if( g_pFZN_AudioMgr->IsSoundValid( _sSound ) == false )
+		{
+			FZN_COLOR_LOG( fzn::DBG_MSG_COLORS::DBG_MSG_COL_RED, "Trying to add invalid sound \"%s\" to trigger \"%s\" in animation \"%s\".", _sSound.c_str(), _sTrigger.c_str(), m_sName.c_str() );
 			return;
 		}
 
@@ -859,7 +908,15 @@ namespace fzn
 		TriggerVector& oVector = ( m_bIsProcessingTriggers && m_bReplaceTriggers ) ? m_oTriggersBuffer : m_oTriggers;
 
 		for( const std::string& sSound : _oSound )
+		{
+			if( g_pFZN_AudioMgr->IsSoundValid( sSound ) == false )
+			{
+				FZN_COLOR_LOG( fzn::DBG_MSG_COLORS::DBG_MSG_COL_RED, "Trying to add invalid sound \"%s\" to trigger \"%s\" in animation \"%s\".", sSound.c_str(), _sTrigger.c_str(), m_sName.c_str() );
+				continue;;
+			}
+
 			_AddContentToTriggerVector( oVector, TriggerContent( sSound, _bRemoveCallbackWhenCalled ), _sTrigger );
+		}
 	}
 
 	bool Anm2::HasTriggerSound( const std::string& _sTrigger, const std::string& _sSound ) const
@@ -885,6 +942,12 @@ namespace fzn
 
 	void Anm2::AddAnimationStartSound( const std::string& _sSound, bool _bRemoveCallbackWhenCalled /*= false*/ )
 	{
+		if( g_pFZN_AudioMgr->IsSoundValid( _sSound ) == false )
+		{
+			FZN_COLOR_LOG( fzn::DBG_MSG_COLORS::DBG_MSG_COL_RED, "Trying to add invalid sound \"%s\" to START trigger in animation \"%s\".", _sSound.c_str(), m_sName.c_str() );
+			return;
+		}
+
 		if( m_bIsProcessingTriggers && m_bReplaceTriggers )
 			_AddContentToTriggerContentVector( m_oAnimationStartTriggerBuffer.m_oContent, TriggerContent( _sSound, _bRemoveCallbackWhenCalled ) );
 		else
@@ -903,6 +966,12 @@ namespace fzn
 
 	void Anm2::AddAnimationEndSound( const std::string& _sSound, bool _bRemoveCallbackWhenCalled /*= false*/ )
 	{
+		if( g_pFZN_AudioMgr->IsSoundValid( _sSound ) == false )
+		{
+			FZN_COLOR_LOG( fzn::DBG_MSG_COLORS::DBG_MSG_COL_RED, "Trying to add invalid sound \"%s\" to END trigger in animation \"%s\".", _sSound.c_str(), m_sName.c_str() );
+			return;
+		}
+
 		if( m_bIsProcessingTriggers && m_bReplaceTriggers )
 			_AddContentToTriggerContentVector( m_oAnimationEndTriggerBuffer.m_oContent, TriggerContent( _sSound, _bRemoveCallbackWhenCalled ) );
 		else
@@ -1304,9 +1373,6 @@ namespace fzn
 
 			const float fDuration = oCurrentFrameInfo.m_fDuration * m_fSpeedRatio;
 
-			//if( m_sName.find( "HeadRightCharge" ) != std::string::npos || m_sName.find( "HeadDownCharge" ) != std::string::npos )
-			//	FZN_LOG( "Layer %s %d - %f / %f | global %f / %f // %f", oCurrentLayer.m_sName.c_str(), oCurrentLayer.m_iFrameIndex, oCurrentLayer.m_fTimer, fDuration, m_fTimer, m_fDuration * m_fSpeedRatio, m_bUseUnmodifiedFrameTime ? UnmodifiedFrameTime : FrameTime );
-
 			if( oCurrentFrameInfo.m_bInterpolate && oCurrentLayer.m_iFrameIndex + 1 < (int)oCurrentLayer.m_oFrames.size() )
 			{
 				const FrameInfo& oNextFrame = oCurrentLayer.m_oFrames[ oCurrentLayer.m_iFrameIndex + 1 ];
@@ -1347,9 +1413,6 @@ namespace fzn
 				else if( oCurrentLayer.m_iFrameIndex < (int)oCurrentLayer.m_oFrames.size() - 1 )
 					++oCurrentLayer.m_iFrameIndex;
 
-				//if( m_sName.find( "HeadRightCharge" ) != std::string::npos || m_sName.find( "HeadDownCharge" ) != std::string::npos )
-				//	FZN_LOG( "%s", __FUNCTION__ );
-
 				_UpdateLayerInfos( oCurrentLayer, _bRestart ? -1.f : fDuration );
 			}
 			++oCurrentLayer.m_iFrameCount;
@@ -1379,9 +1442,6 @@ namespace fzn
 			_oLayer.m_fTimer -= _fPreviousFrameDuration;
 		else
 			_oLayer.m_fTimer = 0.f;
-
-		//if( m_sName.find( "HeadRightCharge" ) != std::string::npos || m_sName.find( "HeadDownCharge" ) != std::string::npos )
-		//	FZN_LOG( "%s %d", __FUNCTION__, m_eState );
 
 		_oLayer.m_iFrameCount = 0;
 	}
@@ -1462,7 +1522,7 @@ namespace fzn
 
 	float Anm2::_GetLayerDurationToIndex( const LayerInfo& _oLayer, int _iFrameIndex ) const
 	{
-		if( _iFrameIndex >= _oLayer.m_oFrames.size() )
+		if( _iFrameIndex >= (int)_oLayer.m_oFrames.size() )
 			return _GetLayerTotalDuration( _oLayer );
 
 		float fDuration = 0.f;
@@ -1553,11 +1613,16 @@ namespace fzn
 	{
 		TriggerVector::iterator itTrigger = _FindTriggerInTriggerVector( _oVector, _sTrigger, _fTime );
 
-		if( itTrigger == _oVector.end() && _fTime >= 0.f )
+		if( itTrigger == _oVector.end() )
 		{
-			_oVector.push_back( Trigger( _sTrigger, _fTime ) );
+			if( _fTime >= 0.f )
+			{
+				_oVector.push_back( Trigger( _sTrigger, _fTime ) );
 
-			_AddContentToTriggerContentVector( _oVector.back().m_oContent, _oContent );
+				_AddContentToTriggerContentVector( _oVector.back().m_oContent, _oContent );
+			}
+			else
+				FZN_COLOR_LOG( fzn::DBG_MSG_COLORS::DBG_MSG_COL_RED, "Trigger \"%s\" not found in given vector. (\"%s\")", _sTrigger.c_str(), m_sName.c_str() );
 		}
 		else
 			_AddContentToTriggerContentVector( ( *itTrigger ).m_oContent, _oContent );

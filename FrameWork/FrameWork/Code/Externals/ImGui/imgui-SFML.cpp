@@ -145,6 +145,7 @@ StickInfo s_dPadInfo;
 StickInfo s_lStickInfo;
 
 // various helper functions
+ImColor toImColor( sf::Color c );
 ImVec2 getTopLeftAbsolute(const sf::FloatRect& rect);
 ImVec2 getDownRightAbsolute(const sf::FloatRect& rect);
 
@@ -583,24 +584,50 @@ void Image(const sf::Texture& texture, const sf::Vector2f& size,
     ImGui::Image(textureID, size, uv0, uv1, tintColor, borderColor);
 }
 
-void Image(const sf::Sprite& sprite, const sf::Color& tintColor,
-           const sf::Color& borderColor) {
-    sf::FloatRect bounds = sprite.getGlobalBounds();
-    Image(sprite, sf::Vector2f(bounds.width, bounds.height), tintColor,
-          borderColor);
+/////////////// Image Overloads for sf::RenderTexture
+void Image( const sf::RenderTexture& texture, const sf::Color& tintColor,
+    const sf::Color& borderColor ) {
+    Image( texture, static_cast<sf::Vector2f>(texture.getSize()), tintColor, borderColor );
 }
 
-void Image(const sf::Sprite& sprite, const sf::Vector2f& size,
-           const sf::Color& tintColor, const sf::Color& borderColor) {
+void Image( const sf::RenderTexture& texture, const sf::Vector2f& size, const sf::Color& tintColor,
+    const sf::Color& borderColor ) {
+    ImTextureID textureID =
+        convertGLTextureHandleToImTextureID( texture.getTexture().getNativeHandle() );
+
+    ImGui::Image( textureID, ImVec2( size.x, size.y ), ImVec2( 0, 1 ),
+        ImVec2( 1, 0 ), // flipped vertically, because textures in sf::RenderTexture are
+        // stored this way
+        toImColor( tintColor ), toImColor( borderColor ) );
+}
+
+void Image( const sf::Sprite& sprite, const sf::Color& tintColor, const sf::Color& borderColor ) {
+    const sf::IntRect& textureRect = sprite.getTextureRect();
+    Image( sprite, sf::Vector2f( textureRect.width, textureRect.height ), tintColor, borderColor );
+}
+
+void Image( const sf::Sprite& sprite, const sf::Vector2f& size, const sf::Color& tintColor,
+    const sf::Color& borderColor ) {
     const sf::Texture* texturePtr = sprite.getTexture();
     // sprite without texture cannot be drawn
-    if (!texturePtr) {
+    if( !texturePtr ) {
         return;
     }
 
-    Image(*texturePtr, size,
-          static_cast<sf::FloatRect>(sprite.getTextureRect()), tintColor,
-          borderColor);
+    const sf::Texture& texture = *texturePtr;
+    sf::Vector2f textureSize = static_cast<sf::Vector2f>(texture.getSize());
+    const sf::IntRect& textureRect = sprite.getTextureRect();
+
+    float fTop = textureSize.y - textureRect.top;
+    float fBottom = textureSize.y - textureRect.height;
+    float fSize = fTop - fBottom;
+    ImVec2 uv0( textureRect.left / textureSize.x, 1 - textureRect.top / textureSize.y );
+    ImVec2 uv1( ( textureRect.left + textureRect.width) / textureSize.x, 1 - ( textureRect.top + textureRect.height )  / textureSize.y );
+
+    ImTextureID textureID = convertGLTextureHandleToImTextureID( texture.getNativeHandle() );
+
+    //ImGui::Image( textureID, ImVec2( size.x, 63.f ), ImVec2( 0, 1.f ), ImVec2( 1, 0.4f ), toImColor( tintColor ), toImColor( borderColor ) );
+	ImGui::Image( textureID, ImVec2( size.x, size.y ), uv0, uv1, toImColor( tintColor ), toImColor( borderColor ) );
 }
 
 /////////////// Image Button Overloads
@@ -669,6 +696,11 @@ void DrawRectFilled(const sf::FloatRect& rect, const sf::Color& color,
 }  // end of namespace ImGui
 
 namespace {
+
+ImColor toImColor( sf::Color c ) {
+    return ImColor( static_cast<int>(c.r), static_cast<int>(c.g), static_cast<int>(c.b),
+        static_cast<int>(c.a) );
+}
 
 ImVec2 getTopLeftAbsolute(const sf::FloatRect& rect) {
     ImVec2 pos = ImGui::GetCursorScreenPos();

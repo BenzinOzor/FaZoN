@@ -13,6 +13,7 @@
 #include "FZN/Display/Anm2.h"
 #include "FZN/Display/ProgressBar.h"
 #include "FZN/DataStructure/Vector.h"
+#include "FZN/Managers/DataManager.h"
 #include "FZN/Managers/WindowManager.h"
 #include "FZN/Tools/Tools.h"
 
@@ -22,6 +23,7 @@
 
 
 FZN_EXPORT fzn::WindowManager* g_pFZN_WindowMgr = nullptr;
+FZN_EXPORT fzn::Tools::ImGuiFormatOptions fzn::WindowManager::s_ImGuiFormatOptions = fzn::Tools::ImGuiFormatOptions();
 
 namespace fzn
 {
@@ -81,11 +83,8 @@ namespace fzn
 			ImGui::SFML::Update( *m_pWindow, sf::seconds( fFrameTime ) );
 		}
 
-		for( FazonCore::DataCallBack& oCallBack : m_oCallBacks[FazonCore::CB_Update] )
-			oCallBack.pFct( oCallBack.pData );
-
-		for( FazonCore::DataCallBack& oCallBack : m_oCallBacks[FazonCore::CB_Display] )
-			oCallBack.pFct( oCallBack.pData );
+		m_oCallbacksHolder.ExecuteCallbacks( DataCallbackType::Update );
+		m_oCallbacksHolder.ExecuteCallbacks( DataCallbackType::Display );
 
 		ImGui::SFML::Render( *m_pWindow );
 
@@ -151,8 +150,7 @@ namespace fzn
 
 	void CustomWindow::ProcessEventsCallBacks()
 	{
-		for( FazonCore::DataCallBack& oCallBack : m_oCallBacks[FazonCore::CB_Event] )
-				oCallBack.pFct( oCallBack.pData );
+		m_oCallbacksHolder.ExecuteCallbacks( DataCallbackType::Event );
 	}
 
 
@@ -232,7 +230,7 @@ namespace fzn
 		if( _sIconPath.empty() )
 			return;
 		
-		m_oIcon.loadFromFile( _sIconPath );
+		g_pFZN_DataMgr->LoadSfImage( m_oIcon, _sIconPath );
 
 		if( m_oIcon.getPixelsPtr() != nullptr )
 			m_pWindow->setIcon( 32, 32, m_oIcon.getPixelsPtr() );
@@ -590,6 +588,16 @@ namespace fzn
 		}
 	}
 
+	sf::Vector2f WindowManager::GetMousePosition( int _iWindowID /*= -1*/ )
+	{
+		if( const sf::RenderWindow* pWindow = GetWindow( _iWindowID ) )
+		{
+			return pWindow->mapPixelToCoords( sf::Mouse::getPosition( *pWindow ) );
+		}
+
+		return { 0.f, 0.f };
+	}
+
 	/////////////////ACCESSORS / MUTATORS/////////////////
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -653,63 +661,6 @@ namespace fzn
 	float WindowManager::GetTimeFactor() const
 	{
 		return m_fTimeFactor;
-	}
-
-
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	//Adds a callBack function to the chosen vector
-	//Parameter 1 : Data pointer (class Type)
-	//Parameter 2 : Function pointer
-	//Parameter 3 : Chosen vector
-	//Return value : Function index in the vector
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	int WindowManager::AddCallBack( void* _pData, CallBack _pFct, FazonCore::CallBacks _eCallBackType, int _iWindow /*= -1*/, int _iPriority /*= 0*/ )
-	{
-		if( m_oWindows.empty() || _eCallBackType >= FazonCore::CallBacks::CB_Nb )
-			return -1;
-
-		int iWindow = m_iMainWindow;
-
-		if( _iWindow >= 0 && _iWindow < (int)m_oWindows.size() )
-			iWindow = _iWindow;
-
-		FazonCore::DataCallBack oCallBack( _pData, _pFct, _iPriority );
-		m_oWindows[iWindow]->m_oCallBacks[_eCallBackType].push_back( oCallBack );
-
-		std::sort( m_oWindows[ iWindow ]->m_oCallBacks[ _eCallBackType ].begin(), m_oWindows[ iWindow ]->m_oCallBacks[ _eCallBackType ].end(), FazonCore::CallbackSorter );
-
-		for( int iCallback = 0; iCallback < (int)m_oWindows[ iWindow ]->m_oCallBacks[ _eCallBackType ].size(); ++iCallback )
-		{
-			if( m_oWindows[ iWindow ]->m_oCallBacks[ _eCallBackType ][ iCallback ] == oCallBack )
-				return iCallback;
-		}
-
-		return - 1;
-	}
-
-	void WindowManager::RemoveCallBack( void* _pData, CallBack _pFct, FazonCore::CallBacks _eCallBackType, int _iWindow /*= -1*/ )
-	{
-		if( m_oWindows.empty() || _eCallBackType >= FazonCore::CallBacks::CB_Nb )
-			return;
-
-		int iWindow = m_iMainWindow;
-
-		if( _iWindow >= 0 && _iWindow < (int)m_oWindows.size() )
-			iWindow = _iWindow;
-
-		CallBacksVector* pCallBacks = &m_oWindows[iWindow]->m_oCallBacks[_eCallBackType];
-		CallBacksVector::iterator itCallback = pCallBacks->begin();
-
-		while( itCallback != pCallBacks->end() )
-		{
-			if( itCallback->pData == _pData && itCallback->pFct == _pFct )
-			{
-				pCallBacks->erase( itCallback );
-				itCallback = pCallBacks->end();
-			}
-			else
-				itCallback++;
-		}
 	}
 
 	void WindowManager::RemoveClosedWindows()

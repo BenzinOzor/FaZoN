@@ -7,6 +7,9 @@
 #ifndef _CHANNEL_H_
 #define _CHANNEL_H_
 
+#include "FZN/Defines.h"
+
+
 namespace FMOD { class Channel; }
 
 namespace fzn
@@ -42,7 +45,7 @@ namespace fzn
 		/// Indicates whether or not the Channel is available to take a sound to play.
 		/// @return	If true, the Channel is available.
 		//-------------------------------------------------------------------------------------------------
-		INT8 IsChannelAvailable();
+		bool IsChannelAvailable();
 		//-------------------------------------------------------------------------------------------------
 		/// Sets channel component.
 		/// @param [in]	_channel	: The channel to set.
@@ -57,7 +60,7 @@ namespace fzn
 		/// Indicates whether or not the Channel is playing.
 		/// @return	If true, th Channel is playing a sound.
 		//-------------------------------------------------------------------------------------------------
-		INT8 IsPlaying();
+		bool IsPlaying();
 		//-------------------------------------------------------------------------------------------------
 		/// Sets the AudioObject of the Channel.
 		/// @param [in]	_audioObject	: The AudioObject to put in the Channel
@@ -67,7 +70,7 @@ namespace fzn
 	private:
 		FMOD::Channel* m_channel;			//FMOD Channel component
 		int m_index;							//Channel index in the system
-		INT8 m_isPlaying;						//Indicates if the channel is currently playing a sound (true) or not
+		bool m_isPlaying;						//Indicates if the channel is currently playing a sound (true) or not
 		AudioObject* m_sound;				//Audio object currently playing in the channel
 	};
 } //namespace fzn

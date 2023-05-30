@@ -29,11 +29,14 @@ namespace fzn
 	//-------------------------------------------------------------------------------------------------
 	BTElement::State Sequence::Update()
 	{
+		if( m_oChildren.empty() )
+			return State::Invalid;
+
 		BTElement::State childStatus;
 
 		while( 1 )
 		{
-			childStatus = m_oChildren[m_iCurrentChild]->Tick();
+			childStatus = m_oChildren[ m_iCurrentChild ]->Tick();
 
 			if( childStatus != State::Success )
 				return childStatus;
@@ -95,7 +98,7 @@ namespace fzn
 	//-------------------------------------------------------------------------------------------------
 	BTElement::State RandomSelector::Update()
 	{
-		if( m_iCurrentChild >= m_oChildren.size() )
+		if( m_iCurrentChild >= (int)m_oChildren.size() )
 			return State::Failure;
 
 		return m_oChildren[ m_iCurrentChild ]->Tick();

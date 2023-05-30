@@ -28,7 +28,7 @@ namespace fzn
 
 		tinyxml2::XMLDocument resFile;
 
-		if( resFile.LoadFile( _sPath.c_str() ) )
+		if( g_pFZN_DataMgr->LoadXMLFile( resFile, _sPath.c_str() ) )
 		{
 			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Failure : %s.", resFile.ErrorName() );
 			return;

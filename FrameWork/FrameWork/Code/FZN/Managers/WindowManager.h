@@ -16,18 +16,23 @@
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/WindowStyle.hpp>
 
-#include <FZN/Managers/FazonCore.h>
+//#include <FZN/Managers/FazonCore.h>
+#include "FZN/Tools/Tools.h"
+#include "FZN/Tools/DataCallback.h"
 
 namespace sf
 {
 	class RenderWindow;
 }
 
+struct ImFont;
+
 namespace fzn
 {
 	class Animation;
 	class Anm2;
 	class ProgressBar;
+	class FazonCore;
 
 	//=========================================================
 	///======================CUSTOMWINDOW======================
@@ -51,7 +56,7 @@ namespace fzn
 
 		sf::RenderWindow*	m_pWindow;
 		sf::Event			m_oEvent;
-		CallBacksVector		m_oCallBacks[FazonCore::CallBacks::CB_Nb];			//Array of 3 Lists containing callBacks structures.
+		DataCallbacksHolder m_oCallbacksHolder;
 
 		unsigned int		m_iIndex;				//Index of the window in Graphics.
 		unsigned int		m_iWidth;				//Width of the window (read only).
@@ -193,6 +198,8 @@ namespace fzn
 
 		void DetermineNewMainWindow();
 
+		sf::Vector2f GetMousePosition( int _iWindowID = -1 );
+
 
 		/////////////////ACCESSORS / MUTATORS/////////////////
 
@@ -225,45 +232,53 @@ namespace fzn
 
 		/////////////////MEMBER VARIABLES/////////////////
 
-		//INT8 m_bClipCursor;			//Constrain the cursor in the application's window (true) or not
-		UINT m_width;				//Width of the window
-		UINT m_height;				//Height of the window
-		//UINT m_desiredFPS;			//Theorical FPS (to set the framerate on the window)
-		//float m_framerate;			//Real framerate calculated from the game loop
+		sf::Uint32 m_width;				//Width of the window
+		sf::Uint32 m_height;			//Height of the window
+
+		static Tools::ImGuiFormatOptions s_ImGuiFormatOptions;
 
 	private:
 
-		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		//Adds a callBack function to the chosen vector
-		//Parameter 1 : Data pointer (class Type)
-		//Parameter 2 : Function pointer
-		//Parameter 3 : Chosen vector
-		//Return value : Function index in the vector
-		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		int AddCallBack( void* _pData, CallBack _pFct, FazonCore::CallBacks _eCallBackType, int _iWindow = -1, int _iPriority = 0 );
-		void RemoveCallBack( void* _pData, CallBack _pFct, FazonCore::CallBacks _eCallBackType, int _iWindow = -1 );
+		template< typename CallbackType >
+		void AddCallback( CallbackType* _pObject, typename DataCallback<CallbackType>::CallbackFct _pFct, DataCallbackType _eCallbackType, int _iPriority = 0, int _iWindow = -1 )
+		{
+			if( m_oWindows.empty() )
+				return;
+
+			int iWindow = m_iMainWindow;
+
+			if( _iWindow >= 0 && _iWindow < (int)m_oWindows.size() )
+				iWindow = _iWindow;
+
+			m_oWindows[ iWindow ]->m_oCallbacksHolder.AddCallback< CallbackType >( _pObject, _pFct, _eCallbackType, _iPriority );
+		}
+
+		template< typename CallbackType >
+		void RemoveCallback( CallbackType* _pObject, typename DataCallback<CallbackType>::CallbackFct _pFct, DataCallbackType _eCallbackType, int _iWindow = -1 )
+		{
+			if( m_oWindows.empty() )
+				return;
+
+			int iWindow = m_iMainWindow;
+
+			if( _iWindow >= 0 && _iWindow < (int)m_oWindows.size() )
+				iWindow = _iWindow;
+
+			m_oWindows[ iWindow ]->m_oCallbacksHolder.RemoveCallback< CallbackType >( _pObject, _pFct, _eCallbackType );
+		}
 
 		void RemoveClosedWindows();
 
 
 		/////////////////MEMBER VARIABLES/////////////////
 		std::vector<CustomWindow*>		m_oWindows;					//Container of custom windows
-		//int							m_iNbWindows;				//Number of windows in the array
 		int								m_iMainWindow;				//Index of the main window
 
-		//Vector<FazonCore::DataCallBack>	m_oCallBacks[FazonCore::CallBacks::CB_Nb];			//Array of 3 Lists containing callBacks structures
 		sf::ContextSettings				m_oContext;					//Window contextSettings (default values, for threading issues)
-		//sf::Clock						m_frameClock;				//Frame timer
-		//sf::Time						m_frameTime;				//Frame time (seconds)
-		//sf::Event						m_event;					//Event on the game window
 		bool							m_bCloseAppWithLastWindow;	//Closes the application when the last windows is closed.
 
-		//int m_iTimer;
-		//int m_iDesiredFrameTime;
-		//float m_fFrameTime;
-
-		UINT m_uMinSupportedPeriod;
-		float m_fTimeFactor;
+		sf::Uint32						m_uMinSupportedPeriod;
+		float							m_fTimeFactor;
 	};
 } //namespace fzn
 

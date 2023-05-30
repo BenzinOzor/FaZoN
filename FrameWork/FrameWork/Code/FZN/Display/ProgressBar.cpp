@@ -418,7 +418,7 @@ namespace fzn
 			if( m_eDirection == Direction::eRightToLeft )
 			{
 				oForegroundRect.left = m_oMaxGaugeSize.width - oForegroundRect.width;
-				m_oGaugeSprite.setPosition( m_vPosition + sf::Vector2f( 0.f, m_oMaxGaugeSize.width - oForegroundRect.width ) );
+				m_oGaugeSprite.setPosition( m_vPosition + sf::Vector2f( 0.f, (float)( m_oMaxGaugeSize.width - oForegroundRect.width ) ) );
 			}
 		}
 		else
@@ -428,7 +428,7 @@ namespace fzn
 			if( m_eDirection == Direction::eBottomToTop )
 			{
 				oForegroundRect.top = ( m_oMaxGaugeSize.height - oForegroundRect.height ) + m_oMaxGaugeSize.top;
-				m_oGaugeSprite.setPosition( m_vPosition + sf::Vector2f( 0.f, m_oMaxGaugeSize.height - oForegroundRect.height ) );
+				m_oGaugeSprite.setPosition( m_vPosition + sf::Vector2f( 0.f, (float)( m_oMaxGaugeSize.height - oForegroundRect.height ) ) );
 			}
 		}
 

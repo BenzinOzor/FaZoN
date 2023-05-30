@@ -23,9 +23,6 @@ namespace fzn
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	AudioManager::AudioManager( bool _bUseFMOD /*= false*/ )
 		: m_bUseFMOD( _bUseFMOD )
-		, m_fSoundsVolume( 50.f )
-		, m_fMusicVolume( 50.f )
-		, m_system( nullptr )
 	{
 		if( m_bUseFMOD )
 		{
@@ -104,6 +101,7 @@ namespace fzn
 				SoundInfo oSoundInfo = *itSound;
 
 				m_oAvailableSounds.push_back( oSoundInfo );
+
 				itSound = m_oSounds.erase( itSound );
 			}
 			else
@@ -137,27 +135,25 @@ namespace fzn
 
 		if( _bOnlyOne )
 		{
-			for( SoundInfo& oSound : m_oSounds )
-			{
-				if( oSound.m_sName == _sSound )
-				{
-					if( _bLoop )
-						++oSound.m_iNbInstances;
+			SoundInstances::iterator itSound = _FindSound( m_oSounds, _sSound );
 
-					return;
-				}
-			}
-		}
-
-		for( SoundInfo& oSound : m_oWaitingList )
-		{
-			if( oSound.m_sName == _sSound )
+			if( itSound != m_oSounds.end() )
 			{
-				if( _bOnlyOne && _bLoop )
-					++oSound.m_iNbInstances;
+				if( _bLoop )
+					++itSound->m_iNbInstances;
 
 				return;
 			}
+		}
+
+		SoundInstances::iterator itSound = _FindSound( m_oWaitingList, _sSound );
+
+		if( itSound != m_oWaitingList.end() )
+		{
+			if( _bOnlyOne && _bLoop )
+				++itSound->m_iNbInstances;
+
+			return;
 		}
 
 		SoundInfo oSound;
@@ -200,18 +196,28 @@ namespace fzn
 		if( _sSound.empty() )
 			return;
 
-		for( SoundInfo& oSound : m_oSounds )
+		SoundInstances::iterator itSound = _FindSound( m_oSounds, _sSound );
+
+		if( itSound != m_oSounds.end() )
 		{
-			if( oSound.m_sName == _sSound )
-			{
-				if( oSound.m_iNbInstances > 0 )
-					--oSound.m_iNbInstances;
+			if( itSound->m_iNbInstances > 0 )
+				--itSound->m_iNbInstances;
 
-				if( oSound.m_iNbInstances <= 0 )
-					oSound.m_pSound->stop();
+			if( itSound->m_iNbInstances <= 0 )
+				itSound->m_pSound->stop();
 
-				return;
-			}
+			return;
+		}
+
+		itSound = _FindSound( m_oWaitingList, _sSound );
+
+		if( itSound != m_oWaitingList.end() )
+		{
+			if( itSound->m_iNbInstances > 0 )
+				--itSound->m_iNbInstances;
+
+			if( itSound->m_iNbInstances <= 0 )
+				m_oWaitingList.erase( itSound );
 		}
 	}
 
@@ -246,6 +252,58 @@ namespace fzn
 				oSound.m_pSound->stop();
 			}
 		}
+	}
+
+	void AudioManager::Music_Play( const std::string& _sMusic, bool _bLoop, Audio::MusicCallbackPtr _pCallback, bool _bDeleteCallback )
+	{
+		if( m_oMusic.m_sName == _sMusic && m_oMusic.m_pMusic != nullptr )
+		{
+			m_oMusic.m_pMusic->play();
+			return;
+		}
+
+		if( m_oMusic.m_pMusic != nullptr && m_oMusic.m_pMusic->getStatus() == sf::Music::Playing )
+			m_oMusic.m_pMusic->stop();
+		
+		m_oMusic.m_pMusic			= nullptr;
+		m_oMusic.m_sName			= _sMusic;
+		m_oMusic.m_pCallback		= _pCallback;
+		m_oMusic.m_bDeleteCallback	= _bDeleteCallback;
+
+		m_oMusic.m_pMusic = g_pFZN_DataMgr->GetSfMusic( _sMusic );
+
+		if( m_oMusic.m_pMusic != nullptr )
+		{
+			m_oMusic.m_pMusic->setLoop( _bLoop );
+			m_oMusic.m_pMusic->setVolume( m_fMusicVolume );
+
+			m_oMusic.m_pMusic->stop();
+			m_oMusic.m_pMusic->play();
+		}
+	}
+
+	void AudioManager::Music_Pause()
+	{
+		if( m_oMusic.m_pMusic == nullptr )
+			return;
+
+		m_oMusic.m_pMusic->pause();
+	}
+
+	void AudioManager::Music_Resume()
+	{
+		if( m_oMusic.m_pMusic == nullptr || m_oMusic.m_pMusic->getStatus() == sf::Music::Playing )
+			return;
+
+		m_oMusic.m_pMusic->play();
+	}
+
+	void AudioManager::Music_Stop()
+	{
+		if( m_oMusic.m_pMusic == nullptr )
+			return;
+
+		m_oMusic.m_pMusic->stop();
 	}
 
 	/////////////////ACCESSOR / MUTATOR/////////////////
@@ -322,7 +380,7 @@ namespace fzn
 	{
 		tinyxml2::XMLDocument resFile;
 
-		if( resFile.LoadFile( DATAPATH( SOUNDS_FILE_NAME ) ) )
+		if( g_pFZN_DataMgr->LoadXMLFile( resFile, DATAPATH( SOUNDS_FILE_NAME ) ) )
 		{
 			FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Failure : %s.", resFile.ErrorName() );
 			return;
@@ -397,9 +455,17 @@ namespace fzn
 
 		if( pSound != nullptr )
 		{
-			pSound->m_sName = _oSound.m_sName;
+			pSound->m_sName = sSound;
 
-			pSound->m_pSound->setBuffer( *g_pFZN_DataMgr->GetSoundBuffer( sSound ) );
+			sf::SoundBuffer* pSoundBuffer = g_pFZN_DataMgr->GetSoundBuffer( pSound->m_sName );
+
+			if( pSoundBuffer == nullptr )
+			{
+				pSound->m_pSound->stop();	// Stopping the sound for good measure and leaving it for the update to put it in the available sounds vector.
+				return;
+			}
+
+			pSound->m_pSound->setBuffer( *pSoundBuffer );
 			pSound->m_pSound->setVolume( m_fSoundsVolume );
 			pSound->m_pSound->setLoop( _oSound.m_bLoop );
 			pSound->m_pSound->play();
@@ -407,6 +473,14 @@ namespace fzn
 			if( _oSound.m_bLoop )
 				pSound->m_iNbInstances += _oSound.m_iNbInstances;
 		}
+	}
+
+	fzn::AudioManager::SoundInstances::iterator AudioManager::_FindSound( SoundInstances& _oVector, const std::string& _sSound ) const
+	{
+		return std::find_if( _oVector.begin(), _oVector.end(), [ _sSound ]( const SoundInfo& oSound )
+			{
+				return oSound.m_sName == _sSound;
+			} );
 	}
 
 }

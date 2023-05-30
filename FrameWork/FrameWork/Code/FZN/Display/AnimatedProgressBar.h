@@ -29,6 +29,8 @@ namespace fzn
 				void					SetDeltaSpeed( float _fDelay );
 				void					SetDecreaseDelay( float _fSpeed );
 				void					SetDirection( const ProgressBar::Direction& _eDirection );
+				float					GetCurrentValue() const;
+				float					GetMaxValue() const;
 
 	protected:
 				void					_SetCurrentValueSprites();

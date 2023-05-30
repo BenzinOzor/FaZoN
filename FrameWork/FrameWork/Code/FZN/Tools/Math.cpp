@@ -34,6 +34,11 @@ namespace fzn
 		}
 
 
+		int SimgaSum( const int& _iValue )
+		{
+			return ( Square( _iValue ) + _iValue ) / 2;
+		}
+
 		/////////////////VECTORS FUNCTIONS/////////////////
 
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -142,6 +147,12 @@ namespace fzn
 			_vector.x = X;
 		}
 
+		void VectorSetRotationR( sf::Vector2f& _vector, float _angle )
+		{
+			_vector.x = cosf( _angle );
+			_vector.y = sinf( _angle );
+		}
+
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Rotate a vector by a given angle (Deg)
 		//Parameter 1 : Vector to rotate
@@ -149,10 +160,12 @@ namespace fzn
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		void VectorRotateD( sf::Vector2f& _vector, float _angle )
 		{
-			float fAngle = DegToRad( _angle );
-			float X = cosf( fAngle ) * _vector.x - sinf( fAngle ) * _vector.y;
-			_vector.y = sinf( fAngle ) * _vector.x + cosf( fAngle ) * _vector.y;
-			_vector.x = X;
+			VectorRotateR( _vector, DegToRad( _angle ) );
+		}
+
+		void VectorSetRotationD( sf::Vector2f& _vector, float _angle )
+		{
+			VectorSetRotationR( _vector, DegToRad( _angle ) );
 		}
 
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------

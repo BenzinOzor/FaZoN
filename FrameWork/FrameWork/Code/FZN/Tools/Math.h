@@ -30,6 +30,7 @@ namespace fzn
 		FZN_EXPORT				float	Clamp_0_1( const float& _fValue );
 		FZN_EXPORT				float	DegToRad( const float& _fDeg );
 		FZN_EXPORT				float	RadToDeg( const float& _fRad );
+		FZN_EXPORT				int		SimgaSum( const int& _iValue );
 
 
 		/////////////////VECTORS FUNCTIONS/////////////////
@@ -81,12 +82,14 @@ namespace fzn
 		//Parameter 2 : Angle of rotation
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		FZN_EXPORT void VectorRotateR( sf::Vector2f& _vector, float _angle );
+		FZN_EXPORT void VectorSetRotationR( sf::Vector2f& _vector, float _angle );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Rotate a vector by a given angle (Deg)
 		//Parameter 1 : Vector to rotate
 		//Parameter 2 : Angle of rotation
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		FZN_EXPORT void VectorRotateD( sf::Vector2f& _vector, float _angle );
+		FZN_EXPORT void VectorSetRotationD( sf::Vector2f& _vector, float _angle );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Truncate a vector to a given length
 		//Parameter 1 : Vector to truncate

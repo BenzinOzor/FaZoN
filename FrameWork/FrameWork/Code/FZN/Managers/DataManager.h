@@ -10,8 +10,12 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
+#include <functional>
+#include <any>
 
 #include <SFML/System/NonCopyable.hpp>
+#include <tinyXML2/tinyxml2.h>
 
 #include "FZN/Defines.h"
 #include "FZN/Managers/FazonCore.h"
@@ -25,6 +29,7 @@ namespace sf
 	class Texture;
 	class Font;
 	class Shader;
+	class Image;
 }
 
 namespace fzn
@@ -41,21 +46,9 @@ namespace fzn
 
 	struct Resource
 	{
-		Resource()
-		{
-			Reset();
-		}
-
-		void Reset()
-		{
-			name = "";
-			path = "";
-			type = "";
-		}
-
-		std::string name;			//Name of the resource
-		std::string path;			//Path to the resource
-		std::string type;			//Type of resource
+		std::string m_sName{ "" };			//Name of the resource
+		std::string m_sPath{ "" };			//Path to the resource
+		std::string m_sType{ "" };			//Type of resource
 	};
 
 	//=========================================================
@@ -64,9 +57,9 @@ namespace fzn
 
 	struct ResourceGroup
 	{
-		std::string				m_sName = "";		//Name of the resource group
+		std::string				m_sName{ "" };		//Name of the resource group
 		std::vector< Resource > m_oResources;		//Container of all the paths to the resources
-		bool					m_bLoaded = false;	//Indicates if the group has been loaded (true) or not
+		bool					m_bLoaded{ false };	//Indicates if the group has been loaded (true) or not
 	};
 
 	//=========================================================
@@ -112,7 +105,7 @@ namespace fzn
 		//Parameter 2 : Path to the texture
 		//Return value : Loaded (or allready existing) texture
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		sf::Texture* LoadTexture(const std::string& _name, const std::string& _path);
+		sf::Texture* LoadTexture( const std::string& _name, const std::string& _path, bool _bCryptedFile = USINGCRYPTEDFILES );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Accessor on a texture in the map
 		//Parameter : Texture name
@@ -192,11 +185,11 @@ namespace fzn
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		void UnloadSound(const std::string& _name);
 
-		sf::Music* LoadSfMusic(const std::string& _name, const std::string& _path);
+		sf::Music* LoadSfMusic( const std::string& _name, const std::string& _path, bool _bCryptedFile = USINGCRYPTEDFILES );
 		sf::Music* GetSfMusic( const std::string& _name, bool _bHandleError = true );
 		void UnloadSfMusic(const std::string& _name);
 
-		sf::SoundBuffer* LoadSoundBuffer(const std::string& _name, const std::string& _path);
+		sf::SoundBuffer* LoadSoundBuffer( const std::string& _name, const std::string& _path, bool _bCryptedFile = USINGCRYPTEDFILES );
 		sf::SoundBuffer* GetSoundBuffer( const std::string& _name, bool _bHandleError = true );
 		void UnloadSoundBuffer(const std::string& _name);
 
@@ -221,15 +214,22 @@ namespace fzn
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		void UnloadFont(const std::string& _name);
 
-		BitmapFont* LoadBitmapFont(const std::string& _name, const std::string& _path);
+		BitmapFont* LoadBitmapFont( const std::string& _name, const std::string& _path );
 		BitmapFont* GetBitmapFont( const std::string& _name, bool _bHandleError = true );
 		void UnloadBitmapFont(const std::string& _name);
 
-		CustomBitmapGlyph* GetBitmapGlyph( const std::string& _name, bool _bHandleError = true );
+		CustomBitmapGlyph* GetBitmapGlyph( const std::string& _sName, const std::string& _sTag, bool _bHandleError = true );
 
-		sf::Shader* LoadShader( const std::string& _sName, const std::string& _sPath );
+		sf::Shader* LoadShader( const std::string& _sName, const std::string& _sPath, bool _bCryptedFile = USINGCRYPTEDFILES );
 		sf::Shader* GetShader( const std::string& _sName, bool _bHandleError = true );
 		void		UnloadShader( const std::string& _sName );
+
+		
+		/////////////////OTHER FUNCTIONS/////////////////
+
+		std::string			LoadTextFile( const std::string& _sPath, bool _bCryptedFile = USINGCRYPTEDFILES );
+		tinyxml2::XMLError	LoadXMLFile( tinyxml2::XMLDocument& _oFile, const std::string& _sPath, bool _bCryptedFile = USINGCRYPTEDFILES );
+		bool				LoadSfImage( sf::Image& _oImage, const std::string& _sPath, bool _bCryptedFile = USINGCRYPTEDFILES );
 
 
 		/////////////////RESOURCE FILE/////////////////
@@ -237,7 +237,7 @@ namespace fzn
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Loads the resource file
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		void LoadResourceFile( const char* _resourceFile = DATAPATH( "XMLFiles/Resources" ), bool _bLocalResourceFile = true );
+		void LoadResourceFile( const char* _resourceFile = DATAPATH( "XMLFiles/Resources.xml" ), bool _bLocalResourceFile = true );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Loads a group of resources
 		//Parameter : Group to load
@@ -253,8 +253,14 @@ namespace fzn
 		bool GetSmoothTextures() const;
 
 		bool ResourceExists( const ResourceType& _eType, const std::string& _sResourceName, const std::string& _sAdditionalName = "" );
-
+		std::vector< unsigned char > _DecryptFile( const std::string& _sPath, bool _bTextFile = false );
 	private:
+		struct MusicData
+		{
+			sf::Music* m_pMusic = nullptr;
+			std::vector< unsigned char > m_oData;
+		};
+
 		/////////////////TYPEDEFS/////////////////
 
 		typedef std::map< std::string, Animation* >			MapAnimations;		//Map containing Animations ordered by strings
@@ -263,14 +269,25 @@ namespace fzn
 		typedef std::map< std::string, sf::Texture* >		MapTextures;		//Map containing Textures ordered by strings
 		typedef std::map< std::string, Music* >				MapMusics;			//Map containing Musics ordered by strings
 		typedef std::map< std::string, Sound* >				MapSound;			//Map containing SoundBuffers ordered by strings
-		typedef std::map< std::string, sf::Music* >			MapSfMusics;
+		typedef std::map< std::string, MusicData >			MapSfMusics;
 		typedef std::map< std::string, sf::SoundBuffer* >	MapSoundBuffers;
 		typedef std::map< std::string, sf::Font* >			MapFonts;			//Map containing Fonts ordered by strings
 		typedef std::map< std::string, BitmapFont* >		MapBitmapFonts;
-		typedef std::map< std::string, CustomBitmapGlyph >	MapBitmapGylphs;
+		typedef std::vector< CustomBitmapGlyph >			BitmapGylphs;
 		typedef std::map< std::string, sf::Shader >			MapShaders;			//Map containing all the resources groups
 		typedef std::map< std::string, ResourceGroup* >		MapResourceGroups;	//Map containing all the resources groups
+		typedef std::function<std::any( const std::string&, const std::string& )> ResourceLoadFct;
+		typedef std::unordered_map< std::string, ResourceLoadFct > MapResourceLoadFcts;
+		typedef std::function<void( const std::string& )> ResourceUnloadFct;
+		typedef std::unordered_map< std::string, ResourceUnloadFct > MapResourceUnloadFcts;
 
+
+		/////////////////CRYPTED DATA LOADING/////////////////
+
+		sf::Texture*		_LoadCryptedTexture( const std::string& _sName, const std::string& _sPath );
+		sf::Music*			_LoadCryptedSfMusic( const std::string& _sName, const std::string& _sPath );
+		sf::SoundBuffer*	_LoadCryptedSoundBuffer( const std::string& _sName, const std::string& _sPath );
+		sf::Shader*			_LoadCryptedShader( const std::string& _sName, const std::string& _sPath );
 
 		/////////////////OTHER FUNCTIONS/////////////////
 
@@ -285,6 +302,7 @@ namespace fzn
 		//Parameter : Resource to load
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		void LoadResourceFromXML( const Resource& _oResource );
+		void _FindAndLoadResource( const std::string& _sType, const std::string& _sName, const std::string& _sPath );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Unloads a resource in the map from the xml resource file
 		//Parameter : Resource to unload
@@ -294,6 +312,11 @@ namespace fzn
 		void _LoadBitmapGlyphFile( const std::string& _sFile );
 
 		void _LoadShaders();
+
+		void _SendFileLoadedEvent();
+
+		void _LookForResources( tinyxml2::XMLNode* _pNode, const std::string& _sCurrenntPath );
+		void _AddResource( tinyxml2::XMLElement* _pElement, const std::string& _sCurrenntPath );
 
 		/////////////////MEMBER VARIABLES/////////////////
 
@@ -308,9 +331,11 @@ namespace fzn
 		MapBitmapFonts		m_mapBitmapFonts;
 		MapAnimations		m_mapAnimations;
 		MapAnimatedObjects	m_mapAnimatedObjets;
-		MapBitmapGylphs		m_mapBitmapGlyphs;
+		BitmapGylphs		m_oBitmapGlyphs;
 		MapShaders			m_mapShaders;
 		MapResourceGroups	m_mapResourceGroups;
+		MapResourceLoadFcts	m_mapResourceLoadFcts;
+		MapResourceUnloadFcts m_mapResourceUnloadFcts;
 
 		/////////////////RESOURCE FILE/////////////////
 		bool m_bResourceFileExists;			//Does the resource file exists
