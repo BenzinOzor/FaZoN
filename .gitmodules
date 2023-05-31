@@ -10,3 +10,6 @@
 [submodule "Samples/Floors"]
 	path = Samples/Floors
 	url = https://github.com/BenzinOzor/Floors
+[submodule "Samples/MiniGames"]
+	path = Samples/MiniGames
+	url = https://github.com/BenzinOzor/MiniGames
