@@ -1,3 +1,6 @@
 [submodule "Sample/Demo"]
 	path = Samples/Demo
 	url = https://github.com/BenzinOzor/Demo.git
+[submodule "Samples/BareboneDemo"]
+	path = Samples/BareboneDemo
+	url = https://github.com/BenzinOzor/BareboneDemo
