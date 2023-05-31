@@ -7,3 +7,6 @@
 [submodule "Samples/Checklist"]
 	path = Samples/Checklist
 	url = https://github.com/BenzinOzor/Checklist
+[submodule "Samples/Floors"]
+	path = Samples/Floors
+	url = https://github.com/BenzinOzor/Floors
