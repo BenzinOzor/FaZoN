@@ -4,3 +4,6 @@
 [submodule "Samples/BareboneDemo"]
 	path = Samples/BareboneDemo
 	url = https://github.com/BenzinOzor/BareboneDemo
+[submodule "Samples/Checklist"]
+	path = Samples/Checklist
+	url = https://github.com/BenzinOzor/Checklist
