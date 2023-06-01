@@ -19,3 +19,6 @@
 [submodule "Utilities/HadesBoonHelper"]
 	path = Utilities/HadesBoonHelper
 	url = https://github.com/BenzinOzor/HadesBoonHelper
+[submodule "Games/TSOIRebirth"]
+	path = Games/TSOIRebirth
+	url = https://github.com/BenzinOzor/TSOIRebirth
