@@ -13,3 +13,6 @@
 [submodule "Samples/MiniGames"]
 	path = Samples/MiniGames
 	url = https://github.com/BenzinOzor/MiniGames
+[submodule "Utilities/SoIREditor"]
+	path = Utilities/SoIREditor
+	url = https://github.com/BenzinOzor/SoIREditor
