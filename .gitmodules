@@ -16,3 +16,6 @@
 [submodule "Utilities/SoIREditor"]
 	path = Utilities/SoIREditor
 	url = https://github.com/BenzinOzor/SoIREditor
+[submodule "Utilities/HadesBoonHelper"]
+	path = Utilities/HadesBoonHelper
+	url = https://github.com/BenzinOzor/HadesBoonHelper
