@@ -152,6 +152,7 @@ namespace fzn
 
 		FZN_EXPORT bool LineIntersectsCircle( const sf::Vector2f& _vLineP1, const sf::Vector2f& _vLineP2, const sf::CircleShape& _oCircle );
 
+		FZN_EXPORT float Cross2D( const sf::Vector2f& _vA, const sf::Vector2f& _vB, const sf::Vector2f& _vPoint );
 		FZN_EXPORT bool CollisionOBBPoint( const sf::Shape& _daOBB, const sf::Vector2f& _vPoint );
 		FZN_EXPORT bool CollisionOBBPoint( const std::vector< sf::Vector2f >& _daOBB, const sf::Vector2f& _vPoint );
 
