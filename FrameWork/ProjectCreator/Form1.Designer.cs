@@ -45,6 +45,7 @@
 			label5 = new Label();
 			comboBox1 = new ComboBox();
 			TxtBx_SourcesDirectoryName = new TextBox();
+			Btn_Close = new Button();
 			SuspendLayout();
 			// 
 			// Btn_LocateSln
@@ -88,7 +89,7 @@
 			// 
 			TxtBx_Logs.Location = new Point(334, 55);
 			TxtBx_Logs.Name = "TxtBx_Logs";
-			TxtBx_Logs.Size = new Size(488, 344);
+			TxtBx_Logs.Size = new Size(488, 318);
 			TxtBx_Logs.TabIndex = 4;
 			TxtBx_Logs.Text = "";
 			// 
@@ -194,11 +195,22 @@
 			TxtBx_SourcesDirectoryName.TabIndex = 15;
 			TxtBx_SourcesDirectoryName.Text = "Sources";
 			// 
+			// Btn_Close
+			// 
+			Btn_Close.Location = new Point(543, 379);
+			Btn_Close.Name = "Btn_Close";
+			Btn_Close.Size = new Size(279, 23);
+			Btn_Close.TabIndex = 16;
+			Btn_Close.Text = "Close";
+			Btn_Close.UseVisualStyleBackColor = true;
+			Btn_Close.Click += Btn_Close_Click;
+			// 
 			// Form1
 			// 
 			AutoScaleDimensions = new SizeF(7F, 15F);
 			AutoScaleMode = AutoScaleMode.Font;
 			ClientSize = new Size(834, 411);
+			Controls.Add(Btn_Close);
 			Controls.Add(TxtBx_SourcesDirectoryName);
 			Controls.Add(comboBox1);
 			Controls.Add(label5);
@@ -241,5 +253,6 @@
 		private RadioButton RdBtn_Dll;
 		public TextBox TxtBx_SourcesDirectoryName;
 		public ComboBox comboBox1;
+		private Button Btn_Close;
 	}
 }

@@ -1,0 +1,9 @@
+<Resources path="../../Data/">
+
+	<Folder path="Display/">
+	</Folder>
+
+	<Folder path="Audio/">
+	</Folder>
+
+</Resources>

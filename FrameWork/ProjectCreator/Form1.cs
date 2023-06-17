@@ -10,6 +10,8 @@ namespace ProjectCreator
 		public string m_sSolutionName { get; private set; }
 		public string m_sProjectRoot { get; private set; }
 
+		public string m_sDataFolder { get; private set; }
+
 		public Form1()
 		{
 			InitializeComponent();
@@ -24,6 +26,9 @@ namespace ProjectCreator
 				m_sSettingsFolder += "\\FaZoN Apps\\Project Creator\\";
 
 			Directory.CreateDirectory(m_sSettingsFolder);
+
+			m_sDataFolder = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName;
+			m_sDataFolder += "\\Data";
 		}
 
 		public static string GetFileOrDirectoryName(string _sPath)
@@ -54,6 +59,16 @@ namespace ProjectCreator
 			TxtBx_Logs.ScrollToCaret();
 		}
 
+		public void Log(string _sMessage, Color _oColor, Color _oBGColor, bool _bAddEndOfLine = true)
+		{
+			TxtBx_Logs.SelectionBackColor = _oBGColor;
+			TxtBx_Logs.SelectionColor = _oColor;
+			TxtBx_Logs.AppendText($"{_sMessage}" + (_bAddEndOfLine ? "\n" : ""));
+			TxtBx_Logs.SelectionStart = TxtBx_Logs.Text.Length;
+			TxtBx_Logs.ScrollToCaret();
+			TxtBx_Logs.SelectionBackColor = Color.White;
+		}
+
 		public void DirectoryCreationLog(string _sGrayMessage, string _sBlackMessage)
 		{
 			Log(_sGrayMessage, Color.Gray, false);
@@ -71,12 +86,19 @@ namespace ProjectCreator
 			if (_sFileNewName.Length == 0)
 				_sFileNewName = _sFileName;
 
+			if (File.Exists($"{m_sDataFolder}\\{_sFileName}") == false)
+			{
+				Log($"{_sFileName} doesn't exist, ignoring copy.", Color.Red);
+				return;
+			}
+
 			Log("Copying ", Color.Gray, false);
 			Log($"{_sFileName} ", Color.Black, false);
 			Log("to: ", Color.Gray, false);
 			Log($"{m_sProjectRoot}{_sDestFolder}", Color.Black);
 
-			File.Copy($"{m_sSettingsFolder}\\{_sFileName}", $"{m_sProjectRoot}{_sDestFolder}\\{_sFileNewName}", true);
+
+			File.Copy($"{m_sDataFolder}\\{_sFileName}", $"{m_sProjectRoot}{_sDestFolder}\\{_sFileNewName}", true);
 		}
 
 		public void FileEditionLog(string _sFileName)
@@ -166,7 +188,7 @@ namespace ProjectCreator
 				Combo_ProjectTypes.Items.Clear();
 				TxtBx_Logs.Clear();
 
-				Log("=======================SOLUTION SCAN========================", Color.Plum);
+				Log("=======================SOLUTION SCAN=======================", Color.Plum);
 				Log("Solution path: ", Color.Gray, false);
 				Log(openFileDialog.FileName, Color.Black);
 
@@ -179,6 +201,15 @@ namespace ProjectCreator
 			_CreateDirectories();
 			_CopyFiles();
 			_EditFiles();
+
+			Log("									          ", Color.Black, Color.Black);
+			Log("=================PROJECT SUCCESSFULLY CREATED==================", Color.LawnGreen, Color.Black);
+			Log("									          ", Color.Black, Color.Black);
+		}
+
+		private void Btn_Close_Click(object sender, EventArgs e)
+		{
+			Application.Exit();
 		}
 	}
 }
