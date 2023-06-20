@@ -1,4 +1,10 @@
-## The Project
+- [The project](https://github.com/BenzinOzor/FaZoN/edit/master/README.md#the-project)
+- [Solution compilation and parameters](https://github.com/BenzinOzor/FaZoN/edit/master/README.md#solution-compilation-and-parameters)
+- [Getting started](https://github.com/BenzinOzor/FaZoN/edit/master/README.md#getting-started)
+- [Project Creator](https://github.com/BenzinOzor/FaZoN/edit/master/README.md#project-creator)
+---
+
+## The project
 FaZoN is a framework made by me in my free time.
 
 Features:
