@@ -9,6 +9,7 @@ FaZoN is a framework made by me in my free time.
 
 Features:
 - 2D rendering using SFML
+- 2D animations
 - ImGUI
 - Input detection coming from keyboard, mouse or controller
 - Action Keys allowing multiple binds to be used for the same action
