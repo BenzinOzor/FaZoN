@@ -22,3 +22,6 @@
 [submodule "Games/TSOIRebirth"]
 	path = Games/TSOIRebirth
 	url = https://github.com/BenzinOzor/TSOIRebirth
+[submodule "Utilities/PerlerMaker"]
+	path = Utilities/PerlerMaker
+	url = https://github.com/BenzinOzor/PerlerMaker
