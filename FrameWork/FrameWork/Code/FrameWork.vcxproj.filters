@@ -192,6 +192,15 @@
     <ClInclude Include="FZN\Tools\DataCallback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FZN\UI\ImGuiAdditions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Externals\ImGui\imgui_stdlib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FZN\UI\ImGui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FZN\Managers\AIManager.cpp">
@@ -330,6 +339,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FZN\Game\StateMachine\FZNStateMachine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Externals\ImGui\imgui_stdlib.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FZN\UI\ImGuiAdditions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

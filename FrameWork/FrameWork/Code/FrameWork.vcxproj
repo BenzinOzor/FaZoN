@@ -282,6 +282,7 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
     <ClInclude Include="Externals\ImGui\imgui-SFML_export.h" />
     <ClInclude Include="Externals\ImGui\imgui.h" />
     <ClInclude Include="Externals\ImGui\imgui_internal.h" />
+    <ClInclude Include="Externals\ImGui\imgui_stdlib.h" />
     <ClInclude Include="Externals\ImGui\imstb_rectpack.h" />
     <ClInclude Include="Externals\ImGui\imstb_textedit.h" />
     <ClInclude Include="Externals\ImGui\imstb_truetype.h" />
@@ -304,6 +305,7 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
     <ClInclude Include="FZN\Tools\DataCallback.h" />
     <ClInclude Include="FZN\Tools\Event.h" />
     <ClInclude Include="FZN\Tools\HermiteCubicSpline.h" />
+    <ClInclude Include="FZN\UI\ImGuiAdditions.h" />
     <ClInclude Include="FZN\Tools\Logging.h" />
     <ClInclude Include="FZN\Tools\Math.h" />
     <ClInclude Include="FZN\Tools\Shaders.h" />
@@ -336,12 +338,14 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
     <ClInclude Include="FZN\Game\Steering\SteeringEntity.h" />
     <ClInclude Include="FZN\Game\Steering\SteeringObject.h" />
     <ClInclude Include="FZN\Display\TraceRect.h" />
+    <ClInclude Include="FZN\UI\ImGui.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Externals\ImGui\imgui-SFML.cpp" />
     <ClCompile Include="Externals\ImGui\imgui.cpp" />
     <ClCompile Include="Externals\ImGui\imgui_demo.cpp" />
     <ClCompile Include="Externals\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="Externals\ImGui\imgui_stdlib.cpp" />
     <ClCompile Include="Externals\ImGui\imgui_tables.cpp" />
     <ClCompile Include="Externals\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="FZN\Display\AnimatedProgressBar.cpp" />
@@ -384,6 +388,7 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
     <ClCompile Include="FZN\Game\Steering\SteeringEntity.cpp" />
     <ClCompile Include="FZN\Game\Steering\SteeringObject.cpp" />
     <ClCompile Include="FZN\Display\TraceRect.cpp" />
+    <ClCompile Include="FZN\UI\ImGuiAdditions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
