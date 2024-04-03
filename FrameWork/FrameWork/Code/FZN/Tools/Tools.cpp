@@ -38,6 +38,19 @@ namespace fzn
 									_oShape.getSize().x, _oShape.getSize().y );
 		}
 
+		sf::ConvexShape ConvertShapePtrToConvexShape( const sf::Shape* _pShape )
+		{
+			if( _pShape == nullptr )
+				return sf::ConvexShape();
+
+			sf::ConvexShape _oRetShape( _pShape->getPointCount() );
+
+			for( size_t iPoint = 0; iPoint < _pShape->getPointCount(); ++iPoint )
+				_oRetShape.setPoint( iPoint, _pShape->getPoint( iPoint ) );
+
+			return _oRetShape;
+		}
+
 		bool MaskHasFlagRaised( const sf::Uint8& _uMask, const sf::Uint8& _uFlag )
 		{
 			return ( _uMask & _uFlag ) != 0;
@@ -489,6 +502,10 @@ namespace fzn
 
 			return ( rect1.x < _rect2.left + _rect2.width && rect1.x + rect1Size.x > _rect2.left && rect1.y < _rect2.top + _rect2.height && rect1.y + rect1Size.y > _rect2.top );
 		}
+		bool CollisionAABBAABB( const sf::FloatRect& _rect1, const sf::FloatRect& _rect2 )
+		{
+			return ( _rect1.left < _rect2.left + _rect2.width && _rect1.left + _rect1.width > _rect2.left && _rect1.top < _rect2.top + _rect2.height && _rect1.top + _rect1.height > _rect2.top );
+		}
 
 		bool LineIntersectsCircle( const sf::Vector2f& _vLineP1, const sf::Vector2f& _vLineP2, const sf::CircleShape& _oCircle )
 		{
@@ -622,8 +639,8 @@ namespace fzn
 		{
 			std::stringstream szTime( "" );
 			szTime << std::setfill( '0' ) << std::setw( 2 ) << TimerAsMinuts( _fTimer )
-				<< " : " << std::setfill( '0' ) << std::setw( 2 ) << TimerAsSeconds( _fTimer )
-				<< " : " << std::setfill( '0' ) << std::setw( 2 ) << TimerAsHundredth( _fTimer );
+				<< "'" << std::setfill( '0' ) << std::setw( 2 ) << TimerAsSeconds( _fTimer )
+				<< "." << std::setfill( '0' ) << std::setw( 2 ) << TimerAsHundredth( _fTimer );
 			return szTime.str();
 		}
 
@@ -773,7 +790,7 @@ namespace fzn
 		//Parameter 3 : Characters size
 		//Parameter 4 : Color of the string
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		void DrawString( const char* _string, const sf::Vector2f& _position, unsigned int _characterSize, sf::Color _color )
+		/*void DrawString( const char* _string, const sf::Vector2f& _position, unsigned int _characterSize, sf::Color _color )
 		{
 			sf::Text text( _string, *g_pFZN_DataMgr->LoadFont( "defaultFont", DATAPATH( "Display/Fonts/defaultFont.ttf" ) ) );
 			text.setPosition( _position );
@@ -781,7 +798,7 @@ namespace fzn
 			text.setFillColor( _color );
 
 			g_pFZN_WindowMgr->Draw( text );
-		}
+		}*/
 
 		void DrawString( const char* _string, const sf::Vector2f& _position, unsigned int _characterSize, sf::Color _color, int iWindowId /*= MainWindow*/ )
 		{

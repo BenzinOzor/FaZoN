@@ -7,6 +7,12 @@
 #ifndef _ENGINEMATH_H_
 #define _ENGINEMATH_H_
 
+#include <SFML/System/Vector2.hpp>
+#include <SFML/System/Vector3.hpp>
+#include <SFML/Graphics/Shape.hpp>
+
+#include <FZN/Defines.h>
+
 
 namespace fzn
 {
@@ -66,16 +72,23 @@ namespace fzn
 		FZN_EXPORT float VectorDot( const sf::Vector2f& _vector1, const sf::Vector2f& _vector2 );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Vector cross product calculation
-		//Parameter : Concerned vector
-		//Return value : Length of the vector
+		//Parameters : Concerned vectors
+		//Return value : Perpendicular vector
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		FZN_EXPORT sf::Vector3f VectorCross( const sf::Vector3f& _vector1, const sf::Vector3f& _vector2 );
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		//Vector cross product calculation
+		//Parameters : Concerned 2D vectors
+		//Return value : Perpendicular vector
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		FZN_EXPORT sf::Vector2f VectorCross2D( const sf::Vector2f& _vector1, const sf::Vector2f& _vector2 );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Angle between two vectors calculation
 		//Parameters : Vectors for calculation
 		//Return value : Angle in degrees
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		FZN_EXPORT float VectorAngle( const sf::Vector2f& _vector1, const sf::Vector2f& _vector2 );
+		FZN_EXPORT float VectorAngle360( const sf::Vector2f& _vector1, const sf::Vector2f& _vector2 );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Rotate a vector by a given angle (Rad)
 		//Parameter 1 : Vector to rotate
@@ -103,7 +116,6 @@ namespace fzn
 		//Return value : Trucated vector
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		FZN_EXPORT sf::Vector2f VectorTruncated( const sf::Vector2f& _vector, float _maxLength );
-		
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Indicate if a point is on the right or on the left of a given vector.
 		//Parameter 1 : Vector
@@ -111,6 +123,39 @@ namespace fzn
 		//Return value : True if the point is on the right, false if on the left.
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		FZN_EXPORT bool VectorRightOrLeft( const sf::Vector2f& _vA, const sf::Vector2f& _vB );
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		//Indicate if two vectors go in the same direction by computing their dot product.
+		//Parameters : Vectors to test
+		//Return value : True if they go in the same direction or are perpendicular (dot >= 0).
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		FZN_EXPORT bool VectorsSameDirection( const sf::Vector2f& _vVectorA, const sf::Vector2f& _vVectorB );
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		//Indicate if two vectors are perpendicular by computing their dot product.
+		//Parameters : Vectors to test
+		//Return value : True if they are perpendicular (dot is 0).
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		FZN_EXPORT bool VectorsPerpendicular( const sf::Vector2f& _vVectorA, const sf::Vector2f& _vVectorB );
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		//Compute the perpendicular vector to the given vector and direction.
+		//Parameter 1 : Vector to which the resulting one will be perpendicular
+		//Parameter 2 : Direction in which the perpendicular vector must go
+		//Return value : Perpendicular vector
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		FZN_EXPORT sf::Vector2f VectorsGetPerpendicular( const sf::Vector2f& _vVector, const sf::Vector2f& _vDirection );
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		//Look for the farthest point in a shape in a given direction.
+		//Parameter 1 : The shape containing the points
+		//Parameter 2 : The direction to be tested
+		//Return value : The farthest point in the given direction
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		FZN_EXPORT sf::Vector2f GetFarthestPointInDirection( const sf::Shape* _pShape, const sf::Vector2f& _vDirection );
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		//Returns the farthest point in a direction in a Minkowski Sum of two shapes
+		//Parameter 1 & 2 : The two shapes to do the Minkowski Sum on
+		//Parameter 3 : The direction to be tested
+		//Return value : The farthest point in the given direction
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		FZN_EXPORT sf::Vector2f GetSupportPoint( const sf::Shape* _pShapeA, const sf::Shape* _pShapeB, const sf::Vector2f& _vDirection );
 
 		FZN_EXPORT float Interpolate( float _fInMin, float _fInMax, float _fOutMin, float _fOutMax, float _fValue, bool _bClamp = true );
 		FZN_EXPORT sf::Vector2f Interpolate( sf::Vector2f _vInMin, sf::Vector2f _vInMax, sf::Vector2f _vOutMin, sf::Vector2f _vOutMax, sf::Vector2f _vValue, bool _bClamp = true );

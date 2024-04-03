@@ -192,7 +192,7 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\LuaPlus\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\TinyXML2\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\Fmod\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\SFML\$(Configuration)\;$(SolutionDir)FrameWork\ExternalWrapper\Dependencies\Libs\ExternalWrapper\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>fmod_vc.lib;tinyxml2.lib;sfml-audio.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;Opengl32.lib;LuaPlus5.1_r.lib;ExternalWrapper_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>fmod_vc.lib;tinyxml2.lib;sfml-audio.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;Opengl32.lib;ExternalWrapper_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(SolutionDir) FrameWork $(ProjectName) $(Configuration) $(TargetName)

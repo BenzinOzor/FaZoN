@@ -103,8 +103,8 @@ namespace fzn
 
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Vector cross product calculation
-		//Parameter : Concerned vector
-		//Return value : Length of the vector
+		//Parameters : Concerned vectors
+		//Return value : Perpendicular vector
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		sf::Vector3f VectorCross( const sf::Vector3f& _vector1, const sf::Vector3f& _vector2 )
 		{
@@ -115,6 +115,18 @@ namespace fzn
 			vRet.z = _vector1.x * _vector2.y - _vector1.y * _vector2.x;
 
 			return vRet;
+		}
+
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		//Vector cross product calculation
+		//Parameters : Concerned 2D vectors
+		//Return value : Perpendicular vector
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		sf::Vector2f VectorCross2D( const sf::Vector2f& _v1, const sf::Vector2f& _v2 )
+		{
+			sf::Vector3f vResult = VectorCross( { _v1.x, _v1.y, 0.f }, { _v2.x, _v2.y, 0.f } );
+
+			return { vResult.x, vResult.y };
 		}
 
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -133,6 +145,19 @@ namespace fzn
 			float fTanB = atan2( _vector2.y, _vector2.x );
 			float fAngle = atan2( _vector1.y, _vector1.x ) - atan2( _vector2.y, _vector2.x );
 			return fAngle * 180.f / PI;
+		}
+
+		float VectorAngle360( const sf::Vector2f& _vector1, const sf::Vector2f& _vector2 )
+		{
+			float fTanA = atan2( _vector1.y, _vector1.x );
+			float fTanB = atan2( _vector2.y, _vector2.x );
+			float fAngle = atan2( _vector1.y, _vector1.x ) - atan2( _vector2.y, _vector2.x );
+			float fAngleDeg = fAngle * 180.f / PI;
+
+			if( fAngleDeg < 0.f )
+				fAngleDeg = 180.f + fAngleDeg * -1.f;
+
+			return fAngleDeg;
 		}
 
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -206,9 +231,99 @@ namespace fzn
 		//Parameter 2 : Point
 		//Return value : True if the point is on the right, false if on the left.
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		FZN_EXPORT bool VectorRightOrLeft( const sf::Vector2f& _vA, const sf::Vector2f& _vB )
+		bool VectorRightOrLeft( const sf::Vector2f& _vA, const sf::Vector2f& _vB )
 		{
 			return ( _vA.x * _vB.y - _vA.y * _vB.x ) > 0.f;
+		}
+
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		//Indicate if two vectors go in the same direction by computing their dot product.
+		//Parameters : Vectors to test
+		//Return value : True if they go in the same direction or are perpendicular (dot >= 0).
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		bool VectorsSameDirection( const sf::Vector2f& _vVectorA, const sf::Vector2f& _vVectorB )
+		{
+			return VectorDot( _vVectorA, _vVectorB ) >= 0.f;
+		}
+
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		//Indicate if two vectors are perpendicular by computing their dot product.
+		//Parameters : Vectors to test
+		//Return value : True if they are perpendicular (dot is 0).
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		bool VectorsPerpendicular( const sf::Vector2f& _vVectorA, const sf::Vector2f& _vVectorB )
+		{
+			return VectorDot( _vVectorA, _vVectorB ) == 0.f;
+		}
+
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		//Compute the perpendicular vector to the given vector and direction.
+		//Parameter 1 : Vector to which the resulting one will be perpendicular
+		//Parameter 2 : Direction in which the perpendicular vector must go
+		//Return value : Perpendicular vector
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		sf::Vector2f VectorsGetPerpendicular( const sf::Vector2f& _vVector, const sf::Vector2f& _vDirection )
+		{
+			sf::Vector3f vSegment3D{ _vVector.x, _vVector.y, 0.f };
+			sf::Vector3f vCross = VectorCross( vSegment3D, { _vDirection.x, _vDirection.y, 0.f } );
+			sf::Vector3f vResult3D = VectorCross( vCross, vSegment3D );
+
+			return { vResult3D.x, vResult3D.y };
+		}
+
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		//Look for the farthest point in a shape in a given direction.
+		//Parameter 1 : The shape containing the points
+		//Parameter 2 : The direction to be tested
+		//Return value : The farthest point in the given direction
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		sf::Vector2f GetFarthestPointInDirection( const sf::Shape* _pShape, const sf::Vector2f& _vDirection )
+		{
+			if( _pShape == nullptr )
+				return { 0.f, 0.f };
+
+			float fMaxProj = -FLT_MAX;
+			float fDot{ 0.f };
+			sf::Vector2f vFarthestPoint{ 0.f, 0.f };
+			sf::Vector2f vCurrentPoint{ 0.f, 0.f };
+
+			const sf::Transform& rTransform = _pShape->getTransform();
+
+			for( int iPoint = 0; iPoint < _pShape->getPointCount(); ++iPoint )
+			{
+				vCurrentPoint = rTransform.transformPoint( _pShape->getPoint( iPoint ) );
+				fDot = VectorDot( _vDirection, vCurrentPoint );
+
+				if( fMaxProj < fDot )
+				{
+					fMaxProj = fDot;
+					vFarthestPoint = vCurrentPoint;
+				}
+			}
+
+			return vFarthestPoint;
+		}
+
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		//Returns the farthest point in a direction in a Minkowski Sum of two shapes
+		//Parameter 1 & 2 : The two shapes to do the Minkowski Sum on
+		//Parameter 3 : The direction to be tested
+		//Return value : The farthest point in the given direction
+		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		sf::Vector2f GetSupportPoint( const sf::Shape* _pShapeA, const sf::Shape* _pShapeB, const sf::Vector2f& _vDirection )
+		{
+			// We don't have to do the entire Minkowski Sum of the two shapes,
+			// we just have to find the farthest points of shape A and B in the given direction and its negative and substract them.
+			// https://dyn4j.org/2010/04/gjk-gilbert-johnson-keerthi/
+
+			if( _pShapeA == nullptr || _pShapeB == nullptr )
+				return { 0.f, 0.f };
+
+			// Get points on the edge of the shapes in opposite directions
+			const sf::Vector2f vPointA = GetFarthestPointInDirection( _pShapeA, _vDirection );
+			const sf::Vector2f vPointB = GetFarthestPointInDirection( _pShapeB, -_vDirection );
+
+			return vPointA - vPointB;
 		}
 
 		FZN_EXPORT float Interpolate( float _fInMin, float _fInMax, float _fOutMin, float _fOutMax, float _fValue, bool _bClamp /*= true */ )

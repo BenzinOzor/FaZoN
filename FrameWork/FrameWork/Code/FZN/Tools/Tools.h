@@ -55,6 +55,7 @@ namespace fzn
 		FZN_EXPORT sf::FloatRect	ConvertIntRectToFloat( const sf::IntRect& _oIntRect );
 		FZN_EXPORT sf::IntRect		ConvertFloatRectToInt( const sf::FloatRect& _oIntRect );
 		FZN_EXPORT sf::FloatRect	ConvertRectangleShapeToFloatRect( const sf::RectangleShape& _oShape );
+		FZN_EXPORT sf::ConvexShape	ConvertShapePtrToConvexShape( const sf::Shape* _pShape );
 
 		FZN_EXPORT bool MaskHasFlagRaised( const sf::Uint8& _uMask, const sf::Uint8& _uFlag );
 		FZN_EXPORT bool MaskHasFlagRaised( const sf::Uint16& _uMask, const sf::Uint16& _uFlag );
@@ -149,10 +150,10 @@ namespace fzn
 		//Return value : The two shapes are in collision (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		FZN_EXPORT bool CollisionAABBAABB( const sf::RectangleShape& _rect1, const sf::FloatRect& _rect2 );
+		FZN_EXPORT bool CollisionAABBAABB( const sf::FloatRect& _rect1, const sf::FloatRect& _rect2 );
 
 		FZN_EXPORT bool LineIntersectsCircle( const sf::Vector2f& _vLineP1, const sf::Vector2f& _vLineP2, const sf::CircleShape& _oCircle );
 
-		FZN_EXPORT float Cross2D( const sf::Vector2f& _vA, const sf::Vector2f& _vB, const sf::Vector2f& _vPoint );
 		FZN_EXPORT bool CollisionOBBPoint( const sf::Shape& _daOBB, const sf::Vector2f& _vPoint );
 		FZN_EXPORT bool CollisionOBBPoint( const std::vector< sf::Vector2f >& _daOBB, const sf::Vector2f& _vPoint );
 
@@ -252,7 +253,7 @@ namespace fzn
 		//Parameter 3 : Characters size
 		//Parameter 4 : Color of the string
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		FZN_EXPORT void DrawString( const char* _string, const sf::Vector2f& _position, unsigned int _characterSize, sf::Color _color = sf::Color::White );
+		//FZN_EXPORT void DrawString( const char* _string, const sf::Vector2f& _position, unsigned int _characterSize, sf::Color _color = sf::Color::White );
 		FZN_EXPORT void DrawString( const char* _string, const sf::Vector2f& _position, unsigned int _characterSize, sf::Color _color = sf::Color::White, int _iWindowId = 0 );
 
 		FZN_EXPORT void FormatImGuiText( const std::string& _sText, const ImGuiFormatOptions* _pFormatOptions = nullptr );
