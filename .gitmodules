@@ -25,3 +25,6 @@
 [submodule "Utilities/PerlerMaker"]
 	path = Utilities/PerlerMaker
 	url = https://github.com/BenzinOzor/PerlerMaker
+[submodule "Utilities/MarathonMessageCreator"]
+	path = Utilities/MarathonMessageCreator
+	url = https://github.com/BenzinOzor/MarathonMessageCreator
