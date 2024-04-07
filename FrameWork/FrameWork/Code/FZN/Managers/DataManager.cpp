@@ -811,7 +811,9 @@ namespace fzn
 			return sContent;
 		}
 		
-		return "";
+		auto file_stream = std::ifstream{ _sPath };
+
+		return { ( std::istreambuf_iterator<char>( file_stream ) ), std::istreambuf_iterator<char>() };
 	}
 
 	tinyxml2::XMLError DataManager::LoadXMLFile( tinyxml2::XMLDocument& _oFile, const std::string& _sPath, bool _bCryptedFile /*= USINGCRYPTEDFILES*/ )
