@@ -1146,5 +1146,18 @@ namespace fzn
 			return std::string::npos;
 		}
 
+		void replace_word( std::string& _text, const std::string& _word, const std::string& _new_word, size_t _off )
+		{
+			if( _text.empty() || _word.empty() )
+				return;
+
+			auto word_pos{ FindWholeWord( _text, _word, _off ) };
+
+			if( word_pos == std::string::npos )
+				return;
+
+			_text.replace( word_pos, _word.size(), _new_word );
+		}
+
 	} //namespace Tools
 } //namespace fzn
