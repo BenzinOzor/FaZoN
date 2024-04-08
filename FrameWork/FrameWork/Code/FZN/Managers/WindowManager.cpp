@@ -23,7 +23,6 @@
 
 
 FZN_EXPORT fzn::WindowManager* g_pFZN_WindowMgr = nullptr;
-FZN_EXPORT fzn::Tools::ImGuiFormatOptions fzn::WindowManager::s_ImGuiFormatOptions = fzn::Tools::ImGuiFormatOptions();
 
 namespace fzn
 {

@@ -810,7 +810,7 @@ namespace fzn
 			g_pFZN_WindowMgr->Draw( text, iWindowId );
 		}
 
-		void DrawImGuiTextWithOptions( const ImGuiFormatOptions& _rFormatOptions, const std::string& _sTagContent, bool& _bSameLine, int& _iChar, int _iCharOffset, int _iOptionsEndIndex )
+		void DrawImGuiTextWithOptions( const ImGui_fzn::ImGuiFormatOptions& _rFormatOptions, const std::string& _sTagContent, bool& _bSameLine, int& _iChar, int _iCharOffset, int _iOptionsEndIndex )
 		{
 			std::string sOptions = _sTagContent.substr( 0, _iOptionsEndIndex );
 			std::string sText = _sTagContent.substr( _iOptionsEndIndex + 1 );
@@ -876,7 +876,7 @@ namespace fzn
 			_iChar += _iCharOffset;
 		}
 
-		void FormatImGuiText( const std::string& _sText, const ImGuiFormatOptions* _pFormatOptions /*= nullptr*/ )
+		void FormatImGuiText( const std::string& _sText, const ImGui_fzn::ImGuiFormatOptions* _pFormatOptions /*= nullptr*/ )
 		{
 			if( _sText.empty() )
 				return;
@@ -921,7 +921,7 @@ namespace fzn
 			bool bSameLine = false;
 
 			const sf::Texture* pTexture = nullptr;
-			const ImGuiFormatOptions& rFormatOptions = _pFormatOptions != nullptr ? *_pFormatOptions : WindowManager::s_ImGuiFormatOptions;
+			const ImGui_fzn::ImGuiFormatOptions& rFormatOptions = _pFormatOptions != nullptr ? *_pFormatOptions : ImGui_fzn::s_ImGuiFormatOptions;
 
 			int iChar = 0;
 			while( iChar < (int)sText.size() )
@@ -1005,7 +1005,7 @@ namespace fzn
 
 		void BoldImGuiText( const std::string& _sText )
 		{
-			CustomFontImGuiText( _sText, WindowManager::s_ImGuiFormatOptions.m_pFontBold );
+			CustomFontImGuiText( _sText, ImGui_fzn::s_ImGuiFormatOptions.m_pFontBold );
 		}
 
 		void CustomFontImGuiText( const std::string& _sText, ImFont* _pFont )
@@ -1023,7 +1023,7 @@ namespace fzn
 			ImGui::PopFont();
 		}
 
-		ImVec4 GetImColorFromString( const std::string& _sColor, const ImGuiFormatOptions* _pFormatOptions /*= nullptr*/ )
+		ImVec4 GetImColorFromString( const std::string& _sColor, const ImGui_fzn::ImGuiFormatOptions* _pFormatOptions /*= nullptr*/ )
 		{
 			auto GetColorFromString = []( const std::string& _sColor )
 			{
@@ -1038,7 +1038,7 @@ namespace fzn
 				return fColor;
 			};
 
-			auto GetNextColor = [&]( std::string& _sRGB, const ImGuiFormatOptions& _rFormatOptions, float _fDefaultValue )
+			auto GetNextColor = [&]( std::string& _sRGB, const ImGui_fzn::ImGuiFormatOptions& _rFormatOptions, float _fDefaultValue )
 			{
 				if( _sRGB.empty() )
 					return _fDefaultValue;
@@ -1071,7 +1071,7 @@ namespace fzn
 
 			std::string sRGB{ _sColor };
 			std::string sColor{ "" };
-			const ImGuiFormatOptions& rFormatOptions = _pFormatOptions != nullptr ? *_pFormatOptions : WindowManager::s_ImGuiFormatOptions;
+			const ImGui_fzn::ImGuiFormatOptions& rFormatOptions = _pFormatOptions != nullptr ? *_pFormatOptions : ImGui_fzn::s_ImGuiFormatOptions;
 
 			oColor.x = GetNextColor( sRGB, rFormatOptions, -1.f );
 			oColor.y = GetNextColor( sRGB, rFormatOptions, -1.f );
@@ -1081,12 +1081,12 @@ namespace fzn
 			return oColor;
 		}
 
-		std::string GetColorTag( const ImVec4& _rColor, const ImGuiFormatOptions* _pFormatOptions /*= nullptr */ )
+		std::string GetColorTag( const ImVec4& _rColor, const ImGui_fzn::ImGuiFormatOptions* _pFormatOptions /*= nullptr */ )
 		{
 			if( fzn::Tools::IsColorValid( _rColor ) == false )
 				return "";
 
-			const ImGuiFormatOptions& rFormatOptions = _pFormatOptions != nullptr ? *_pFormatOptions : WindowManager::s_ImGuiFormatOptions;
+			const ImGui_fzn::ImGuiFormatOptions& rFormatOptions = _pFormatOptions != nullptr ? *_pFormatOptions : ImGui_fzn::s_ImGuiFormatOptions;
 
 			std::string sColorTag = rFormatOptions.m_sOption_Color;
 
@@ -1146,12 +1146,12 @@ namespace fzn
 			return std::string::npos;
 		}
 
-		void replace_word( std::string& _text, const std::string& _word, const std::string& _new_word, size_t _off )
+		void replace_word( std::string& _text, const std::string& _word, const std::string& _new_word, size_t _off, bool _whole_word /*= false*/ )
 		{
 			if( _text.empty() || _word.empty() )
 				return;
 
-			auto word_pos{ FindWholeWord( _text, _word, _off ) };
+			auto word_pos{ _whole_word ? FindWholeWord( _text, _word, _off ) : _text.find( _word, _off ) };
 
 			if( word_pos == std::string::npos )
 				return;

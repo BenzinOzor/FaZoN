@@ -235,8 +235,6 @@ namespace fzn
 		sf::Uint32 m_width;				//Width of the window
 		sf::Uint32 m_height;			//Height of the window
 
-		static Tools::ImGuiFormatOptions s_ImGuiFormatOptions;
-
 	private:
 
 		template< typename CallbackType >

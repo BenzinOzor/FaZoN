@@ -18,6 +18,7 @@
 #include <SFML/Graphics/Shape.hpp>
 
 #include "FZN/Defines.h"
+#include "FZN/UI/ImGuiAdditions.h"
 
 
 namespace sf
@@ -35,22 +36,6 @@ namespace fzn
 	namespace Tools
 	{
 		static const ImVec4 InvalidImGuiColor = { -1.f, -1.f, -1.f, -1.f };
-		struct ImGuiFormatOptions
-		{
-			std::string m_sBeginTag						= "%%";
-			std::string m_sEndTag						= "%%";
-			std::string m_sTagOptionsEnd				= ":";
-			std::string m_sTagOptionsSeparator			= ";";
-			std::string m_sTagOptionParameterBegin		= "(";
-			std::string m_sTagOptionParameterEnd		= ")";
-			std::string m_sTagOptionParameterSeparator	= ",";
-
-			std::string m_sOption_Bold					= "b";
-			std::string m_sOption_Color					= "c";
-
-			ImFont*		m_pFontRegular	= nullptr;
-			ImFont*		m_pFontBold		= nullptr;
-		};
 
 		FZN_EXPORT sf::FloatRect	ConvertIntRectToFloat( const sf::IntRect& _oIntRect );
 		FZN_EXPORT sf::IntRect		ConvertFloatRectToInt( const sf::FloatRect& _oIntRect );
@@ -256,15 +241,15 @@ namespace fzn
 		//FZN_EXPORT void DrawString( const char* _string, const sf::Vector2f& _position, unsigned int _characterSize, sf::Color _color = sf::Color::White );
 		FZN_EXPORT void DrawString( const char* _string, const sf::Vector2f& _position, unsigned int _characterSize, sf::Color _color = sf::Color::White, int _iWindowId = 0 );
 
-		FZN_EXPORT void FormatImGuiText( const std::string& _sText, const ImGuiFormatOptions* _pFormatOptions = nullptr );
+		FZN_EXPORT void FormatImGuiText( const std::string& _sText, const ImGui_fzn::ImGuiFormatOptions* _pFormatOptions = nullptr );
 		FZN_EXPORT void BoldImGuiText( const std::string& _sText );
 		FZN_EXPORT void CustomFontImGuiText( const std::string& _sText, ImFont* _pFont );
-		FZN_EXPORT ImVec4 GetImColorFromString( const std::string& _sColor, const ImGuiFormatOptions* _pFormatOptions = nullptr );
-		FZN_EXPORT std::string GetColorTag( const ImVec4& _rColor, const ImGuiFormatOptions* _pFormatOptions = nullptr );
+		FZN_EXPORT ImVec4 GetImColorFromString( const std::string& _sColor, const ImGui_fzn::ImGuiFormatOptions* _pFormatOptions = nullptr );
+		FZN_EXPORT std::string GetColorTag( const ImVec4& _rColor, const ImGui_fzn::ImGuiFormatOptions* _pFormatOptions = nullptr );
 		FZN_EXPORT bool IsColorValid( const ImVec4& _rColor );
 
 		FZN_EXPORT size_t FindWholeWord( const std::string& _sText, const std::string& _sWord, size_t _Off );
-		FZN_EXPORT void replace_word( std::string& _text, const std::string& _word, const std::string& _new_word, size_t _off );
+		FZN_EXPORT void replace_word( std::string& _text, const std::string& _word, const std::string& _new_word, size_t _off, bool _whole_word = false );
 	} //namespace Tools
 } //namespace fzn
 
