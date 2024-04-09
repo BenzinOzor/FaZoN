@@ -25,8 +25,8 @@ namespace ImGui_fzn
 
 	struct ImGuiFormatOptions
 	{
-		std::string m_sBeginTag = "%%";
-		std::string m_sEndTag = "%%";
+		std::string m_sBeginTag = "[[";
+		std::string m_sEndTag = "]]";
 		std::string m_sTagOptionsEnd = ":";
 		std::string m_sTagOptionsSeparator = ";";
 		std::string m_sTagOptionParameterBegin = "(";

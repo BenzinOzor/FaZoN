@@ -120,7 +120,7 @@ namespace ImGui_fzn
 
 		while( tag_begin_pos != std::string::npos )
 		{
-			tag_end_pos = _text.find( _tag_begin, tag_begin_pos );
+			tag_end_pos = _text.find( _tag_begin, tag_begin_pos + _tag_begin.size() );
 
 			// if we don't find any end tag, it's useless to continue to look for other tags as there won't be closing ones ever again.
 			if( tag_end_pos == std::string::npos )
@@ -132,6 +132,39 @@ namespace ImGui_fzn
 			_text.replace( tag_end_pos, _tag_end.size(), "" );
 
 			tag_begin_pos = _text.find( _tag_begin, tag_end_pos + _tag_end.size() );
+		}
+	}
+
+	void format_markdown_bold_tag( std::string& _text, const ImGuiFormatOptions* _format_options /*= nullptr */ )
+	{
+		if( _text.empty() )
+			return;
+
+		const auto& imgui_format_options = _format_options != nullptr ? *_format_options : s_ImGuiFormatOptions;
+
+		auto tag_bold = std::string{ "**" };
+		auto tag_begin_pos = size_t{ 0 };
+		auto tag_end_pos = size_t{ 0 };
+		auto insert = std::string{};
+		auto option_bold = imgui_format_options.m_sBeginTag + imgui_format_options.m_sOption_Bold + imgui_format_options.m_sTagOptionsEnd;
+
+		tag_begin_pos = _text.find( tag_bold, tag_begin_pos );
+
+		while( tag_begin_pos != std::string::npos )
+		{
+			tag_end_pos = _text.find( tag_bold, tag_begin_pos + tag_bold.size() );
+
+			// if we don't find any end tag, it's useless to continue to look for other tags as there won't be closing ones ever again.
+			if( tag_end_pos == std::string::npos )
+				return;
+
+			_text.replace( tag_begin_pos, tag_bold.size(), option_bold.c_str() );
+			tag_end_pos -= tag_bold.size();
+			tag_end_pos += option_bold.size();
+
+			_text.replace( tag_end_pos, tag_bold.size(), imgui_format_options.m_sEndTag );
+
+			tag_begin_pos = _text.find( tag_bold, tag_end_pos + tag_bold.size() );
 		}
 	}
 
@@ -154,52 +187,8 @@ namespace ImGui_fzn
 				}
 			};
 
-		remove_markdown_tag( formated_text, "**", "**" );
-		/*
-		const fzn::Tools::ImGuiFormatOptions& rFormatOptions = fzn::WindowManager::s_ImGuiFormatOptions;
-		size_t iWord = 0;
-		std::string sInsert = "";
-		bool bOptions = false;
-
-		for( const ReplaceTermCategory& rCategory : s_oTermsToReplace )
-		{
-			for( const std::string& rTerm : rCategory.m_oTerms )
-			{
-				iWord = 0;
-				iWord = fzn::Tools::FindWholeWord( _sDescription, rTerm, iWord );
-
-				while( iWord != std::string::npos )
-				{
-					bOptions = false;
-					sInsert = rFormatOptions.m_sBeginTag;
-
-					if( rCategory.m_bBold )
-					{
-						sInsert += rFormatOptions.m_sOption_Bold;
-						bOptions = true;
-					}
-
-					if( fzn::Tools::IsColorValid( rCategory.m_oColor ) )
-					{
-						sInsert += rFormatOptions.m_sTagOptionsSeparator;
-						sInsert += fzn::Tools::GetColorTag( rCategory.m_oColor );
-						bOptions = true;
-					}
-
-					if( bOptions )
-						sInsert += rFormatOptions.m_sTagOptionsEnd;
-
-					_sDescription.insert( iWord, sInsert );
-
-					iWord += rTerm.size() + sInsert.size();
-					_sDescription.insert( iWord, rFormatOptions.m_sEndTag );
-					iWord = fzn::Tools::FindWholeWord( _sDescription, rTerm, iWord );
-				}
-			}
-		}
-
-		return _sDescription;
-		*/
+		remove_markdown_tag( formated_text, "<", ">" );
+		format_markdown_bold_tag( formated_text, &imgui_format_options );
 
 		return formated_text;
 	}
