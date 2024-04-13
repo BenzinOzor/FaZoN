@@ -61,27 +61,6 @@ namespace ImGui_fzn
 		return false;
 	}
 
-	void BoldText( const std::string& _sText, ImVec4 _color /*= color::white */ )
-	{
-		CustomFontText( _sText, s_ImGuiFormatOptions.m_pFontBold, _color );
-	}
-
-	void CustomFontText( const std::string& _sText, ImFont* _pFont, ImVec4 _color /*= color::white */ )
-	{
-		if( _pFont == nullptr )
-		{
-			ImGui::TextColored( _color, _sText.c_str() );
-			return;
-		}
-
-		ImGui::PushFont( _pFont );
-
-		ImGui::TextColored( _color, _sText.c_str() );
-
-		ImGui::PopFont();
-
-	}
-
 	bool is_color_valid( const ImVec4& _color )
 	{
 		if( _color.x < 0.f || _color.y < 0.f || _color.z < 0.f || _color.w < 0.f )
