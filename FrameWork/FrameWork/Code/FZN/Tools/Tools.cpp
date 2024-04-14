@@ -196,7 +196,7 @@ namespace fzn
 			return sPath;
 		}
 
-		std::string GetFileNameFromPath( const std::string& _sPath )
+		std::string GetFileNameFromPath( const std::string& _sPath, bool _keep_extension /*= false*/ )
 		{
 			std::string sFileName( "" );
 
@@ -206,7 +206,22 @@ namespace fzn
 
 			sFileName = _sPath.substr( Math::Max( iSlashIndex + 1, iBackSlashIndex + 1 ) );
 
+			if( _keep_extension )
+				return sFileName;
+
 			return sFileName.substr( 0, sFileName.find_last_of( "." ) );
+		}
+
+		StringVector split( std::string_view _text, char _delimiter )
+		{
+			auto line_stream = std::stringstream( _text.data() );
+			auto item = std::string{};
+			auto items = StringVector{};
+
+			while( std::getline( line_stream, item, _delimiter ) )
+				items.push_back( item );
+
+			return items;
 		}
 
 		/////////////////COLLISION FUNCTIONS/////////////////

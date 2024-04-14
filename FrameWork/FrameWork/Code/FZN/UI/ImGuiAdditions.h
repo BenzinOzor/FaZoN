@@ -68,7 +68,7 @@ namespace ImGui_fzn
 	template< typename ...Args >
 	void bold_text_colored( const ImColor& _color, std::string_view _text, Args... _args )
 	{
-		custom_font_text_colored( s_ImGuiFormatOptions.m_pFontBold, _color, _text, _args );
+		custom_font_text_colored( s_ImGuiFormatOptions.m_pFontBold, _color, _text, _args... );
 	}
 
 	template< typename ...Args >

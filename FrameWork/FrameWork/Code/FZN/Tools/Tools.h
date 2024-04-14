@@ -62,7 +62,8 @@ namespace fzn
 		FZN_EXPORT void			ConvertSlashesInWindowsPath( std::string& _sPath );
 		FZN_EXPORT void			ConvertToAntiSlashes( std::string& _sPath );
 		FZN_EXPORT std::string	ConvertToAntiSlashes( const std::string& _sPath );
-		FZN_EXPORT std::string	GetFileNameFromPath( const std::string& _sPath );
+		FZN_EXPORT std::string	GetFileNameFromPath( const std::string& _sPath, bool _keep_extension = false );
+		FZN_EXPORT StringVector	split( std::string_view _text, char _delimiter );
 
 		/////////////////COLLISION FUNCTIONS/////////////////
 
