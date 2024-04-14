@@ -42,6 +42,15 @@ namespace fzn
 		FZN_EXPORT sf::FloatRect	ConvertRectangleShapeToFloatRect( const sf::RectangleShape& _oShape );
 		FZN_EXPORT sf::ConvexShape	ConvertShapePtrToConvexShape( const sf::Shape* _pShape );
 
+		template < typename Mask, typename Flag >
+		bool mask_has_flag_raised( const Mask& _mask, const Flag& _flag ) { return ( _mask & _flag ) != 0; }
+
+		template < typename Mask, typename Flag >
+		void mask_raise_flag( Mask& _mask, const Flag& _flag ) { _mask |= _flag; }
+
+		template < typename Mask, typename Flag >
+		void mask_lower_flag( Mask& _mask, const Flag& _flag ) { _mask &= ~_flag; }
+
 		FZN_EXPORT bool MaskHasFlagRaised( const sf::Uint8& _uMask, const sf::Uint8& _uFlag );
 		FZN_EXPORT bool MaskHasFlagRaised( const sf::Uint16& _uMask, const sf::Uint16& _uFlag );
 		FZN_EXPORT void MaskRaiseFlag( sf::Uint8& _uMask, const sf::Uint8& _uFlag );

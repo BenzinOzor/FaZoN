@@ -67,7 +67,8 @@ namespace fzn
 				return;
 			}
 
-			g_pFZN_InputMgr->ManageInputEvent( m_oEvent );
+			if( g_pFZN_InputMgr != nullptr )
+				g_pFZN_InputMgr->ManageInputEvent( m_oEvent );
 
 			ProcessEventsCallBacks();
 		}

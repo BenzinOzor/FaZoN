@@ -146,19 +146,19 @@ namespace fzn
 
 		_CreateSaveFolder();
 
-		if( m_pInputManager == nullptr )
+		if( Tools::mask_has_flag_raised( _oDesc.m_uModules, CoreModuleFlags_InputModule ) && m_pInputManager == nullptr )
 		{
 			m_pInputManager = new InputManager;
 			m_iActivatedModulesNbr++;
 		}
 
-		if( m_pDataManager == nullptr )
+		if( Tools::mask_has_flag_raised( _oDesc.m_uModules, CoreModuleFlags_DataModule ) && m_pDataManager == nullptr )
 		{
 			m_pDataManager = new DataManager;
 			m_iActivatedModulesNbr++;
 		}
 
-		if( m_pAnimManager == nullptr )
+		if( Tools::mask_has_flag_raised( _oDesc.m_uModules, CoreModuleFlags_AnimModule ) && m_pAnimManager == nullptr )
 		{
 			m_pAnimManager = new AnimManager;
 			m_iActivatedModulesNbr++;
@@ -166,13 +166,13 @@ namespace fzn
 			//m_oThread = new sf::Thread( &AnimManager::Update, m_pAnimManager );
 		}
 
-		if( m_pWindowManager == nullptr )
+		if( Tools::mask_has_flag_raised( _oDesc.m_uModules, CoreModuleFlags_WindowModule ) && m_pWindowManager == nullptr )
 		{
 			m_pWindowManager = new WindowManager;
 			m_iActivatedModulesNbr++;
 		}
 
-		if( m_pAudioManager == nullptr )
+		if( Tools::mask_has_flag_raised( _oDesc.m_uModules, CoreModuleFlags_AudioModule ) && m_pAudioManager == nullptr )
 		{
 			m_pAudioManager = new AudioManager( _oDesc.m_bUseFMOD );
 			m_iActivatedModulesNbr++;
@@ -183,28 +183,28 @@ namespace fzn
 	{
 		switch( eModule )
 		{
-		case InputModule:
+		case CoreModules::InputModule:
 			if( m_pInputManager == nullptr )
 			{
 				m_pInputManager = new InputManager;
 				m_iActivatedModulesNbr++;
 			}
 			break;
-		case DataModule:
+		case CoreModules::DataModule:
 			if( m_pDataManager == nullptr )
 			{
 				m_pDataManager = new DataManager;
 				m_iActivatedModulesNbr++;
 			}
 			break;
-		case AnimModule:
+		case CoreModules::AnimModule:
 			if( m_pAnimManager == nullptr )
 			{
 				m_pAnimManager = new AnimManager;
 				m_iActivatedModulesNbr++;
 			}
 			break;
-		case WindowModule:
+		case CoreModules::WindowModule:
 			if( m_pWindowManager == nullptr )
 			{
 				m_pWindowManager = new WindowManager;
@@ -214,21 +214,21 @@ namespace fzn
 					m_pInputManager->SetInputSystem( InputManager::EventSystem );
 			}
 			break;
-		case AudioModule:
+		case CoreModules::AudioModule:
 			if( m_pAudioManager == nullptr )
 			{
 				m_pAudioManager = new AudioManager;
 				m_iActivatedModulesNbr++;
 			}
 			break;
-		case SteeringModule:
+		case CoreModules::SteeringModule:
 			if( m_pSteeringManager == nullptr )
 			{
 				m_pSteeringManager = new SteeringManager;
 				m_iActivatedModulesNbr++;
 			}
 			break;
-		case MessageModule:
+		case CoreModules::MessageModule:
 			if( m_pMessageManager == nullptr )
 			{
 				m_pMessageManager = new MessageManager;
@@ -334,7 +334,7 @@ namespace fzn
 
 		switch( eModule )
 		{
-		case InputModule:
+		case CoreModules::InputModule:
 			if( m_pInputManager != nullptr )
 			{
 				delete m_pInputManager;
@@ -342,7 +342,7 @@ namespace fzn
 				m_iActivatedModulesNbr--;
 			}
 			break;
-		case DataModule:
+		case CoreModules::DataModule:
 			if( m_pDataManager != nullptr )
 			{
 				delete m_pDataManager;
@@ -350,7 +350,7 @@ namespace fzn
 				m_iActivatedModulesNbr--;
 			}
 			break;
-		case AnimModule:
+		case CoreModules::AnimModule:
 			if( m_pAnimManager != nullptr )
 			{
 				delete m_pAnimManager;
@@ -358,7 +358,7 @@ namespace fzn
 				m_iActivatedModulesNbr--;
 			}
 			break;
-		case WindowModule:
+		case CoreModules::WindowModule:
 			if( m_pWindowManager != nullptr )
 			{
 				if( m_iActivatedModulesNbr > 1 )
@@ -374,7 +374,7 @@ namespace fzn
 				m_iActivatedModulesNbr--;
 			}
 			break;
-		case AudioModule:
+		case CoreModules::AudioModule:
 			if( m_pAudioManager != nullptr )
 			{
 				delete m_pAudioManager;
@@ -382,7 +382,7 @@ namespace fzn
 				m_iActivatedModulesNbr--;
 			}
 			break;
-		case SteeringModule:
+		case CoreModules::SteeringModule:
 			if( m_pSteeringManager != nullptr )
 			{
 				delete m_pSteeringManager;
@@ -390,7 +390,7 @@ namespace fzn
 				m_iActivatedModulesNbr--;
 			}
 			break;
-		case MessageModule:
+		case CoreModules::MessageModule:
 			if( m_pMessageManager != nullptr )
 			{
 				delete m_pMessageManager;
@@ -589,7 +589,6 @@ namespace fzn
 			spaces += " ";
 
 		SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 2 );
-		printf( "\n" );
 		printf( "================================================================================\n" );
 		printf( "%sHI %s AND WELCOME ON\n", spaces.c_str(), userName );
 		printf( "                          _____ _____ _____ _____ _   _  \n" );
@@ -601,7 +600,6 @@ namespace fzn
 		printf( "\n================================================================================\n" );
 		SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 15 );
 
-		FZN_LOG( "" );
 		FZN_LOG( "================================================================================" );
 		FZN_LOG( "%sHI %s AND WELCOME ON", spaces.c_str(), userName );
 		FZN_LOG( "                          _____ _____ _____ _____ _   _  " );
@@ -715,19 +713,19 @@ namespace fzn
 	{
 		switch( eModule )
 		{
-		case InputModule:
+		case CoreModules::InputModule:
 			return m_pInputManager != nullptr;
-		case DataModule:
+		case CoreModules::DataModule:
 			return m_pDataManager != nullptr;
-		case AnimModule:
+		case CoreModules::AnimModule:
 			return m_pAnimManager != nullptr;
-		case WindowModule:
+		case CoreModules::WindowModule:
 			return m_pWindowManager != nullptr;
-		case AudioModule:
+		case CoreModules::AudioModule:
 			return m_pAudioManager != nullptr;
-		case SteeringModule:
+		case CoreModules::SteeringModule:
 			return m_pSteeringManager != nullptr;
-		case MessageModule:
+		case CoreModules::MessageModule:
 			return m_pMessageManager != nullptr;
 		default:
 			return FALSE;

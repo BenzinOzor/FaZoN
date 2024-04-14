@@ -13,6 +13,7 @@ namespace ImGui_fzn
 		static const auto transparent = ImVec4{ 0.f, 0.f, 0.f, 0.f };
 
 		static const auto black		= ImVec4{ 0.f, 0.f, 0.f, 1.f };
+		static const auto gray		= ImVec4{ 0.5f, 0.5f, 0.5f, 1.f };
 		static const auto white		= ImVec4{ 1.f, 1.f, 1.f, 1.f };
 		static const auto red		= ImVec4{ 1.f, 0.f, 0.f, 1.f };
 		static const auto green		= ImVec4{ 0.f, 1.f, 0.f, 1.f };

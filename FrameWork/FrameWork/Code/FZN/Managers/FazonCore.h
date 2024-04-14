@@ -50,17 +50,6 @@ namespace fzn
 	class FZN_EXPORT FazonCore : public sf::NonCopyable
 	{
 	public:
-		struct ProjectDesc
-		{
-			std::string		m_sName{ "" };
-
-			FZNProjectType	m_eProjectType{ FZNProjectType::COUNT_PROJECT_TYPES };
-			std::string		m_sSaveFolderName{ m_sName };
-			bool			m_bUseCryptedData{ false };
-			bool			m_bUseFMOD{ false };
-			std::string		m_sDataFolderPath{ "../../Data/" };
-		};
-
 		enum CoreModules : INT8
 		{
 			InputModule,
@@ -71,6 +60,33 @@ namespace fzn
 			SteeringModule,
 			MessageModule,
 			CoreModulesCount
+		};
+
+		enum CoreModuleFlags_ : uint8_t
+		{
+			CoreModuleFlags_InputModule		= 1 << CoreModules::InputModule,
+			CoreModuleFlags_DataModule		= 1 << CoreModules::DataModule,
+			CoreModuleFlags_AnimModule		= 1 << CoreModules::AnimModule,
+			CoreModuleFlags_WindowModule	= 1 << CoreModules::WindowModule,
+			CoreModuleFlags_AudioModule		= 1 << CoreModules::AudioModule,
+			CoreModuleFlags_SteeringModule	= 1 << CoreModules::SteeringModule,
+			CoreModuleFlags_MessageModule	= 1 << CoreModules::MessageModule,
+		};
+
+		using CoreModulesMask = uint8_t;
+		static constexpr uint8_t CoreModulesMask_Game			= CoreModuleFlags_InputModule | CoreModuleFlags_DataModule | CoreModuleFlags_AnimModule | CoreModuleFlags_WindowModule | CoreModuleFlags_AudioModule;
+		static constexpr uint8_t CoreModulesMask_Application	= CoreModuleFlags_DataModule | CoreModuleFlags_WindowModule;
+
+		struct ProjectDesc
+		{
+			std::string		m_sName{ "" };
+
+			FZNProjectType	m_eProjectType{ FZNProjectType::COUNT_PROJECT_TYPES };
+			CoreModulesMask m_uModules{ m_eProjectType == FZNProjectType::Application ? CoreModulesMask_Application : CoreModulesMask_Game };
+			std::string		m_sSaveFolderName{ m_sName };
+			bool			m_bUseCryptedData{ false };
+			bool			m_bUseFMOD{ false };
+			std::string		m_sDataFolderPath{ "../../Data/" };
 		};
 
 		/////////////////SINGLETON MANAGEMENT/////////////////
