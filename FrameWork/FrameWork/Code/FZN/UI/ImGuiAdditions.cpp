@@ -61,6 +61,15 @@ namespace ImGui_fzn
 		return false;
 	}
 
+	bool small_slider_float( const char* label, float* v, float v_min, float v_max, const char* format )
+	{
+		float backup_padding_y = ImGui::GetStyle().FramePadding.y;
+		ImGui::GetStyle().FramePadding.y = 0.0f;
+		bool pressed = ImGui::SliderFloat( label, v, v_min, v_max, format );
+		ImGui::GetStyle().FramePadding.y = backup_padding_y;
+		return pressed;
+	}
+
 	bool is_color_valid( const ImVec4& _color )
 	{
 		if( _color.x < 0.f || _color.y < 0.f || _color.z < 0.f || _color.w < 0.f )

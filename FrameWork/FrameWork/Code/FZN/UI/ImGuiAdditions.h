@@ -50,6 +50,8 @@ namespace ImGui_fzn
 
 	FZN_EXPORT bool SliderBool( bool& _slider_value, std::string_view _label_left, std::string_view _label_right );
 
+	FZN_EXPORT bool small_slider_float( const char* label, float* v, float v_min, float v_max, const char* format );
+
 	template< typename ...Args >
 	void custom_font_text_colored( ImFont* _font, const ImColor& _color, std::string_view _text, Args... _args )
 	{
