@@ -80,4 +80,6 @@ namespace ImGui_fzn
 
 	FZN_EXPORT std::string convert_markdown_to_imgui_format( const std::string_view _text, const ImGui_fzn::ImGuiFormatOptions* _format_options = nullptr );
 	//FZN_EXPORT std::string create_color_tag( const ImVec4& _color, const ImGui_fzn::ImGuiFormatOptions* _format_options = nullptr );
+
+	FZN_EXPORT ImColor get_color( ImGuiCol_ _color_id );
 }

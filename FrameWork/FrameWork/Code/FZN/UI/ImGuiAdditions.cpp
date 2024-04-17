@@ -171,4 +171,12 @@ namespace ImGui_fzn
 
 		return formated_text;
 	}
+
+	ImColor get_color( ImGuiCol_ _color_id )
+	{
+		if( _color_id >= ImGuiCol_::ImGuiCol_COUNT )
+			return {};
+
+		return ImGui::GetStyle().Colors[ _color_id ];
+	}
 }
