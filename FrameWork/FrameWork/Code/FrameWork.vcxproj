@@ -139,8 +139,8 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;$(SolutionDir)FrameWork\ExternalWrapper\Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>FRAMEWORK_EXPORTS;FZN_DEBUG;FZN_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code\Externals;$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;$(SolutionDir)FrameWork\ExternalWrapper\Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>FRAMEWORK_EXPORTS;JSON_DLL_BUILD;FZN_DEBUG;FZN_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -184,8 +184,8 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;$(SolutionDir)FrameWork\ExternalWrapper\Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>FRAMEWORK_EXPORTS;FZN_RELEASE;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code\Externals;$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;$(SolutionDir)FrameWork\ExternalWrapper\Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>FRAMEWORK_EXPORTS;JSON_DLL_BUILD;FZN_RELEASE;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -213,8 +213,8 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;$(SolutionDir)FrameWork\ExternalWrapper\Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>FRAMEWORK_EXPORTS;FZN_RELEASE;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code\Externals;$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;$(SolutionDir)FrameWork\ExternalWrapper\Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>FRAMEWORK_EXPORTS;JSON_DLL_BUILD;FZN_RELEASE;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -286,6 +286,17 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
     <ClInclude Include="Externals\ImGui\imstb_rectpack.h" />
     <ClInclude Include="Externals\ImGui\imstb_textedit.h" />
     <ClInclude Include="Externals\ImGui\imstb_truetype.h" />
+    <ClInclude Include="Externals\json\allocator.h" />
+    <ClInclude Include="Externals\json\assertions.h" />
+    <ClInclude Include="Externals\json\config.h" />
+    <ClInclude Include="Externals\json\forwards.h" />
+    <ClInclude Include="Externals\json\json.h" />
+    <ClInclude Include="Externals\json\json_features.h" />
+    <ClInclude Include="Externals\json\json_tool.h" />
+    <ClInclude Include="Externals\json\reader.h" />
+    <ClInclude Include="Externals\json\value.h" />
+    <ClInclude Include="Externals\json\version.h" />
+    <ClInclude Include="Externals\json\writer.h" />
     <ClInclude Include="FZN\Defines.h" />
     <ClInclude Include="FZN\Display\AnimatedProgressBar.h" />
     <ClInclude Include="FZN\Display\Animation.h" />
@@ -348,6 +359,9 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
     <ClCompile Include="Externals\ImGui\imgui_stdlib.cpp" />
     <ClCompile Include="Externals\ImGui\imgui_tables.cpp" />
     <ClCompile Include="Externals\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="Externals\json\json_reader.cpp" />
+    <ClCompile Include="Externals\json\json_value.cpp" />
+    <ClCompile Include="Externals\json\json_writer.cpp" />
     <ClCompile Include="FZN\Display\AnimatedProgressBar.cpp" />
     <ClCompile Include="FZN\Display\Animation.cpp" />
     <ClCompile Include="FZN\Audio\AudioObject.cpp" />
@@ -392,6 +406,7 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
+    <None Include="Externals\json\json_valueiterator.inl" />
     <None Include="FZN\DataStructure\FixedSizeAllocator.inl" />
     <None Include="FZN\DataStructure\Vector.inl" />
     <None Include="FZN\Game\PathFinding\STLAstar.inl" />
