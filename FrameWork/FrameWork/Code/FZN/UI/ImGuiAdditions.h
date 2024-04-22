@@ -84,4 +84,6 @@ namespace ImGui_fzn
 	//FZN_EXPORT std::string create_color_tag( const ImVec4& _color, const ImGui_fzn::ImGuiFormatOptions* _format_options = nullptr );
 
 	FZN_EXPORT ImColor get_color( ImGuiCol_ _color_id );
+
+	FZN_EXPORT void rect_filled( const sf::FloatRect& _rect, const ImVec4& _color );
 }

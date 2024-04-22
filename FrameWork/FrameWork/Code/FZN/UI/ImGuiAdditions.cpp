@@ -188,4 +188,18 @@ namespace ImGui_fzn
 
 		return ImGui::GetStyle().Colors[ _color_id ];
 	}
+
+	void rect_filled( const sf::FloatRect& _rect, const ImVec4& _color )
+	{
+		auto* draw_list{ ImGui::GetWindowDrawList() };
+
+		if( draw_list == nullptr )
+			return;
+
+		const auto rect_pos_min = ImVec2{ _rect.left, _rect.top };
+		const auto rect_pos_max = ImVec2{ rect_pos_min.x + _rect.width, rect_pos_min.y + _rect.height };
+
+		draw_list->AddRectFilled( rect_pos_min, rect_pos_max, ImGui::ColorConvertFloat4ToU32( _color ) );
+	}
+
 }
