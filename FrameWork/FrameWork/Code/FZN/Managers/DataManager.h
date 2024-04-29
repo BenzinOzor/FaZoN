@@ -341,7 +341,7 @@ namespace fzn
 		bool m_bResourceFileExists;			//Does the resource file exists
 		bool m_bResourceFileLoaded;			//Has the resource file been loaded
 
-		bool m_bSmoothTextures;
+		bool m_bSmoothTextures{ true };
 	};
 } //namspace fzn
 

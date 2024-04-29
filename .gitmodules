@@ -28,3 +28,6 @@
 [submodule "Utilities/MarathonMessageCreator"]
 	path = Utilities/MarathonMessageCreator
 	url = https://github.com/BenzinOzor/MarathonMessageCreator
+[submodule "Utilities/TruthTable"]
+	path = Utilities/TruthTable
+	url = https://github.com/BenzinOzor/TruthTable
