@@ -167,7 +167,7 @@ void initDefaultJoystickMapping();
 // Returns first id of connected joystick
 unsigned int getConnectedJoystickId();
 
-void updateJoystickActionState(ImGuiIO& io, ImGuiNavInput_ action);
+void updateJoystickActionState(ImGuiIO& io, ImGuiNavInput action);
 void updateJoystickDPadState(ImGuiIO& io);
 void updateJoystickLStickState(ImGuiIO& io);
 
@@ -873,7 +873,7 @@ void initDefaultJoystickMapping() {
     ImGui::SFML::SetJoytickLStickThreshold(5.f);
 }
 
-void updateJoystickActionState(ImGuiIO& io, ImGuiNavInput_ action) {
+void updateJoystickActionState(ImGuiIO& io, ImGuiNavInput action) {
     bool isPressed =
         sf::Joystick::isButtonPressed(s_joystickId, s_joystickMapping[action]);
     io.NavInputs[action] = isPressed ? 1.0f : 0.0f;
