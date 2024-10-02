@@ -31,3 +31,6 @@
 [submodule "Utilities/TruthTable"]
 	path = Utilities/TruthTable
 	url = https://github.com/BenzinOzor/TruthTable
+[submodule "Games/Floktober_2024"]
+	path = Games/Floktober_2024
+	url = https://github.com/BenzinOzor/Floktober_2024
