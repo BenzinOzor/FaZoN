@@ -86,4 +86,6 @@ namespace ImGui_fzn
 	FZN_EXPORT ImColor get_color( ImGuiCol_ _color_id );
 
 	FZN_EXPORT void rect_filled( const sf::FloatRect& _rect, const ImVec4& _color );
+
+	FZN_EXPORT bool square_button( const char* _label, float _size = 0.f );
 }

@@ -202,4 +202,8 @@ namespace ImGui_fzn
 		draw_list->AddRectFilled( rect_pos_min, rect_pos_max, ImGui::ColorConvertFloat4ToU32( _color ) );
 	}
 
+	bool square_button( const char* _label, float _size /*= 0.f */ )
+	{
+		return ImGui::Button( _label, { _size <= 0.f ? ImGui::GetFrameHeight() : _size, 0.f } );
+	}
 }
