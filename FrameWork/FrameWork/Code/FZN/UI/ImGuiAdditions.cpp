@@ -206,4 +206,10 @@ namespace ImGui_fzn
 	{
 		return ImGui::Button( _label, { _size <= 0.f ? ImGui::GetFrameHeight() : _size, 0.f } );
 	}
+
+	ImVec4 color_diff_alpha( const ImVec4& _color, float _new_alpha )
+	{
+		return { _color.x, _color.x, _color.x, _new_alpha };
+	}
+
 }
