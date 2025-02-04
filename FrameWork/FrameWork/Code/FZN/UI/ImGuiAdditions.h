@@ -9,20 +9,46 @@ namespace ImGui_fzn
 {
 	namespace color
 	{
-		static const auto invalid = ImVec4{ -1.f, -1.f, -1.f, -1.f };
-		static const auto transparent = ImVec4{ 0.f, 0.f, 0.f, 0.f };
+		inline constexpr ImVec4 invalid			{ -1.f, -1.f, -1.f, -1.f };
+		inline constexpr ImVec4 transparent		{ 0.f, 0.f, 0.f, 0.f };
 
-		static const auto black		= ImVec4{ 0.f, 0.f, 0.f, 1.f };
-		static const auto gray		= ImVec4{ 0.5f, 0.5f, 0.5f, 1.f };
-		static const auto white		= ImVec4{ 1.f, 1.f, 1.f, 1.f };
-		static const auto red		= ImVec4{ 1.f, 0.f, 0.f, 1.f };
-		static const auto green		= ImVec4{ 0.f, 1.f, 0.f, 1.f };
-		static const auto blue		= ImVec4{ 0.f, 0.f, 1.f, 1.f };
-		static const auto yellow	= ImVec4{ 1.f, 1.f, 0.f, 1.f };
-		static const auto pink		= ImVec4{ 1.f, 0.f, 1.f, 1.f };
-		static const auto cyan		= ImVec4{ 0.f, 1.f, 1.f, 1.f };
+		inline constexpr ImVec4 black			{ 0.f, 0.f, 0.f, 1.f };
+		inline constexpr ImVec4 white			{ 1.f, 1.f, 1.f, 1.f };
 
-		static const auto link		= ImVec4{ 0.05f, 0.53f, 0.78f, 1.f };
+		inline constexpr ImVec4 gray			{ 0.6f, 0.6f, 0.6f, 1.f };
+		inline constexpr ImVec4 light_gray		{ 0.75f, 0.75f, 0.75f, 1.f };
+		inline constexpr ImVec4 dark_gray		{ 0.5f, 0.5f, 0.5f, 1.f };
+
+		inline constexpr ImVec4 red 			{ 0.8f, 0.2f, 0.2f, 1.f };
+		inline constexpr ImVec4 bright_red		{ 1.f, 0.f, 0.f, 1.f };
+		inline constexpr ImVec4 light_red		{ 0.95f, 0.3f, 0.3f, 1.f };
+		inline constexpr ImVec4 dark_red		{ 0.45f, 0.15f, 0.15f, 1.f };
+
+		inline constexpr ImVec4 green			{ 0.2f, 0.8f, 0.2f, 1.f };
+		inline constexpr ImVec4 bright_green		{ 0.f, 1.f, 0.f, 1.f };
+		inline constexpr ImVec4 light_green		{ 0.3f, 0.95f, 0.3f, 1.f };
+		inline constexpr ImVec4 dark_green		{ 0.15f, 0.45f, 0.15f, 1.f };
+
+		inline constexpr ImVec4 green			{ 0.2f, 0.8f, 0.2f, 1.f };
+		inline constexpr ImVec4 bright_blue		{ 0.f, 0.f, 1.f, 1.f };
+		inline constexpr ImVec4 light_green		{ 0.3f, 0.95f, 0.3f, 1.f };
+		inline constexpr ImVec4 dark_green		{ 0.15f, 0.45f, 0.15f, 1.f };
+
+		inline constexpr ImVec4 yellow			{ 1.f, 1.f, 0.f, 1.f };
+		inline constexpr ImVec4 light_yellow		{ 1.f, 0.78f, 0.19f, 1.f };
+		inline constexpr ImVec4 dark_yellow		{ 0.5f, 0.37f, 0.08f, 1.f };
+
+		inline constexpr ImVec4 magenta			{ 1.f, 0.f, 1.f, 1.f };
+		inline constexpr ImVec4 light_magenta		{ 1.f, 0.f, 0.5f, 1.f };
+		inline constexpr ImVec4 dark_magenta		{ 0.5f, 0.f, 0.2f, 1.f };
+
+		inline constexpr ImVec4 cyan			{ 0.f, 1.f, 1.f, 1.f };
+		inline constexpr ImVec4 light_cyan		{ 0.f, 1.f, 0.65f, 1.f };
+		inline constexpr ImVec4 dark_cyan		{ 0.f, 0.5f, 0.3f, 1.f };
+
+		inline constexpr ImVec4 orange			{ 0.8f, 0.5f, 0.2f, 1.f };
+
+		inline constexpr ImVec4 link			{ 0.05f, 0.53f, 0.78f, 1.f };
 	}
 
 	struct ImGuiFormatOptions
