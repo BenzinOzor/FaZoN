@@ -132,7 +132,7 @@ namespace fzn
 			_sString = GetSpacedString( _sString, _bCapitalizeFirstLetter );
 		}
 
-		std::string GetToLowerString( const std::string& _sString )
+		std::string get_lower_string( const std::string& _sString )
 		{
 			std::string sRet = _sString;
 
@@ -144,12 +144,12 @@ namespace fzn
 			return sRet;
 		}
 
-		void ToLower( std::string& _sString )
+		void to_lower( std::string& _sString )
 		{
-			_sString = GetToLowerString( _sString );
+			_sString = get_lower_string( _sString );
 		}
 
-		std::string GetToUpperString( const std::string& _sString )
+		std::string get_upper_string( const std::string& _sString )
 		{
 			std::string sRet = _sString;
 
@@ -161,9 +161,35 @@ namespace fzn
 			return sRet;
 		}
 
-		void ToUpper( std::string& _sString )
+		void to_upper( std::string& _sString )
 		{
-			_sString = GetToUpperString( _sString );
+			_sString = get_upper_string( _sString );
+		}
+
+		bool match_filter( std::string_view _filter, std::string_view _text )
+		{
+			if( _filter.empty() )
+				return true;
+
+			const std::string filter_lower{ std::move( get_lower_string( _filter.data() ) ) };
+			std::string text_lower{	std::move( get_lower_string( _text.data() ) ) };
+
+			const StringVector filter_words{ fzn::Tools::split( filter_lower, ' ' ) };
+
+			int nb_match{ 0 };
+
+			for( const std::string& word : filter_words )
+			{
+				if( auto match_pos = text_lower.find( word ); match_pos != std::string::npos )
+				{
+					++nb_match;
+					text_lower = text_lower.substr( match_pos + word.size() );
+				}
+				else
+					return false; // We want all the words in the filter to match, so return false as soon as one of the word isn't in the given text.
+			}
+
+			return nb_match == filter_words.size();
 		}
 
 		void ConvertSlashesInWindowsPath( std::string& _sString )
@@ -212,7 +238,7 @@ namespace fzn
 			return sFileName.substr( 0, sFileName.find_last_of( "." ) );
 		}
 
-		StringVector split( std::string_view _text, char _delimiter )
+		StringVector split( std::string_view _text, char _delimiter /*= ' '*/ )
 		{
 			auto line_stream = std::stringstream( _text.data() );
 			auto item = std::string{};
@@ -222,6 +248,29 @@ namespace fzn
 				items.push_back( item );
 
 			return items;
+		}
+
+		bool is_number( std::string_view _text )
+		{
+			return _text.empty() == false && std::find_if_not( _text.begin(), _text.end(), []( unsigned char _char ) { return std::isdigit( _char ); } ) == _text.end();
+		}
+
+		std::vector< int > extract_numbers( std::string_view _text, char _delimiter /*= ' '*/ )
+		{
+			const StringVector strings{ std::move( split( _text, _delimiter ) ) };
+
+			std::vector< int > numbers{};
+			numbers.reserve( strings.size() );
+
+			for( auto& string_item : strings )
+			{
+				if( is_number( string_item ) == false )
+					continue;
+
+				numbers.push_back( std::stoi( string_item ) );
+			}
+
+			return numbers;
 		}
 
 		/////////////////COLLISION FUNCTIONS/////////////////

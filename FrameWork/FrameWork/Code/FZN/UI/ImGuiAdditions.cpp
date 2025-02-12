@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "Externals/ImGui/imgui.h"
 #include "Externals/ImGui/imgui_stdlib.h"
 
@@ -207,9 +209,45 @@ namespace ImGui_fzn
 		return ImGui::Button( _label, { _size <= 0.f ? ImGui::GetFrameHeight() : _size, 0.f } );
 	}
 
+	bool deactivable_button( const char* _label, bool _disable, const ImVec2& _size /*= { 0.f, 0.f } */ )
+	{
+		if( _disable )
+			ImGui::BeginDisabled();
+
+		const bool result = ImGui::Button( _label, _size );
+
+		if( _disable )
+			ImGui::EndDisabled();
+
+		return result;
+	}
+
 	ImVec4 color_diff_alpha( const ImVec4& _color, float _new_alpha )
 	{
 		return { _color.x, _color.x, _color.x, _new_alpha };
 	}
 
+	bool Filter( std::string& _buffer, const char* _hint )
+	{
+		bool bFilterChanged{ false };
+
+		if( ImGui::BeginTable( "##Filter", 2 ) )
+		{
+			ImGui::TableSetupColumn( "A", ImGuiTableColumnFlags_WidthFixed );
+			ImGui::TableSetupColumn( "B", ImGuiTableColumnFlags_WidthStretch );
+
+			ImGui::TableNextColumn();
+			if( deactivable_button( "Clear", _buffer.empty() ) )
+				_buffer.clear();
+
+			ImGui::TableNextColumn();
+			ImGui::PushItemWidth( -1 );
+			bFilterChanged = ImGui::InputTextWithHint( "#Search", _hint, &_buffer );
+			ImGui::PopItemWidth();
+
+			ImGui::EndTable();
+		}
+
+		return bFilterChanged;
+	}
 }

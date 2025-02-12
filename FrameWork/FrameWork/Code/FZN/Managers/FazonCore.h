@@ -17,7 +17,7 @@ class FazonCore;
 
 #include <SFML/Graphics/Rect.hpp>
 #include <vector>
-#include <Windows.h>
+//#include <Windows.h>
 #include <queue>
 
 #include <SFML/System/Clock.hpp>

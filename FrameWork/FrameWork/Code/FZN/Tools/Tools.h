@@ -63,16 +63,19 @@ namespace fzn
 
 		FZN_EXPORT std::string	GetSpacedString( const std::string& _sString, bool _bCapitalizeFirstLetter = false );
 		FZN_EXPORT void			InsertSpacesInString( std::string& _sString, bool _bCapitalizeFirstLetter = false );
-		FZN_EXPORT std::string	GetToLowerString( const std::string& _sString );
-		FZN_EXPORT void			ToLower( std::string& _sString );
-		FZN_EXPORT std::string	GetToUpperString( const std::string& _sString );
-		FZN_EXPORT void			ToUpper( std::string& _sString );
+		FZN_EXPORT std::string	get_lower_string( const std::string& _sString );
+		FZN_EXPORT void			to_lower( std::string& _sString );
+		FZN_EXPORT std::string	get_upper_string( const std::string& _sString );
+		FZN_EXPORT void			to_upper( std::string& _sString );
+		FZN_EXPORT bool			match_filter( std::string_view _filter, std::string_view _text );
 
 		FZN_EXPORT void			ConvertSlashesInWindowsPath( std::string& _sPath );
 		FZN_EXPORT void			ConvertToAntiSlashes( std::string& _sPath );
 		FZN_EXPORT std::string	ConvertToAntiSlashes( const std::string& _sPath );
 		FZN_EXPORT std::string	GetFileNameFromPath( const std::string& _sPath, bool _keep_extension = false );
-		FZN_EXPORT StringVector	split( std::string_view _text, char _delimiter );
+		FZN_EXPORT StringVector	split( std::string_view _text, char _delimiter = ' ' );
+		FZN_EXPORT bool			is_number( std::string_view _text );
+		FZN_EXPORT std::vector< int > extract_numbers( std::string_view _text, char _delimiter = ' ' );
 
 		/////////////////COLLISION FUNCTIONS/////////////////
 
