@@ -653,6 +653,17 @@ namespace fzn
 			return true;
 		}
 
+		bool CollisionAABBPoint( const sf::FloatRect& _aabb, const sf::Vector2f& _point )
+		{
+			if( _point.x < _aabb.left || _point.x > _aabb.left + _aabb.width )
+				return false;
+
+			if( _point.y < _aabb.top || _point.y > _aabb.top + _aabb.height )
+				return false;
+
+			return true;
+		}
+
 		/////////////////CLOCK FUNCTIONS/////////////////
 
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -155,6 +155,8 @@ namespace fzn
 		FZN_EXPORT bool CollisionOBBPoint( const sf::Shape& _daOBB, const sf::Vector2f& _vPoint );
 		FZN_EXPORT bool CollisionOBBPoint( const std::vector< sf::Vector2f >& _daOBB, const sf::Vector2f& _vPoint );
 
+		FZN_EXPORT bool CollisionAABBPoint( const sf::FloatRect& _aabb, const sf::Vector2f& _point );
+
 		/////////////////CLOCK FUNCTIONS/////////////////
 
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
