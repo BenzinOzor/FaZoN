@@ -141,7 +141,7 @@
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code\Externals;$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;$(SolutionDir)FrameWork\ExternalWrapper\Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>FRAMEWORK_EXPORTS;JSON_DLL_BUILD;FZN_DEBUG;FZN_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\LuaPlus\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\TinyXML2\$(Configuration)\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\Fmod\;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Libs\SFML\$(Configuration)\;$(SolutionDir)FrameWork\ExternalWrapper\Dependencies\Libs\ExternalWrapper\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -186,7 +186,7 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code\Externals;$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;$(SolutionDir)FrameWork\ExternalWrapper\Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>FRAMEWORK_EXPORTS;JSON_DLL_BUILD;FZN_RELEASE;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -215,7 +215,7 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)FrameWork\$(ProjectName)\Code\Externals;$(SolutionDir)FrameWork\$(ProjectName)\Code;$(SolutionDir)FrameWork\$(ProjectName)\Dependencies\Includes;$(SolutionDir)FrameWork\ExternalWrapper\Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>FRAMEWORK_EXPORTS;JSON_DLL_BUILD;FZN_RELEASE;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -307,6 +307,7 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
     <ClInclude Include="FZN\Display\Anm2.h" />
     <ClInclude Include="FZN\Display\BitmapFont.h" />
     <ClInclude Include="FZN\Display\BitmapText.h" />
+    <ClInclude Include="FZN\Display\Line.h" />
     <ClInclude Include="FZN\Game\BehaviorTree\BTBasicElements.h" />
     <ClInclude Include="FZN\Game\BehaviorTree\BTComposites.h" />
     <ClInclude Include="FZN\Game\BehaviorTree\BTDecorators.h" />
@@ -371,6 +372,7 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
     <ClCompile Include="FZN\Display\Anm2.cpp" />
     <ClCompile Include="FZN\Display\BitmapFont.cpp" />
     <ClCompile Include="FZN\Display\BitmapText.cpp" />
+    <ClCompile Include="FZN\Display\Line.cpp" />
     <ClCompile Include="FZN\Game\BehaviorTree\BTBasicElements.cpp" />
     <ClCompile Include="FZN\Game\BehaviorTree\BTComposites.cpp" />
     <ClCompile Include="FZN\Game\BehaviorTree\BTDecorators.cpp" />

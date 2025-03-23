@@ -234,6 +234,9 @@
     <ClInclude Include="Externals\json\writer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FZN\Display\Line.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FZN\Managers\AIManager.cpp">
@@ -387,6 +390,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Externals\json\json_writer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FZN\Display\Line.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
