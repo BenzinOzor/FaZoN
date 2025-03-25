@@ -142,6 +142,7 @@ namespace fzn
 		//Return value : Perpendicular vector
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		FZN_EXPORT sf::Vector2f VectorsGetPerpendicular( const sf::Vector2f& _vVector, const sf::Vector2f& _vDirection );
+		FZN_EXPORT sf::Vector2f vector_get_perpendicular( const sf::Vector2f& _vector, bool _clockwise = true );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Look for the farthest point in a shape in a given direction.
 		//Parameter 1 : The shape containing the points

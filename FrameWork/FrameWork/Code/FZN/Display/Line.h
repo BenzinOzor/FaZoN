@@ -1,5 +1,6 @@
 #pragma once
 
+#include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/VertexArray.hpp>
 
@@ -23,6 +24,7 @@ namespace fzn
 
 		void from_vertex_array( const sf::VertexArray& _vertex_array );
 		void set_thickness( float _thickness );
+		void set_color( const sf::Color& _color );
 
 	private:
 		virtual void draw( sf::RenderTarget& _target, sf::RenderStates _states ) const;
@@ -30,7 +32,11 @@ namespace fzn
 		void _from_lines( const sf::VertexArray& _lines );
 		void _from_line_strip( const sf::VertexArray& _line );
 
+		void _build_triangles();
+
 		sf::VertexArray m_line;
+		sf::VertexArray m_triangles;
 		float m_thickness{ 1.f };
+		sf::Color m_color{ sf::Color::White };
 	};
 };

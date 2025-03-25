@@ -3,6 +3,7 @@
 #include <SFML/Graphics/RenderTarget.hpp>
 
 #include "Line.h"
+#include "FZN/Tools/Math.h"
 
 namespace fzn
 {
@@ -10,12 +11,14 @@ namespace fzn
 	Line::Line( float _thickness /*= 1.f */ )
 	{
 		m_line.setPrimitiveType( sf::LineStrip );
+		m_triangles.setPrimitiveType( sf::Triangles );
 		set_thickness( _thickness );
 	}
 
 	Line::Line( const sf::VertexArray& _vertex_array, float _thickness /*= 1.f */ )
 	{
 		m_line.setPrimitiveType( sf::LineStrip );
+		m_triangles.setPrimitiveType( sf::Triangles );
 		set_thickness( _thickness );
 	
 		from_vertex_array( _vertex_array );
@@ -34,6 +37,7 @@ namespace fzn
 	void Line::clear()
 	{
 		m_line.clear();
+		m_triangles.clear();
 	}
 
 	bool Line::is_empty() const
@@ -49,7 +53,7 @@ namespace fzn
 
 	void Line::from_vertex_array( const sf::VertexArray& _vertex_array )
 	{
-		m_line.clear();
+		clear();
 
 		switch( _vertex_array.getPrimitiveType() )
 		{
@@ -57,6 +61,11 @@ namespace fzn
 			case sf::LineStrip: _from_line_strip( _vertex_array );	break;
 			default: break;
 		}
+
+		if( m_line.getVertexCount() == 0 )
+			return;
+
+		_build_triangles();
 	}
 
 	void Line::set_thickness( float _thickness )
@@ -65,11 +74,19 @@ namespace fzn
 			m_thickness = 1.f;
 		else
 			m_thickness = _thickness;
+
+		_build_triangles();
+	}
+
+	void Line::set_color( const sf::Color& _color )
+	{
+		m_color = _color;
 	}
 
 	void Line::draw( sf::RenderTarget& _target, sf::RenderStates _states ) const
 	{
 		_target.draw( m_line, _states );
+		_target.draw( m_triangles, _states );
 	}
 
 	void Line::_from_lines( const sf::VertexArray& _lines )
@@ -158,4 +175,38 @@ namespace fzn
 	void Line::_from_line_strip( const sf::VertexArray& _line )
 	{
 	}
+
+	void Line::_build_triangles()
+	{
+		if( m_thickness <= 1.f )
+			return;
+
+		for( int point_id{ 0 }; point_id < m_line.getVertexCount(); ++point_id )
+		{
+			// We are at the end of the line, we have finished.
+			if( point_id + 1 >= m_line.getVertexCount() )
+				return;
+
+			// We don't want to compute the transparent points of the base line as we don't need triangles to be linked all the way through the line.
+			if( m_line[ point_id ].color == sf::Color::Transparent || m_line[ point_id ].color == sf::Color::Transparent )
+				continue;
+
+			const sf::Vertex& current_vertex{ m_line[ point_id ] };
+			const sf::Vertex& next_vertex{ m_line[ point_id + 1 ] };
+
+			const sf::Vector2f segment{ next_vertex.position - current_vertex.position };
+			sf::Vector2f perpendicular_right{ Math::vector_get_perpendicular( segment ) };
+			Math::VectorNormalize( perpendicular_right );
+			perpendicular_right *= m_thickness * 0.5f;
+
+			m_triangles.append( { current_vertex.position + perpendicular_right, m_color } );
+			m_triangles.append( { current_vertex.position - perpendicular_right, m_color } );
+			m_triangles.append( { next_vertex.position + perpendicular_right, m_color } );
+
+			m_triangles.append( { current_vertex.position - perpendicular_right, m_color } );
+			m_triangles.append( { next_vertex.position + perpendicular_right, m_color } );
+			m_triangles.append( { next_vertex.position - perpendicular_right, m_color } );
+		}
+	}
+
 };

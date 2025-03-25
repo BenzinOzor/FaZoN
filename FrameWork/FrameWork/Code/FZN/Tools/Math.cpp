@@ -271,6 +271,14 @@ namespace fzn
 			return { vResult3D.x, vResult3D.y };
 		}
 
+		sf::Vector2f vector_get_perpendicular( const sf::Vector2f& _vector, bool _clockwise /*= true*/ )
+		{
+			if( _clockwise )
+				return { - _vector.y, _vector.x };
+
+			return { _vector.y, - _vector.x };
+		}
+
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Look for the farthest point in a shape in a given direction.
 		//Parameter 1 : The shape containing the points
