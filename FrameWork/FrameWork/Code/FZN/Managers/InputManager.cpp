@@ -38,20 +38,20 @@ namespace fzn
 		JoystickInit();
 
 		if( g_pFZN_Core->IsUsingCryptedData() )
-			LoadActionKeysFromXML( m_oDefaultActionKeys, DATAPATH( "XMLFiles/actionKeys.cfg" ), true );
+			LoadActionKeysFromXML( m_oBackupActionKeys, DATAPATH( "XMLFiles/actionKeys.cfg" ), true );
 		else
-			LoadActionKeysFromXML( m_oDefaultActionKeys, DATAPATH( "XMLFiles/actionKeys.xml" ), false );
+			LoadActionKeysFromXML( m_oBackupActionKeys, DATAPATH( "XMLFiles/actionKeys.xml" ), false );
 
 		if( g_pFZN_Core->FileExists( g_pFZN_Core->GetSaveFolderPath() + "/actionKeys.xml" ) )
 		{
 			LoadActionKeysFromXML( m_oCustomActionKeys, g_pFZN_Core->GetSaveFolderPath() + "/actionKeys.xml", false );
 
 			if( m_oCustomActionKeys.empty() )
-				m_oCustomActionKeys = m_oDefaultActionKeys;
+				m_oCustomActionKeys = m_oBackupActionKeys;
 		}
 		else
 		{
-			m_oCustomActionKeys = m_oDefaultActionKeys;
+			m_oCustomActionKeys = m_oBackupActionKeys;
 			SaveCustomActionKeysToFile();
 		}
 
@@ -86,6 +86,143 @@ namespace fzn
 		UpdateJoystick();
 
 		UpdateDeviceInUse();
+	}
+
+
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Get the bindings vector corresponding to the given bind_input
+	// bind_input: The SFML input type (Keyboard::Key, Mouse::Button, Joystick::Axis or INT8 (Joystick button))
+	// _action_key: The action key from which we want to get the bindings vector
+	// Return value: A reference to the corresponding bindings vector (keyboard inputs by default)
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	template <typename bind_input>
+	static ActionKey::Binds& get_input_type_binds( ActionKey& _action_key )
+	{
+		if constexpr( std::is_same< sf::Joystick::Axis, bind_input >() || std::is_same< INT8, bind_input >() )
+			return _action_key.m_oControllerBinds;
+
+		return _action_key.m_oKeyboardBinds;
+	}
+
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Look for the given input in the given action key bindings
+	// bind_input: The SFML input type (Keyboard::Key, Mouse::Button, Joystick::Axis or INT8 (Joystick button))
+	// _binds: The action key bindings
+	// _input: The input to look for
+	// Return value: An iterator to the found input
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	template< typename bind_input >
+	static ActionKey::Binds::iterator find_input( ActionKey::Binds& _binds, bind_input _input, bool _input_direction, bool _full_axis )
+	{
+		if constexpr( std::is_same< bind_input, sf::Keyboard::Key >() )
+		{
+			return std::ranges::find( _binds, _input, &ActionKey::Bind::m_eKey );
+		}
+		else if constexpr( std::is_same< bind_input, sf::Mouse::Button >() )
+		{
+			return std::ranges::find( _binds, _input, &ActionKey::Bind::m_eMouseButton );
+		}
+		else if constexpr( std::is_same< bind_input, INT8 >() )
+		{
+			return std::ranges::find( _binds, _input, &ActionKey::Bind::m_iJoystickButton );
+		}
+		else if constexpr( std::is_same< bind_input, sf::Joystick::Axis >() )
+		{
+			//return std::ranges::find( _binds, _input, &ActionKey::Bind::m_eJoystickAxis );
+			return std::ranges::find_if( _binds, [&_input, &_input_direction, &_full_axis]( const ActionKey::Bind& _bind )
+			{
+				if( _full_axis )
+					return _bind.m_eJoystickAxis == _input;
+
+				return _bind.m_eJoystickAxis == _input && _bind.m_bAxisDirection == _input_direction;
+			});
+		}
+
+		return _binds.end();
+	}
+
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Assign the given input to the given action key bindings
+	// bind_input: The SFML input type (Keyboard::Key, Mouse::Button, Joystick::Axis or INT8 (Joystick button))
+	// _binds: The action key bindings
+	// _input: The input to add or assign
+	// _index: The index at which we wand to assign the input
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	template< typename bind_input >
+	static void assign_input_to_action_key( ActionKey::Binds& _binds, bind_input _input, size_t _index, bool _input_direction )
+	{
+		if( _index >= _binds.size() )
+		{
+			if constexpr( std::is_same< bind_input, sf::Joystick::Axis >() )
+				_binds.push_back( { _input, _input_direction } );
+			else
+				_binds.push_back( _input );
+		}
+		else
+		{
+			if constexpr( std::is_same< bind_input, sf::Keyboard::Key >() )
+			{
+				_binds[ _index ].m_eKey = _input;
+			}
+			else if constexpr( std::is_same< bind_input, sf::Mouse::Button >() )
+			{
+				_binds[ _index ].m_eMouseButton = _input;
+			}
+			else if constexpr( std::is_same< bind_input, INT8 >() )
+			{
+				_binds[ _index ].m_iJoystickButton = _input;
+			}
+			else if constexpr( std::is_same< bind_input, sf::Joystick::Axis >() )
+			{
+				_binds[ _index ].Reset();
+				_binds[ _index ].m_eJoystickAxis = _input;
+				_binds[ _index ].m_bAxisDirection = _input_direction;
+			}
+		}
+	}
+
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Add or replace an input in the given action key
+	// bind_input: The input type from SFML
+	// _action_keys: The action keys vector to handle (keyboard/mouse or joystick inputs)
+	// _action_key_infos: The informations about the action key we're handling
+	// _input: The SFML input type value (actual value of keyboard key, mouse button, joystick button or joystick axis)
+	// Return value: True if the input has been added/replaced in the given action key
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	template < typename bind_input >
+	static bool set_action_key_bind( ActionKeys& _action_keys, InputManager::ActionKeyBindReplacementInfo& _action_key_infos, bind_input _input, bool _input_direction = false )
+	{
+		if( _action_key_infos.m_action_key == nullptr )
+			return false;
+
+		// The bindings of the action key we're working on.
+		ActionKey::Binds& binds{ get_input_type_binds<bind_input>( *_action_key_infos.m_action_key ) };
+		const bool full_axis = _action_key_infos.m_action_key->m_bFullAxis;
+
+		// If the input entered by the player is already in the bindings vector, we ignore it.
+		if( find_input( binds, _input, _input_direction, full_axis ) != binds.end() )
+			return false;
+
+		assign_input_to_action_key( binds, _input, _action_key_infos.m_bind_index, full_axis );
+
+		for( fzn::ActionKey& action_key : _action_keys )
+		{
+			if( action_key.m_sName == _action_key_infos.m_action_key->m_sName )
+				continue;
+
+			if( _action_key_infos.m_same_category_only && action_key.m_iCategory != _action_key_infos.m_action_key->m_iCategory )
+				continue;
+
+			ActionKey::Binds& action_key_binds{ get_input_type_binds<bind_input>( action_key ) };
+			if( auto it_bind = find_input( action_key_binds, _input, _input_direction, action_key.m_bFullAxis ); it_bind != action_key_binds.end() )
+			{
+				action_key_binds.erase( it_bind );
+				break;
+			}
+		};
+
+		_action_key_infos.reset();
+		return true;
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -125,22 +262,23 @@ namespace fzn
 			bool bBindReplaced = false;
 			if( IsWaitingInputForType( BindType::eKey ) && _event.type == sf::Event::KeyPressed )
 			{
-				bBindReplaced = _SetActionKeyBind_Key( _event.key.code );
+				bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, _event.key.code );
 				bResetEvent = true;
 			}
 			else if( IsWaitingInputForType( BindType::eMouseButton ) && _event.type == sf::Event::MouseButtonPressed )
 			{
-				bBindReplaced = _SetActionKeyBind_MouseButton( _event.mouseButton.button );
+				bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, _event.mouseButton.button );
 				bResetEvent = true;
 			}
 			else if( IsWaitingInputForType( BindType::eJoystickButton ) && _event.type == sf::Event::JoystickButtonPressed )
 			{
-				bBindReplaced = _SetActionKeyBind_JoystickButton( _event.joystickButton.button );
+				bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, (INT8)_event.joystickButton.button );
 				bResetEvent = true;
 			}
 			else if( IsWaitingInputForType( BindType::eJoystickAxis ) && _event.type == sf::Event::JoystickMoved && fabs( _event.joystickMove.position ) > 50.f )
 			{
-				bBindReplaced = _SetActionKeyBind_JoystickAxis( _event.joystickMove.axis, _event.joystickMove.position );
+				const bool direction = _event.joystickMove.position - m_joysticks[ m_defaultJoystick ].defaultAxisValues[ _event.joystickMove.axis ] > 0;
+				bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, _event.joystickMove.axis, direction );
 				bResetEvent = true;
 			}
 
@@ -976,17 +1114,22 @@ namespace fzn
 		return nullptr;
 	}
 
-	std::string InputManager::GetActionKeyString( const std::string& _sActionOrKey, bool _bKeyboard, int _iIndex /*= 0 */ ) const
+	std::string InputManager::GetActionKeyString( const std::string& _sActionOrKey, bool _bKeyboard, int _iIndex /*= 0 */, bool _bAddBrackets /*= false*/ ) const
 	{
 		const std::string sGlyphName = _GetActionKeyString( _sActionOrKey, _bKeyboard, _iIndex );
 
 		if( sGlyphName.empty() == false )
-			return "[" + sGlyphName + "]";
+		{
+			if( _bAddBrackets )
+				return "[" + sGlyphName + "]";
+			else
+				return sGlyphName;
+		}
 
 		return "";
 	}
 
-	const std::vector< fzn::ActionKey >& InputManager::GetActionKeys() const
+	const ActionKeys& InputManager::GetActionKeys() const
 	{
 		return m_oCustomActionKeys;
 	}
@@ -998,52 +1141,103 @@ namespace fzn
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	const ActionKey* InputManager::GetActionKey( const std::string& _sActionKey ) const
 	{
-		for( const fzn::ActionKey& oActionKey : m_oCustomActionKeys )
-		{
-			if( _sActionKey == oActionKey.m_sName )
-				return &oActionKey;
-		}
+		auto& actionKey = std::ranges::find( m_oCustomActionKeys, _sActionKey, &ActionKey::m_sName );
 
-		return nullptr;
+		if( actionKey == m_oCustomActionKeys.end() )
+			return nullptr;
+
+		return &(*actionKey);
 	}
 
 	ActionKey* InputManager::GetActionKey( const std::string& _sActionKey )
 	{
-		for( fzn::ActionKey& oActionKey : m_oCustomActionKeys )
-		{
-			if( _sActionKey == oActionKey.m_sName )
-				return &oActionKey;
-		}
+		auto& actionKey = std::ranges::find( m_oCustomActionKeys, _sActionKey, &ActionKey::m_sName );
 
-		return nullptr;
+		if( actionKey == m_oCustomActionKeys.end() )
+			return nullptr;
+
+		return &( *actionKey );
 	}
 
-	bool InputManager::ReplaceActionKeyBind( const std::string& _sActionKey, const BindTypeMask& _uBind, int _iIndex, bool _bSameCategoryOnly /*= true*/ )
+	bool InputManager::replace_action_key_bind( const std::string& _action_key, BindTypeMask _mask, size_t _index, bool _same_category_only /*= true*/ )
 	{
-		if( _sActionKey.empty() || _uBind == 0 || _uBind >= ( 1 << BindType::eNbTypes ) || _iIndex < 0 )
+		ActionKey* action_key_ptr{ GetActionKey( _action_key ) };
+
+		if( action_key_ptr == nullptr || _mask == 0 || _mask > BindTypeFlag_All )
 			return false;
 
-		m_oActionKeyBindInfo.m_sActionKey = _sActionKey;
-		m_oActionKeyBindInfo.m_iBindIndex = _iIndex;
-		m_oActionKeyBindInfo.m_uBindTypeMask = _uBind;
-		m_oActionKeyBindInfo.m_bSameCategoryOnly = _bSameCategoryOnly;
+		m_oActionKeyBindInfo.reset();
+
+		m_oActionKeyBindInfo.m_action_key = action_key_ptr;
+		m_oActionKeyBindInfo.m_mask = _mask;
+		m_oActionKeyBindInfo.m_bind_index = _index;
+		m_oActionKeyBindInfo.m_same_category_only = _same_category_only;
+	}
+
+	bool InputManager::RemoveActionKeyBind( const std::string& _sActionKey, BindType _eBind, uint32_t _uIndex /*= 0*/ )
+	{
+		if( _sActionKey.empty() || _eBind < 0 || _eBind >= BindType::eNbTypes )
+			return false;
+
+		auto action_key_it = std::ranges::find( m_oCustomActionKeys, _sActionKey, &fzn::ActionKey::m_sName );
+		
+		if( action_key_it == m_oCustomActionKeys.end() )
+			return false;
+
+		
+
+		switch( _eBind )
+		{
+			case fzn::InputManager::eKey:
+			case fzn::InputManager::eMouseButton:
+			{
+				if( _uIndex >= action_key_it->m_oKeyboardBinds.size() )
+					return false;
+
+				/*action_key_it->m_oKeyboardBinds[ _uIndex ].m_eMouseButton = sf::Mouse::ButtonCount;
+				action_key_it->m_oKeyboardBinds[ _uIndex ].m_eKey = sf::Keyboard::KeyCount;*/
+
+				action_key_it->m_oKeyboardBinds.erase( action_key_it->m_oKeyboardBinds.begin() + _uIndex );
+
+				break;
+			}
+			case fzn::InputManager::eJoystickButton:
+			case fzn::InputManager::eJoystickAxis:
+			{
+				if( _uIndex >= action_key_it->m_oControllerBinds.size() )
+					return false;
+
+				/*action_key_it->m_oControllerBinds[ _uIndex ].m_iJoystickButton = sf::Joystick::ButtonCount;
+				action_key_it->m_oControllerBinds[ _uIndex ].m_eJoystickAxis = (sf::Joystick::Axis)sf::Joystick::AxisCount;*/
+
+				action_key_it->m_oControllerBinds.erase( action_key_it->m_oControllerBinds.begin() + _uIndex );
+				break;
+			}
+			default:
+				return false;
+		}
 
 		return true;
 	}
 
 	bool InputManager::IsWaitingActionKeyBind() const
 	{
-		return m_oActionKeyBindInfo.m_sActionKey.empty() == false && m_oActionKeyBindInfo.m_iBindIndex >= 0 && m_oActionKeyBindInfo.m_uBindTypeMask != 0;
+		return m_oActionKeyBindInfo.m_action_key != nullptr && m_oActionKeyBindInfo.m_bind_index >= 0 && m_oActionKeyBindInfo.m_mask != 0;
 	}
 
 	bool InputManager::IsWaitingInputForType( const BindType& _eBind ) const
 	{
-		return ( m_oActionKeyBindInfo.m_uBindTypeMask & 1 << _eBind ) != 0;
+		return ( m_oActionKeyBindInfo.m_mask & 1 << _eBind ) != 0;
+	}
+
+	void InputManager::BackupActionKeys()
+	{
+		m_oBackupActionKeys = m_oCustomActionKeys;
 	}
 
 	void InputManager::ResetActionKeys()
 	{
-		m_oCustomActionKeys = m_oDefaultActionKeys;
+		m_oCustomActionKeys = m_oBackupActionKeys;
 	}
 
 	void InputManager::SaveCustomActionKeysToFile()
@@ -1746,7 +1940,7 @@ namespace fzn
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	//Reads the XML file containing corresponding keys to each game action
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	void InputManager::LoadActionKeysFromXML( std::vector< ActionKey >& _oActionKeysArray, const std::string& _sXMLPath, bool _bCrypted )
+	void InputManager::LoadActionKeysFromXML( ActionKeys& _oActionKeysArray, const std::string& _sXMLPath, bool _bCrypted )
 	{
 		tinyxml2::XMLDocument File;
 
@@ -1842,202 +2036,6 @@ namespace fzn
 			return;
 
 		_oActionKey.m_oControllerBinds.push_back( { _eJoystickAxis, _bDirection } );
-	}
-
-	bool InputManager::_SetActionKeyBind_Key( const sf::Keyboard::Key& _eKey )
-	{
-		if( m_oActionKeyBindInfo.m_sActionKey.empty() || _eKey >= sf::Keyboard::Key::KeyCount )
-			return false;
-
-		const std::string sAction = m_oActionKeyBindInfo.m_sActionKey;
-		std::vector< ActionKey >::iterator itAction = std::find_if( m_oCustomActionKeys.begin(), m_oCustomActionKeys.end(), [ sAction ]( const ActionKey& oAction ) { return oAction.m_sName == sAction; } );
-
-		if( itAction == m_oCustomActionKeys.end() )
-			return false;
-
-		// If the key is already set, we don't need to change anything.
-		if( std::find_if( itAction->m_oKeyboardBinds.begin(), itAction->m_oKeyboardBinds.end(), [_eKey]( const ActionKey::Bind& oBind ) { return oBind.m_eKey == _eKey; } ) != itAction->m_oKeyboardBinds.end() )
-			return false;
-
-		if( m_oActionKeyBindInfo.m_iBindIndex >= (int)itAction->m_oKeyboardBinds.size() )
-		{
-			itAction->m_oKeyboardBinds.push_back( _eKey );
-		}
-		else
-			itAction->m_oKeyboardBinds[ m_oActionKeyBindInfo.m_iBindIndex ].m_eKey = _eKey;
-
-
-		for( fzn::ActionKey& oActionKey : m_oCustomActionKeys )
-		{
-			if( oActionKey.m_sName == m_oActionKeyBindInfo.m_sActionKey )
-				continue;
-
-			if( m_oActionKeyBindInfo.m_bSameCategoryOnly && oActionKey.m_iCategory != itAction->m_iCategory )
-				continue;
-
-			std::vector< ActionKey::Bind >::iterator itBind = std::find_if( oActionKey.m_oKeyboardBinds.begin(), oActionKey.m_oKeyboardBinds.end(), [_eKey]( const ActionKey::Bind& oBind ) { return oBind.m_eKey == _eKey; } );
-
-			if( itBind != oActionKey.m_oKeyboardBinds.end() )
-			{
-				oActionKey.m_oKeyboardBinds.erase( itBind );
-				break;
-			}
-		}
-
-		m_oActionKeyBindInfo.Reset();
-		return true;
-	}
-
-	bool InputManager::_SetActionKeyBind_MouseButton( const sf::Mouse::Button& _eMouseButton )
-	{
-		if( m_oActionKeyBindInfo.m_sActionKey.empty() || _eMouseButton >= sf::Mouse::Button::ButtonCount )
-			return false;
-
-		const std::string sAction = m_oActionKeyBindInfo.m_sActionKey;
-		std::vector< ActionKey >::iterator itAction = std::find_if( m_oCustomActionKeys.begin(), m_oCustomActionKeys.end(), [ sAction ]( const ActionKey& oAction ) { return oAction.m_sName == sAction; } );
-
-		if( itAction == m_oCustomActionKeys.end() )
-			return false;
-
-		// If the key is already set, we don't need to change anything.
-		if( std::find_if( itAction->m_oKeyboardBinds.begin(), itAction->m_oKeyboardBinds.end(), [_eMouseButton]( const ActionKey::Bind& oBind ) { return oBind.m_eMouseButton == _eMouseButton; } ) != itAction->m_oKeyboardBinds.end() )
-			return false;
-
-		if( m_oActionKeyBindInfo.m_iBindIndex >= (int)itAction->m_oKeyboardBinds.size() )
-		{
-			itAction->m_oKeyboardBinds.push_back( _eMouseButton );
-		}
-		else
-			itAction->m_oKeyboardBinds[ m_oActionKeyBindInfo.m_iBindIndex ].m_eMouseButton = _eMouseButton;
-
-
-		for( fzn::ActionKey& oActionKey : m_oCustomActionKeys )
-		{
-			if( oActionKey.m_sName == m_oActionKeyBindInfo.m_sActionKey )
-				continue;
-
-			if( m_oActionKeyBindInfo.m_bSameCategoryOnly && oActionKey.m_iCategory != itAction->m_iCategory )
-				continue;
-
-			std::vector< ActionKey::Bind >::iterator itBind = std::find_if( oActionKey.m_oKeyboardBinds.begin(), oActionKey.m_oKeyboardBinds.end(), [_eMouseButton]( const ActionKey::Bind& oBind ) { return oBind.m_eMouseButton == _eMouseButton; } );
-
-			if( itBind != oActionKey.m_oKeyboardBinds.end() )
-			{
-				oActionKey.m_oKeyboardBinds.erase( itBind );
-				break;
-			}
-		}
-		
-		m_oActionKeyBindInfo.Reset();
-		return true;
-	}
-
-	bool InputManager::_SetActionKeyBind_JoystickButton( INT8 _iJoystickButton )
-	{
-		if( m_oActionKeyBindInfo.m_sActionKey.empty() || _iJoystickButton >= sf::Joystick::ButtonCount )
-			return false;
-
-		const std::string sAction = m_oActionKeyBindInfo.m_sActionKey;
-		std::vector< ActionKey >::iterator itAction = std::find_if( m_oCustomActionKeys.begin(), m_oCustomActionKeys.end(), [ sAction ]( const ActionKey& oAction ) { return oAction.m_sName == sAction; } );
-
-		if( itAction == m_oCustomActionKeys.end() )
-			return false;
-
-		// If the key is already set, we don't need to change anything.
-		if( std::find_if( itAction->m_oControllerBinds.begin(), itAction->m_oControllerBinds.end(), [_iJoystickButton]( const ActionKey::Bind& oBind ) { return oBind.m_iJoystickButton == _iJoystickButton; } ) != itAction->m_oControllerBinds.end() )
-			return false;
-
-		if( m_oActionKeyBindInfo.m_iBindIndex >= (int)itAction->m_oControllerBinds.size() )
-		{
-			itAction->m_oControllerBinds.push_back( _iJoystickButton );
-		}
-		else
-			itAction->m_oControllerBinds[ m_oActionKeyBindInfo.m_iBindIndex ].m_iJoystickButton = _iJoystickButton;
-
-
-		for( fzn::ActionKey& oActionKey : m_oCustomActionKeys )
-		{
-			if( oActionKey.m_sName == m_oActionKeyBindInfo.m_sActionKey )
-				continue;
-
-			if( m_oActionKeyBindInfo.m_bSameCategoryOnly && oActionKey.m_iCategory != itAction->m_iCategory )
-				continue;
-
-			std::vector< ActionKey::Bind >::iterator itBind = std::find_if( oActionKey.m_oControllerBinds.begin(), oActionKey.m_oControllerBinds.end(), [_iJoystickButton]( const ActionKey::Bind& oBind ) { return oBind.m_iJoystickButton == _iJoystickButton; } );
-
-			if( itBind != oActionKey.m_oControllerBinds.end() )
-			{
-				oActionKey.m_oControllerBinds.erase( itBind );
-				break;
-			}
-		}
-		
-		m_oActionKeyBindInfo.Reset();
-		return true;
-	}
-
-	bool InputManager::_SetActionKeyBind_JoystickAxis( const sf::Joystick::Axis& _eJoystickAxis, float _fPosition )
-	{
-		if( m_oActionKeyBindInfo.m_sActionKey.empty() || _eJoystickAxis >= sf::Joystick::AxisCount )
-			return false;
-
-		const std::string sAction = m_oActionKeyBindInfo.m_sActionKey;
-		std::vector< ActionKey >::iterator itAction = std::find_if( m_oCustomActionKeys.begin(), m_oCustomActionKeys.end(), [ sAction ]( const ActionKey& oAction ) { return oAction.m_sName == sAction; } );
-
-		if( itAction == m_oCustomActionKeys.end() )
-			return false;
-
-		const bool bDirection = _fPosition - m_joysticks[ m_defaultJoystick ].defaultAxisValues[ _eJoystickAxis ] > 0;
-		const bool bFullAxis = itAction->m_bFullAxis;
-
-		// If the key is already set, we don't need to change anything.
-		if( std::find_if( itAction->m_oControllerBinds.begin(), itAction->m_oControllerBinds.end(), [ _eJoystickAxis, bFullAxis, bDirection ]( const ActionKey::Bind& oBind ) 
-			{
-				if( bFullAxis )
-					return oBind.m_eJoystickAxis == _eJoystickAxis;
-
-				return oBind.m_eJoystickAxis == _eJoystickAxis && bDirection == oBind.m_bAxisDirection;
-			} 
-		) != itAction->m_oControllerBinds.end() )
-			return false;
-
-		if( m_oActionKeyBindInfo.m_iBindIndex >= (int)itAction->m_oControllerBinds.size() )
-		{
-			itAction->m_oControllerBinds.push_back( { _eJoystickAxis, bDirection } );
-		}
-		else
-		{
-			itAction->m_oControllerBinds[m_oActionKeyBindInfo.m_iBindIndex].Reset();
-			itAction->m_oControllerBinds[ m_oActionKeyBindInfo.m_iBindIndex ].m_eJoystickAxis = _eJoystickAxis;
-			itAction->m_oControllerBinds[ m_oActionKeyBindInfo.m_iBindIndex ].m_bAxisDirection = bDirection;
-		}
-
-
-		for( fzn::ActionKey& oActionKey : m_oCustomActionKeys )
-		{
-			if( oActionKey.m_sName == m_oActionKeyBindInfo.m_sActionKey )
-				continue;
-
-			if( m_oActionKeyBindInfo.m_bSameCategoryOnly && oActionKey.m_iCategory != itAction->m_iCategory )
-				continue;
-
-			std::vector< ActionKey::Bind >::iterator itBind = std::find_if( oActionKey.m_oControllerBinds.begin(), oActionKey.m_oControllerBinds.end(), [ oActionKey, _eJoystickAxis, bDirection ]( const ActionKey::Bind& oBind )
-			{
-				if( oActionKey.m_bFullAxis )
-					return oBind.m_eJoystickAxis == _eJoystickAxis;
-				else
-					return oBind.m_eJoystickAxis == _eJoystickAxis && oBind.m_bAxisDirection == bDirection;
-			} );
-
-			if( itBind != oActionKey.m_oControllerBinds.end() )
-			{
-				oActionKey.m_oControllerBinds.erase( itBind );
-				break;
-			}
-		}
-		
-		m_oActionKeyBindInfo.Reset();
-		return true;
 	}
 
 	const ActionKey* InputManager::_GetActionKey( sf::Keyboard::Key _eKey ) const
@@ -2203,16 +2201,16 @@ namespace fzn
 		case sf::Keyboard::X:			return 'x';
 		case sf::Keyboard::Y:			return 'y';
 		case sf::Keyboard::Z:			return 'z';
-		case sf::Keyboard::Num0:		return 'à';
+		case sf::Keyboard::Num0:		return 'Ã ';
 		case sf::Keyboard::Num1:		return '&';
-		case sf::Keyboard::Num2:		return 'é';
+		case sf::Keyboard::Num2:		return 'Ã©';
 		case sf::Keyboard::Num3:		return '\"';
 		case sf::Keyboard::Num4:		return '\'';
 		case sf::Keyboard::Num5:		return '(';
 		case sf::Keyboard::Num6:		return '-';
-		case sf::Keyboard::Num7:		return 'è';
+		case sf::Keyboard::Num7:		return 'Ã¨';
 		case sf::Keyboard::Num8:		return '_';
-		case sf::Keyboard::Num9:		return 'ç';
+		case sf::Keyboard::Num9:		return 'Ã§';
 		case sf::Keyboard::LBracket:	return ')';
 		case sf::Keyboard::RBracket:	return '^';
 		case sf::Keyboard::SemiColon:	return '$';
@@ -2221,7 +2219,7 @@ namespace fzn
 		case sf::Keyboard::Quote:		return '\'';
 		case sf::Keyboard::Slash:		return ':';
 		case sf::Keyboard::BackSlash:	return '*';
-		case sf::Keyboard::Tilde:		return 'ù';
+		case sf::Keyboard::Tilde:		return 'Ã¹';
 		case sf::Keyboard::Equal:		return '=';
 		case sf::Keyboard::Dash:		return '-';
 		case sf::Keyboard::Space:		return ' ';
@@ -2294,13 +2292,13 @@ namespace fzn
 		case sf::Keyboard::Num7:		return '7';
 		case sf::Keyboard::Num8:		return '8';
 		case sf::Keyboard::Num9:		return '9';
-		case sf::Keyboard::LBracket:	return '°';
-		case sf::Keyboard::RBracket:	return '¨';
-		case sf::Keyboard::SemiColon:	return '£';
+		case sf::Keyboard::LBracket:	return 'Â°';
+		case sf::Keyboard::RBracket:	return 'Â¨';
+		case sf::Keyboard::SemiColon:	return 'Â£';
 		case sf::Keyboard::Comma:		return '?';
 		case sf::Keyboard::Period:		return '.';
 		case sf::Keyboard::Slash:		return '/';
-		case sf::Keyboard::BackSlash:	return 'µ';
+		case sf::Keyboard::BackSlash:	return 'Âµ';
 		case sf::Keyboard::Tilde:		return '%';
 		case sf::Keyboard::Equal:		return '+';
 		default:						return '\0';

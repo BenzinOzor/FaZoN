@@ -88,13 +88,15 @@ namespace fzn
 			sf::Joystick::Axis	m_eJoystickAxis;
 			bool				m_bAxisDirection;
 		};
+		using Binds = std::vector< Bind >;
 
 		std::string			m_sName = "";
 		int					m_iCategory = 0;
 		bool				m_bFullAxis = true;	// The action is using the complete axis (true) or only half of it.
-		std::vector< Bind > m_oKeyboardBinds;
-		std::vector< Bind > m_oControllerBinds;
+		Binds				m_oKeyboardBinds;
+		Binds				m_oControllerBinds;
 	};
+	using ActionKeys = std::vector< ActionKey >;
 
 
 	//=========================================================
@@ -129,22 +131,35 @@ namespace fzn
 			eJoystickAxis,
 			eNbTypes,
 		};
+		enum BindTypeFlag
+		{
+			BindTypeFlag_Key				= 1 << BindType::eKey,
+			BindTypeFlag_MouseButton		= 1 << BindType::eMouseButton,
+			BindTypeFlag_JoystickButton		= 1 << BindType::eJoystickButton,
+			BindTypeFlag_JoystickAxis		= 1 << BindType::eJoystickAxis,
+
+			BindTypeFlag_KeyboardMouse		= BindTypeFlag_Key | BindTypeFlag_MouseButton,
+			BindTypeFlag_Controller			= BindTypeFlag_JoystickButton | BindTypeFlag_JoystickAxis,
+			BindTypeFlag_All				= BindTypeFlag_KeyboardMouse | BindTypeFlag_Controller
+		};
 		typedef sf::Uint8 BindTypeMask;
 
 		struct ActionKeyBindReplacementInfo
 		{
-			void Reset()
+			void reset()
 			{
-				m_sActionKey = "";
-				m_iBindIndex = -1;
-				m_uBindTypeMask = 0;
-				m_bSameCategoryOnly = true;
+				m_action_key = nullptr;
+				m_action_key_name.clear();
+				m_bind_index = 0;
+				m_mask = 0;
+				m_same_category_only = true;
 			}
 
-			std::string		m_sActionKey = "";
-			int				m_iBindIndex = -1;
-			BindTypeMask	m_uBindTypeMask = 0;
-			bool			m_bSameCategoryOnly = true;
+			ActionKey*		m_action_key{ nullptr };
+			std::string		m_action_key_name;
+			size_t			m_bind_index{ 0 };
+			BindTypeMask	m_mask{ 0 };
+			bool			m_same_category_only{ true };
 		};
 
 		//=========================================================
@@ -512,8 +527,8 @@ namespace fzn
 		
 		std::string GetActionGlyphString( const std::string& _sAction, bool _bKeyboard, bool _bAllKeys ) const;
 		CustomBitmapGlyph* GetBitmapGlyph( const std::string& _sActionOrKey, bool _bKeyboard, int _iIndex = 0 ) const;
-		std::string GetActionKeyString( const std::string& _sActionOrKey, bool _bKeyboard, int _iIndex = 0 ) const;
-		const std::vector< ActionKey >& GetActionKeys() const;
+		std::string GetActionKeyString( const std::string& _sActionOrKey, bool _bKeyboard, int _iIndex = 0, bool _bAddBrackets = false ) const;
+		const ActionKeys& GetActionKeys() const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Accessor on an existing actionKey by its name
 		//Parameter : Name
@@ -521,9 +536,11 @@ namespace fzn
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		const ActionKey* GetActionKey( const std::string& _sActionKey ) const;
 		ActionKey* GetActionKey( const std::string& _sActionKey );
-		bool ReplaceActionKeyBind( const std::string& _sActionKey, const BindTypeMask& _uBind, int _iIndex, bool _bSameCategoryOnly = true );
+		bool replace_action_key_bind( const std::string& _action_key, BindTypeMask _mask, size_t _index, bool _same_category_only = true );
+		bool RemoveActionKeyBind( const std::string& _sActionKey, BindType _eBind, uint32_t _uIndex = 0 );
 		bool IsWaitingActionKeyBind() const;
 		bool IsWaitingInputForType( const BindType& _eBind ) const;
+		void BackupActionKeys();
 		void ResetActionKeys();
 		void SaveCustomActionKeysToFile();
 
@@ -598,17 +615,12 @@ namespace fzn
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Reads the XML file containing corresponding keys to each game action
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		void LoadActionKeysFromXML( std::vector< ActionKey >& _oActionKeysArray, const std::string& _sXMLPath, bool _bCrypted );
+		void LoadActionKeysFromXML( ActionKeys& _oActionKeysArray, const std::string& _sXMLPath, bool _bCrypted );
 		
 		void _AddKeyToActionKey( ActionKey& _oActionKey, const sf::Keyboard::Key& _eKey );
 		void _AddMouseButtonToActionKey( ActionKey& _oActionKey, const sf::Mouse::Button& _eMouseButton );
 		void _AddJoystickButtonToActionKey( ActionKey& _oActionKey, INT8 _iJoystickButton );
 		void _AddJoystickAxisToActionKey( ActionKey& _oActionKey, const sf::Joystick::Axis& _eJoystickAxis, bool _bDirection );
-		
-		bool _SetActionKeyBind_Key( const sf::Keyboard::Key& _eKey );
-		bool _SetActionKeyBind_MouseButton( const sf::Mouse::Button& _eMouseButton );
-		bool _SetActionKeyBind_JoystickButton( INT8 _iJoystickButton );
-		bool _SetActionKeyBind_JoystickAxis( const sf::Joystick::Axis& _eJoystickAxis, float _fPosition );
 
 		const ActionKey* _GetActionKey( sf::Keyboard::Key _eKey ) const;
 		const ActionKey* _GetActionKey( sf::Mouse::Button _eMouseButton ) const;
@@ -683,8 +695,8 @@ namespace fzn
 
 		/////////////////MEMBER VARIABLES/////////////////
 
-		std::vector< ActionKey >		m_oDefaultActionKeys;										//Array containing all the action keys of the game
-		std::vector< ActionKey >		m_oCustomActionKeys;
+		ActionKeys		m_oBackupActionKeys;										//Array containing all the action keys of the game
+		ActionKeys		m_oCustomActionKeys;
 		ActionKeyBindReplacementInfo	m_oActionKeyBindInfo;
 
 		bool							m_bUsingKeyboard;
