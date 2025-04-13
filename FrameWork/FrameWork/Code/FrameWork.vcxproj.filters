@@ -237,6 +237,9 @@
     <ClInclude Include="FZN\Display\Line.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FZN\DataStructure\Variant.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FZN\Managers\AIManager.cpp">

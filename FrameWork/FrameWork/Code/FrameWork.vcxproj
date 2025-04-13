@@ -297,6 +297,7 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
     <ClInclude Include="Externals\json\value.h" />
     <ClInclude Include="Externals\json\version.h" />
     <ClInclude Include="Externals\json\writer.h" />
+    <ClInclude Include="FZN\DataStructure\Variant.h" />
     <ClInclude Include="FZN\Defines.h" />
     <ClInclude Include="FZN\Display\AnimatedProgressBar.h" />
     <ClInclude Include="FZN\Display\Animation.h" />

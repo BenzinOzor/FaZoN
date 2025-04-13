@@ -22,6 +22,7 @@
 #include <SFML/Window/Joystick.hpp>
 
 #include "FZN/Defines.h"
+#include "FZN/DataStructure/Variant.h"
 
 
 namespace fzn
@@ -29,66 +30,19 @@ namespace fzn
 	class Animation;
 
 	//=========================================================
-	//=======================ActionKey===========================
+	//========================ActionKey========================
 	//=========================================================
 
 	struct ActionKey
 	{
-		struct Bind
+		struct AxisInput
 		{
-			Bind()
-			{
-				Reset();
-			}
-
-			Bind( const sf::Keyboard::Key& _eKey )
-				: m_eKey( _eKey )
-				, m_eMouseButton( sf::Mouse::ButtonCount )
-				, m_iJoystickButton( sf::Joystick::ButtonCount )
-				, m_eJoystickAxis( (sf::Joystick::Axis)sf::Joystick::AxisCount )
-				, m_bAxisDirection( true )
-			{}
-
-			Bind( const sf::Mouse::Button& _eMouseButton )
-				: m_eKey( sf::Keyboard::KeyCount )
-				, m_eMouseButton( _eMouseButton )
-				, m_iJoystickButton( sf::Joystick::ButtonCount )
-				, m_eJoystickAxis( (sf::Joystick::Axis)sf::Joystick::AxisCount )
-				, m_bAxisDirection( true )
-			{}
-
-			Bind( const INT8& _iJoystickButton )
-				: m_eKey( sf::Keyboard::KeyCount )
-				, m_eMouseButton( sf::Mouse::ButtonCount )
-				, m_iJoystickButton( _iJoystickButton )
-				, m_eJoystickAxis( (sf::Joystick::Axis)sf::Joystick::AxisCount )
-				, m_bAxisDirection( true )
-			{}
-
-			Bind( const sf::Joystick::Axis& _eJoystickAxis, bool _bAxisDirection )
-				: m_eKey( sf::Keyboard::KeyCount )
-				, m_eMouseButton( sf::Mouse::ButtonCount )
-				, m_iJoystickButton( sf::Joystick::ButtonCount )
-				, m_eJoystickAxis( _eJoystickAxis )
-				, m_bAxisDirection( _bAxisDirection )
-			{}
-
-			void Reset()
-			{
-				m_eKey				= sf::Keyboard::KeyCount;
-				m_eMouseButton		= sf::Mouse::ButtonCount;
-				m_iJoystickButton	= sf::Joystick::ButtonCount;
-				m_eJoystickAxis		= (sf::Joystick::Axis)sf::Joystick::AxisCount;
-				m_bAxisDirection	= true;
-			}
-
-			sf::Keyboard::Key	m_eKey;
-			sf::Mouse::Button	m_eMouseButton;
-			INT8				m_iJoystickButton;
-			sf::Joystick::Axis	m_eJoystickAxis;
-			bool				m_bAxisDirection;
+			sf::Joystick::Axis m_axis{ (sf::Joystick::Axis)sf::Joystick::AxisCount };
+			bool m_axis_direction{ true };
 		};
-		using Binds = std::vector< Bind >;
+		using BindInput = fzn::Variant< sf::Keyboard::Key, sf::Mouse::Button, uint32_t, AxisInput >;
+
+		using Binds = std::vector< BindInput >;
 
 		std::string			m_sName = "";
 		int					m_iCategory = 0;
@@ -100,7 +54,7 @@ namespace fzn
 
 
 	//=========================================================
-	//======================InputManager=========================
+	//======================InputManager=======================
 	//=========================================================
 
 	class FZN_EXPORT InputManager : public sf::NonCopyable
@@ -228,26 +182,26 @@ namespace fzn
 		//Parameter : Concerned key
 		//Return value : The key is pressed (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		bool IsKeyPressed( sf::Keyboard::Key _key );
+		bool IsKeyPressed( sf::Keyboard::Key _key ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Key press test (maintained donw)
 		//Parameter : Concerned key
 		//Return value : The key is down (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		bool IsKeyDown( sf::Keyboard::Key _key );
+		bool IsKeyDown( sf::Keyboard::Key _key ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Release test (transition from Down to Up)
 		//Parameter : Concerned key
 		//Return value : The key is released (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		bool IsKeyReleased( sf::Keyboard::Key _key );
+		bool IsKeyReleased( sf::Keyboard::Key _key ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Key not pressed test (staying Up)
 		//Parameter : Concerned key
 		//Return value : The key is up (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		bool IsKeyUp( sf::Keyboard::Key _key );
-		Status GetKeyState( sf::Keyboard::Key _oKey );
+		bool IsKeyUp( sf::Keyboard::Key _key ) const;
+		Status get_key_state( sf::Keyboard::Key _key ) const;
 
 		/////////////////ACTIONKEYS TESTS/////////////////
 
@@ -256,27 +210,27 @@ namespace fzn
 		//Parameter : Concerned actionKey
 		//Return value : The actionKey is pressed (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		bool IsActionPressed( const char* _actionKey, bool _bIgnoreJoystickAxis = false );
+		bool IsActionPressed( const char* _action_key, bool _bIgnoreJoystickAxis = false ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Key press test (maintained down)
 		//Parameter : Concerned actionKey
 		//Return value : The actionKey is down (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		bool IsActionDown( const char* _actionKey, bool _bIgnoreJoystickAxis = false );
+		bool IsActionDown( const char* _action_key, bool _bIgnoreJoystickAxis = false ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Release test (transition from Down to Up)
 		//Parameter : Concerned actionKey
 		//Return value : The actionKey is released (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		bool IsActionReleased( const char* _actionKey, bool _bIgnoreJoystickAxis = false );
+		bool IsActionReleased( const char* _action_key, bool _bIgnoreJoystickAxis = false ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Key not pressed test (staying Up)
 		//Parameter : Concerned actionKey
 		//Return value : The actionKey is up (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		bool IsActionUp( const char* _actionKey, bool _bIgnoreJoystickAxis = false );
-		Status GetActionState( const char* _actionKey, bool _bIgnoreJoystickAxis = false );
-		float GetActionValue( const char* _action );
+		bool IsActionUp( const char* _action_key, bool _bIgnoreJoystickAxis = false ) const;
+		Status GetActionState( const char* _action_key, bool _bIgnoreJoystickAxis = false ) const;
+		float GetActionValue( const char* _action_key ) const;
 
 
 		/////////////////ACCESSORS/////////////////
@@ -302,40 +256,41 @@ namespace fzn
 		//Parameter : Concerned button
 		//Return value : The button is pressed (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 IsMousePressed( sf::Mouse::Button _button );
+		INT8 IsMousePressed( sf::Mouse::Button _button ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Button press test (maintained donw)
 		//Parameter : Concerned button
 		//Return value : The button is down (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 IsMouseDown( sf::Mouse::Button _button );
+		INT8 IsMouseDown( sf::Mouse::Button _button ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Release test (transition from Down to Up)
 		//Parameter : Concerned button
 		//Return value : The button is released (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 IsMouseReleased( sf::Mouse::Button _button );
+		INT8 IsMouseReleased( sf::Mouse::Button _button ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Button not pressed test (staying Up)
 		//Parameter : Concerned button
 		//Return value : The button is up (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 IsMouseUp( sf::Mouse::Button _button );
+		INT8 IsMouseUp( sf::Mouse::Button _button ) const;
+		Status get_mouse_button_state( sf::Mouse::Button _button ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Checks if the mouse wheel is scrolling up
 		//Return value : The mouse wheel goes up (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 IsMouseWheelGoingUp();
+		INT8 IsMouseWheelGoingUp() const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Checks if the mouse wheel is scrolling down
 		//Return value : The mouse wheel goes down (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 IsMouseWheelGoingDown();
+		INT8 IsMouseWheelGoingDown() const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Accessor on the mouse wheel delta
 		//Return value : return status Down (delta < 0) or Up (delta > 0), returns "nbStates" if delta = 0
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		Status GetMouseWheelDirection();
+		Status GetMouseWheelDirection() const;
 
 
 		/////////////////OTHER FUNCTIONS/////////////////
@@ -404,46 +359,52 @@ namespace fzn
 		//Parameter 2 : Concerned joystick button
 		//Return value : The button is pressed (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 IsJoystickButtonPressed( INT8 _id, INT8 _button );
+		INT8 IsJoystickButtonPressed( INT8 _id, INT8 _button ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Button pressed test (maintened down)
 		//Parameter 1 : Joystick ID
 		//Parameter 2 : Concerned joystick button
 		//Return value : The button is pressed (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 IsJoystickButtonDown( INT8 _id, INT8 _button );
+		INT8 IsJoystickButtonDown( INT8 _id, INT8 _button ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Release test (transition from Down to Up)
 		//Parameter 1 : Joystick ID
 		//Parameter 2 : Concerned joystick button
 		//Return value : The button is pressed (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 IsJoystickButtonReleased( INT8 _id, INT8 _button );
+		INT8 IsJoystickButtonReleased( INT8 _id, INT8 _button ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Button not pressed test (staying up)
 		//Parameter 1 : Joystick ID
 		//Parameter 2 : Concerned joystick button
 		//Return value : The button is pressed (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 IsJoystickButtonUp( INT8 _id, INT8 _button );
+		INT8 IsJoystickButtonUp( INT8 _id, INT8 _button ) const;
+		Status get_joystick_button_state( int8_t _id, uint32_t _button ) const;
 
 
 		/////////////////STICKS FUNCTIONS/////////////////
 
+		bool is_joystick_axis_pressed( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction ) const;
+		bool is_joystick_axis_down( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction ) const;
+		bool is_joystick_axis_released( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction ) const;
+		bool is_joystick_axis_up( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction ) const;
+		Status get_joystick_axis_state( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Indicates if the given axis is stopped (on its default value)
 		//Parameter 1 : Joystick ID
 		//Parameter 2 : Concerned joystick axis
 		//Return value : The axis is stopped (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 IsJoystickAxisStopped( INT8 _id, sf::Joystick::Axis _axis );
+		bool IsJoystickAxisStopped( int8_t _id, sf::Joystick::Axis _axis );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Indicates if the axis corresponding to the given action is stopped (on its default value)
 		//Parameter 1 : Joystick ID
 		//Parameter 2 : Action
 		//Return value : The axis is stopped (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		INT8 IsJoystickAxisStopped( INT8 _id, const char* _action );
+		bool IsJoystickAxisStopped( int8_t _id, const char* _action_key );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Accessor on the position of a given axis
 		//Parameter 1 : Joystick ID
@@ -457,7 +418,7 @@ namespace fzn
 		//Parameter 2 : Action
 		//Return value : Axis position
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		float GetJoystickAxisPosition( INT8 _id, const char* _action );
+		float GetJoystickAxisPosition( INT8 _id, const char* _action_key );
 
 
 		/////////////////ACCESSORS / MUTATORS/////////////////
@@ -525,7 +486,7 @@ namespace fzn
 		INT8 IsJoystickConnected();
 		int GetNumberOfConnectedJoysticks() const;
 		
-		std::string GetActionGlyphString( const std::string& _sAction, bool _bKeyboard, bool _bAllKeys ) const;
+		std::string GetActionGlyphString( std::string_view _action_key_name, bool _keyboard, bool _all_keys ) const;
 		CustomBitmapGlyph* GetBitmapGlyph( const std::string& _sActionOrKey, bool _bKeyboard, int _iIndex = 0 ) const;
 		std::string GetActionKeyString( const std::string& _sActionOrKey, bool _bKeyboard, int _iIndex = 0, bool _bAddBrackets = false ) const;
 		const ActionKeys& GetActionKeys() const;
@@ -617,19 +578,25 @@ namespace fzn
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		void LoadActionKeysFromXML( ActionKeys& _oActionKeysArray, const std::string& _sXMLPath, bool _bCrypted );
 		
-		void _AddKeyToActionKey( ActionKey& _oActionKey, const sf::Keyboard::Key& _eKey );
-		void _AddMouseButtonToActionKey( ActionKey& _oActionKey, const sf::Mouse::Button& _eMouseButton );
-		void _AddJoystickButtonToActionKey( ActionKey& _oActionKey, INT8 _iJoystickButton );
-		void _AddJoystickAxisToActionKey( ActionKey& _oActionKey, const sf::Joystick::Axis& _eJoystickAxis, bool _bDirection );
+		void _AddKeyToActionKey( ActionKey& _action_key, sf::Keyboard::Key _key );
+		void _AddMouseButtonToActionKey( ActionKey& _action_key, sf::Mouse::Button _mouse_button );
+		void _AddJoystickButtonToActionKey( ActionKey& _action_key, uint32_t _joystick_button );
+		void _AddJoystickAxisToActionKey( ActionKey& _action_key, const ActionKey::AxisInput& _axis_input );
 
-		const ActionKey* _GetActionKey( sf::Keyboard::Key _eKey ) const;
-		const ActionKey* _GetActionKey( sf::Mouse::Button _eMouseButton ) const;
-		const ActionKey* _GetActionKey( INT8 _iJoystickButton ) const;
-		const ActionKey* _GetActionKey( sf::Joystick::Axis _eAxis, bool _bDirection ) const;
+		const ActionKey* _GetActionKey( sf::Keyboard::Key _key ) const;
+		const ActionKey* _GetActionKey( sf::Mouse::Button _mouse_button ) const;
+		const ActionKey* _GetActionKey( uint32_t _joystick_button ) const;
+		const ActionKey* _GetActionKey( const ActionKey::AxisInput& _axis_input ) const;
 		void _SendActionsEvent( const ActionKey* _pActionKey, Status _eStatus );
 
 		std::string _GetActionKeyString( const std::string& _sActionOrKey, bool _bKeyboard, int _iIndex = 0 ) const;
 		std::string _GetDeviceTag( bool _bKeyboard ) const;
+
+		bool _check_keyboard_key_state( sf::Keyboard::Key _key, Status _status_to_check ) const;
+		bool _check_mouse_button_state( sf::Mouse::Button _button, Status _status_to_check ) const;
+		bool _check_joystick_button_state( int8_t _id, uint32_t _button, Status _status_to_check ) const;
+		bool _check_joystick_axis_state( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction, Status _status_to_check ) const;
+
 
 		/////////////////CHARS MANAGEMENT/////////////////
 

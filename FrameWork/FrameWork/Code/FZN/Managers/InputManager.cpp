@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------
 
 #include <fstream>
+#include <filesystem>
 
 #include "FZN/Includes.h"
 #include "FZN/Managers/FazonCore.h"
@@ -88,7 +89,6 @@ namespace fzn
 		UpdateDeviceInUse();
 	}
 
-
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Get the bindings vector corresponding to the given bind_input
 	// bind_input: The SFML input type (Keyboard::Key, Mouse::Button, Joystick::Axis or INT8 (Joystick button))
@@ -98,87 +98,10 @@ namespace fzn
 	template <typename bind_input>
 	static ActionKey::Binds& get_input_type_binds( ActionKey& _action_key )
 	{
-		if constexpr( std::is_same< sf::Joystick::Axis, bind_input >() || std::is_same< INT8, bind_input >() )
+		if constexpr( std::is_same< ActionKey::AxisInput, bind_input >() || std::is_same< uint32_t, bind_input >() )
 			return _action_key.m_oControllerBinds;
 
 		return _action_key.m_oKeyboardBinds;
-	}
-
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	// Look for the given input in the given action key bindings
-	// bind_input: The SFML input type (Keyboard::Key, Mouse::Button, Joystick::Axis or INT8 (Joystick button))
-	// _binds: The action key bindings
-	// _input: The input to look for
-	// Return value: An iterator to the found input
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	template< typename bind_input >
-	static ActionKey::Binds::iterator find_input( ActionKey::Binds& _binds, bind_input _input, bool _input_direction, bool _full_axis )
-	{
-		if constexpr( std::is_same< bind_input, sf::Keyboard::Key >() )
-		{
-			return std::ranges::find( _binds, _input, &ActionKey::Bind::m_eKey );
-		}
-		else if constexpr( std::is_same< bind_input, sf::Mouse::Button >() )
-		{
-			return std::ranges::find( _binds, _input, &ActionKey::Bind::m_eMouseButton );
-		}
-		else if constexpr( std::is_same< bind_input, INT8 >() )
-		{
-			return std::ranges::find( _binds, _input, &ActionKey::Bind::m_iJoystickButton );
-		}
-		else if constexpr( std::is_same< bind_input, sf::Joystick::Axis >() )
-		{
-			//return std::ranges::find( _binds, _input, &ActionKey::Bind::m_eJoystickAxis );
-			return std::ranges::find_if( _binds, [&_input, &_input_direction, &_full_axis]( const ActionKey::Bind& _bind )
-			{
-				if( _full_axis )
-					return _bind.m_eJoystickAxis == _input;
-
-				return _bind.m_eJoystickAxis == _input && _bind.m_bAxisDirection == _input_direction;
-			});
-		}
-
-		return _binds.end();
-	}
-
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	// Assign the given input to the given action key bindings
-	// bind_input: The SFML input type (Keyboard::Key, Mouse::Button, Joystick::Axis or INT8 (Joystick button))
-	// _binds: The action key bindings
-	// _input: The input to add or assign
-	// _index: The index at which we wand to assign the input
-	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	template< typename bind_input >
-	static void assign_input_to_action_key( ActionKey::Binds& _binds, bind_input _input, size_t _index, bool _input_direction )
-	{
-		if( _index >= _binds.size() )
-		{
-			if constexpr( std::is_same< bind_input, sf::Joystick::Axis >() )
-				_binds.push_back( { _input, _input_direction } );
-			else
-				_binds.push_back( _input );
-		}
-		else
-		{
-			if constexpr( std::is_same< bind_input, sf::Keyboard::Key >() )
-			{
-				_binds[ _index ].m_eKey = _input;
-			}
-			else if constexpr( std::is_same< bind_input, sf::Mouse::Button >() )
-			{
-				_binds[ _index ].m_eMouseButton = _input;
-			}
-			else if constexpr( std::is_same< bind_input, INT8 >() )
-			{
-				_binds[ _index ].m_iJoystickButton = _input;
-			}
-			else if constexpr( std::is_same< bind_input, sf::Joystick::Axis >() )
-			{
-				_binds[ _index ].Reset();
-				_binds[ _index ].m_eJoystickAxis = _input;
-				_binds[ _index ].m_bAxisDirection = _input_direction;
-			}
-		}
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -189,21 +112,25 @@ namespace fzn
 	// _input: The SFML input type value (actual value of keyboard key, mouse button, joystick button or joystick axis)
 	// Return value: True if the input has been added/replaced in the given action key
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	template < typename bind_input >
-	static bool set_action_key_bind( ActionKeys& _action_keys, InputManager::ActionKeyBindReplacementInfo& _action_key_infos, bind_input _input, bool _input_direction = false )
+	static bool set_action_key_bind( ActionKeys& _action_keys, InputManager::ActionKeyBindReplacementInfo& _action_key_infos, ActionKey::BindInput _input )
 	{
 		if( _action_key_infos.m_action_key == nullptr )
 			return false;
 
+		using InputType = std::decay_t<decltype( _input )>;
+
 		// The bindings of the action key we're working on.
-		ActionKey::Binds& binds{ get_input_type_binds<bind_input>( *_action_key_infos.m_action_key ) };
+		ActionKey::Binds& binds{ get_input_type_binds<InputType>( *_action_key_infos.m_action_key ) };
 		const bool full_axis = _action_key_infos.m_action_key->m_bFullAxis;
 
 		// If the input entered by the player is already in the bindings vector, we ignore it.
-		if( find_input( binds, _input, _input_direction, full_axis ) != binds.end() )
+		if( std::ranges::find( binds, _input ) != binds.end() )
 			return false;
 
-		assign_input_to_action_key( binds, _input, _action_key_infos.m_bind_index, full_axis );
+		if( _action_key_infos.m_bind_index >= binds.size() )
+			binds.push_back( _input );
+		else
+			binds[ _action_key_infos.m_bind_index ] = _input;
 
 		for( fzn::ActionKey& action_key : _action_keys )
 		{
@@ -213,8 +140,8 @@ namespace fzn
 			if( _action_key_infos.m_same_category_only && action_key.m_iCategory != _action_key_infos.m_action_key->m_iCategory )
 				continue;
 
-			ActionKey::Binds& action_key_binds{ get_input_type_binds<bind_input>( action_key ) };
-			if( auto it_bind = find_input( action_key_binds, _input, _input_direction, action_key.m_bFullAxis ); it_bind != action_key_binds.end() )
+			ActionKey::Binds& action_key_binds{ get_input_type_binds<InputType>( action_key ) };
+			if( auto it_bind = std::ranges::find( action_key_binds, _input ); it_bind != action_key_binds.end() )
 			{
 				action_key_binds.erase( it_bind );
 				break;
@@ -262,23 +189,23 @@ namespace fzn
 			bool bBindReplaced = false;
 			if( IsWaitingInputForType( BindType::eKey ) && _event.type == sf::Event::KeyPressed )
 			{
-				bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, _event.key.code );
+				//bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, _event.key.code );
 				bResetEvent = true;
 			}
 			else if( IsWaitingInputForType( BindType::eMouseButton ) && _event.type == sf::Event::MouseButtonPressed )
 			{
-				bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, _event.mouseButton.button );
+				//bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, _event.mouseButton.button );
 				bResetEvent = true;
 			}
 			else if( IsWaitingInputForType( BindType::eJoystickButton ) && _event.type == sf::Event::JoystickButtonPressed )
 			{
-				bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, (INT8)_event.joystickButton.button );
+				//bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, _event.joystickButton.button );
 				bResetEvent = true;
 			}
 			else if( IsWaitingInputForType( BindType::eJoystickAxis ) && _event.type == sf::Event::JoystickMoved && fabs( _event.joystickMove.position ) > 50.f )
 			{
 				const bool direction = _event.joystickMove.position - m_joysticks[ m_defaultJoystick ].defaultAxisValues[ _event.joystickMove.axis ] > 0;
-				bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, _event.joystickMove.axis, direction );
+				//bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, ActionKey::AxisInput{ _event.joystickMove.axis, direction } );
 				bResetEvent = true;
 			}
 
@@ -337,9 +264,9 @@ namespace fzn
 	//Parameter : Concerned key
 	//Return value : The key is pressed (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	bool InputManager::IsKeyPressed( sf::Keyboard::Key _key )
+	bool InputManager::IsKeyPressed( sf::Keyboard::Key _key ) const
 	{
-		return ( m_keyStates[ _key ] == Status::Pressed );
+		return _check_keyboard_key_state( _key, Status::Pressed );
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -347,9 +274,9 @@ namespace fzn
 	//Parameter : Concerned key
 	//Return value : The key is down (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	bool InputManager::IsKeyDown( sf::Keyboard::Key _key )
+	bool InputManager::IsKeyDown( sf::Keyboard::Key _key ) const
 	{
-		return ( m_keyStates[ _key ] == Status::Down );
+		return _check_keyboard_key_state( _key, Status::Down );
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -357,9 +284,9 @@ namespace fzn
 	//Parameter : Concerned key
 	//Return value : The key is released (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	bool InputManager::IsKeyReleased( sf::Keyboard::Key _key )
+	bool InputManager::IsKeyReleased( sf::Keyboard::Key _key ) const
 	{
-		return ( m_keyStates[ _key ] == Status::Released );
+		return _check_keyboard_key_state( _key, Status::Released );
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -367,15 +294,15 @@ namespace fzn
 	//Parameter : Concerned key
 	//Return value : The key is up (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	bool InputManager::IsKeyUp( sf::Keyboard::Key _key )
+	bool InputManager::IsKeyUp( sf::Keyboard::Key _key ) const
 	{
-		return ( m_keyStates[ _key ] == Status::Up );
+		return _check_keyboard_key_state( _key, Status::Up );
 	}
 
-	fzn::InputManager::Status InputManager::GetKeyState( sf::Keyboard::Key _oKey )
+	InputManager::Status InputManager::get_key_state( sf::Keyboard::Key _key ) const
 	{
-		if( _oKey < sf::Keyboard::KeyCount )
-			return m_keyStates[ _oKey ];
+		if( _key < sf::Keyboard::KeyCount )
+			return m_keyStates[ _key ];
 
 		return Status::Up;
 	}
@@ -388,46 +315,34 @@ namespace fzn
 	//Parameter : Concerned actionKey
 	//Return value : The actionKey is pressed (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	bool InputManager::IsActionPressed( const char* _key, bool _bIgnoreJoystickAxis /*= false*/ )
+	bool InputManager::IsActionPressed( const char* _action_key, bool _bIgnoreJoystickAxis /*= false*/ ) const
 	{
-		const ActionKey* pActionKey = GetActionKey( _key );
+		const ActionKey* action_key = GetActionKey( _action_key );
 
-		if( pActionKey == nullptr )
+		if( action_key == nullptr )
 			return false;
 
-		for( const ActionKey::Bind& oBind : pActionKey->m_oKeyboardBinds )
+		for( const ActionKey::BindInput& bind_input : action_key->m_oKeyboardBinds )
 		{
-			if( oBind.m_eKey < sf::Keyboard::KeyCount && m_keyStates[ oBind.m_eKey ] == Status::Pressed )
-				return true;
-
-			if( oBind.m_eMouseButton < sf::Mouse::Button::ButtonCount && m_buttonStates[ oBind.m_eMouseButton ] == Status::Pressed )
+			if( bind_input.visit<bool>( Overloaded
+				{
+					[&]( sf::Keyboard::Key _sf_key ) -> bool { return IsKeyPressed( _sf_key ); },
+					[&]( sf::Mouse::Button _button ) -> bool { return IsMousePressed( _button ); }
+				} ) )
 				return true;
 		}
 
 		if( m_defaultJoystick < 0 || m_joysticks[ m_defaultJoystick ].isConnected == false )
 			return false;
 
-		for( const ActionKey::Bind& oBind : pActionKey->m_oControllerBinds )
+		for( const ActionKey::BindInput& bind_input : action_key->m_oControllerBinds )
 		{
-			if( oBind.m_iJoystickButton < sf::Joystick::ButtonCount && m_joysticks[ m_defaultJoystick ].states[ oBind.m_iJoystickButton ] == Status::Pressed )
+			if( bind_input.visit< bool >( Overloaded
+				{
+					[&]( uint32_t _joystick_button ) -> bool			{ return IsJoystickButtonPressed( m_defaultJoystick, _joystick_button ); },
+					[&]( ActionKey::AxisInput _joystick_axis ) -> bool	{ return is_joystick_axis_pressed( m_defaultJoystick, _joystick_axis.m_axis, action_key->m_bFullAxis, _joystick_axis.m_axis_direction ); }
+				} ) )
 				return true;
-
-			if( oBind.m_eJoystickAxis < sf::Joystick::AxisCount && _bIgnoreJoystickAxis == false )
-			{
-				if( pActionKey->m_bFullAxis )
-				{
-					if( m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::eFull ] == Status::Pressed )
-						return true;
-				}
-				else
-				{
-					if( oBind.m_bAxisDirection && m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::ePositive ] == Status::Pressed )
-						return true;
-					
-					if( oBind.m_bAxisDirection == false && m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::eNegative ] == Status::Pressed )
-						return true;
-				}
-			}
 		}
 
 		return false;
@@ -438,46 +353,34 @@ namespace fzn
 	//Parameter : Concerned actionKey
 	//Return value : The actionKey is down (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	bool InputManager::IsActionDown( const char* _key, bool _bIgnoreJoystickAxis /*= false*/ )
+	bool InputManager::IsActionDown( const char* _action_key, bool _bIgnoreJoystickAxis /*= false*/ ) const
 	{
-		const ActionKey* pActionKey = GetActionKey( _key );
+		const ActionKey* action_key = GetActionKey( _action_key );
 
-		if( pActionKey == nullptr )
+		if( action_key == nullptr )
 			return false;
 
-		for( const ActionKey::Bind& oBind : pActionKey->m_oKeyboardBinds )
+		for( const ActionKey::BindInput& bind_input : action_key->m_oKeyboardBinds )
 		{
-			if( oBind.m_eKey < sf::Keyboard::KeyCount && m_keyStates[ oBind.m_eKey ] == Status::Down )
-				return true;
-
-			if( oBind.m_eMouseButton < sf::Mouse::Button::ButtonCount && m_buttonStates[ oBind.m_eMouseButton ] == Status::Down )
+			if( bind_input.visit<bool>( Overloaded
+				{
+					[&]( sf::Keyboard::Key _sf_key ) -> bool { return IsKeyDown( _sf_key ); },
+					[&]( sf::Mouse::Button _button ) -> bool { return IsMouseDown( _button ); }
+				} ) )
 				return true;
 		}
 
 		if( m_defaultJoystick < 0 || m_joysticks[ m_defaultJoystick ].isConnected == false )
 			return false;
 
-		for( const ActionKey::Bind& oBind : pActionKey->m_oControllerBinds )
+		for( const ActionKey::BindInput& bind_input : action_key->m_oControllerBinds )
 		{
-			if( oBind.m_iJoystickButton < sf::Joystick::ButtonCount && m_joysticks[ m_defaultJoystick ].states[ oBind.m_iJoystickButton ] == Status::Down )
+			if( bind_input.visit< bool >( Overloaded
+				{
+					[&]( uint32_t _joystick_button ) -> bool			{ return IsJoystickButtonDown( m_defaultJoystick, _joystick_button ); },
+					[&]( ActionKey::AxisInput _joystick_axis ) -> bool	{ return is_joystick_axis_down( m_defaultJoystick, _joystick_axis.m_axis, action_key->m_bFullAxis, _joystick_axis.m_axis_direction ); }
+				} ) )
 				return true;
-
-			if( oBind.m_eJoystickAxis < sf::Joystick::AxisCount && _bIgnoreJoystickAxis == false )
-			{
-				if( pActionKey->m_bFullAxis )
-				{
-					if( m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::eFull ] == Status::Down )
-						return true;
-				}
-				else
-				{
-					if( oBind.m_bAxisDirection && m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::ePositive ] == Status::Down )
-						return true;
-					
-					if( oBind.m_bAxisDirection == false && m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::eNegative ] == Status::Down )
-						return true;
-				}
-			}
 		}
 
 		return false;
@@ -488,46 +391,34 @@ namespace fzn
 	//Parameter : Concerned actionKey
 	//Return value : The actionKey is released (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	bool InputManager::IsActionReleased( const char* _key, bool _bIgnoreJoystickAxis /*= false*/ )
+	bool InputManager::IsActionReleased( const char* _action_key, bool _bIgnoreJoystickAxis /*= false*/ ) const
 	{
-		const ActionKey* pActionKey = GetActionKey( _key );
+		const ActionKey* action_key = GetActionKey( _action_key );
 
-		if( pActionKey == nullptr )
+		if( action_key == nullptr )
 			return false;
 
-		for( const ActionKey::Bind& oBind : pActionKey->m_oKeyboardBinds )
+		for( const ActionKey::BindInput& bind_input : action_key->m_oKeyboardBinds )
 		{
-			if( oBind.m_eKey < sf::Keyboard::KeyCount && m_keyStates[ oBind.m_eKey ] == Status::Released )
-				return true;
-
-			if( oBind.m_eMouseButton < sf::Mouse::Button::ButtonCount && m_buttonStates[ oBind.m_eMouseButton ] == Status::Released )
+			if( bind_input.visit<bool>( Overloaded
+				{
+					[&]( sf::Keyboard::Key _sf_key ) -> bool { return IsKeyReleased( _sf_key ); },
+					[&]( sf::Mouse::Button _button ) -> bool { return IsMouseReleased( _button ); }
+				} ) )
 				return true;
 		}
 
 		if( m_defaultJoystick < 0 || m_joysticks[ m_defaultJoystick ].isConnected == false )
 			return false;
 
-		for( const ActionKey::Bind& oBind : pActionKey->m_oControllerBinds )
+		for( const ActionKey::BindInput& bind_input : action_key->m_oControllerBinds )
 		{
-			if( oBind.m_iJoystickButton < sf::Joystick::ButtonCount && m_joysticks[ m_defaultJoystick ].states[ oBind.m_iJoystickButton ] == Status::Released )
+			if( bind_input.visit< bool >( Overloaded
+				{
+					[&]( uint32_t _joystick_button ) -> bool			{ return IsJoystickButtonReleased( m_defaultJoystick, _joystick_button ); },
+					[&]( ActionKey::AxisInput _joystick_axis ) -> bool	{ return is_joystick_axis_released( m_defaultJoystick, _joystick_axis.m_axis, action_key->m_bFullAxis, _joystick_axis.m_axis_direction ); }
+				} ) )
 				return true;
-
-			if( oBind.m_eJoystickAxis < sf::Joystick::AxisCount && _bIgnoreJoystickAxis == false )
-			{
-				if( pActionKey->m_bFullAxis )
-				{
-					if( m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::eFull ] == Status::Released )
-						return true;
-				}
-				else
-				{
-					if( oBind.m_bAxisDirection && m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::ePositive ] == Status::Released )
-						return true;
-					
-					if( oBind.m_bAxisDirection == false && m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::eNegative ] == Status::Released )
-						return true;
-				}
-			}
 		}
 
 		return false;
@@ -538,133 +429,92 @@ namespace fzn
 	//Parameter : Concerned actionKey
 	//Return value : The actionKey is up (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	bool InputManager::IsActionUp( const char* _key, bool _bIgnoreJoystickAxis /*= false*/ )
+	bool InputManager::IsActionUp( const char* _action_key, bool _bIgnoreJoystickAxis /*= false*/ ) const
 	{
-		const ActionKey* pActionKey = GetActionKey( _key );
+		const ActionKey* action_key = GetActionKey( _action_key );
 
-		if( pActionKey == nullptr )
-			return true;
+		if( action_key == nullptr )
+			return false;
 
-		for( const ActionKey::Bind& oBind : pActionKey->m_oKeyboardBinds )
+		for( const ActionKey::BindInput& bind_input : action_key->m_oKeyboardBinds )
 		{
-			if( oBind.m_eKey < sf::Keyboard::KeyCount && m_keyStates[ oBind.m_eKey ] != Status::Up )
-				return false;
-
-			if( oBind.m_eMouseButton < sf::Mouse::Button::ButtonCount && m_buttonStates[ oBind.m_eMouseButton ] != Status::Up )
-				return false;
+			if( bind_input.visit<bool>( Overloaded
+				{
+					[&]( sf::Keyboard::Key _sf_key ) -> bool { return IsKeyUp( _sf_key ); },
+					[&]( sf::Mouse::Button _button ) -> bool { return IsMouseUp( _button ); }
+				} ) )
+				return true;
 		}
 
 		if( m_defaultJoystick < 0 || m_joysticks[ m_defaultJoystick ].isConnected == false )
-			return true;
+			return false;
 
-		for( const ActionKey::Bind& oBind : pActionKey->m_oControllerBinds )
+		for( const ActionKey::BindInput& bind_input : action_key->m_oControllerBinds )
 		{
-			if( oBind.m_iJoystickButton < sf::Joystick::ButtonCount && m_joysticks[ m_defaultJoystick ].states[ oBind.m_iJoystickButton ] != Status::Up )
-				return false;
-
-			if( oBind.m_eJoystickAxis < sf::Joystick::AxisCount && _bIgnoreJoystickAxis == false )
-			{
-				if( pActionKey->m_bFullAxis )
+			if( bind_input.visit< bool >( Overloaded
 				{
-					if( m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::eFull ] != Status::Up )
-						return false;
-				}
-				else
-				{
-					if( oBind.m_bAxisDirection && m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::ePositive ] != Status::Up )
-						return false;
-					
-					if( oBind.m_bAxisDirection == false && m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::eNegative ] != Status::Up )
-						return false;
-				}
-			}
+					[&]( uint32_t _joystick_button ) -> bool			{ return IsJoystickButtonUp( m_defaultJoystick, _joystick_button ); },
+					[&]( ActionKey::AxisInput _joystick_axis ) -> bool	{ return is_joystick_axis_up( m_defaultJoystick, _joystick_axis.m_axis, action_key->m_bFullAxis, _joystick_axis.m_axis_direction ); }
+				} ) )
+				return true;
 		}
 
-		return true;
+		return false;
 	}
 
-	fzn::InputManager::Status InputManager::GetActionState( const char* _actionKey, bool _bIgnoreJoystickAxis /*= false*/ )
+	InputManager::Status InputManager::GetActionState( const char* _action_key, bool _bIgnoreJoystickAxis /*= false*/ ) const
 	{
-		const ActionKey* pActionKey = GetActionKey( _actionKey );
+		const ActionKey* action_key = GetActionKey( _action_key );
 
-		if( pActionKey == nullptr )
+		if( action_key == nullptr )
 			return Status::Up;
 
-		for( const ActionKey::Bind& oBind : pActionKey->m_oKeyboardBinds )
+		for( const ActionKey::BindInput& bind_input : action_key->m_oKeyboardBinds )
 		{
-			if( oBind.m_eKey < sf::Keyboard::KeyCount && m_keyStates[ oBind.m_eKey ] != Status::Up )
-				return m_keyStates[ oBind.m_eKey ];
-
-			if( oBind.m_eMouseButton < sf::Mouse::Button::ButtonCount && m_buttonStates[ oBind.m_eMouseButton ] != Status::Up )
-				return m_buttonStates[ oBind.m_eMouseButton ];
+			return bind_input.visit< Status >( Overloaded
+				{
+					[&]( sf::Keyboard::Key _sf_key ) -> Status { return get_key_state( _sf_key ); },
+					[&]( sf::Mouse::Button _button ) -> Status { return get_mouse_button_state( _button ); }
+				} );
 		}
 
 		if( m_defaultJoystick < 0 || m_joysticks[ m_defaultJoystick ].isConnected == false )
 			return Status::Up;
 
-		for( const ActionKey::Bind& oBind : pActionKey->m_oControllerBinds )
+		for( const ActionKey::BindInput& bind_input : action_key->m_oControllerBinds )
 		{
-			if( oBind.m_iJoystickButton < sf::Joystick::ButtonCount && m_joysticks[ m_defaultJoystick ].states[ oBind.m_iJoystickButton ] != Status::Up )
-				return m_joysticks[ m_defaultJoystick ].states[ oBind.m_iJoystickButton ];
-
-			if( oBind.m_eJoystickAxis < sf::Joystick::AxisCount && _bIgnoreJoystickAxis == false )
-			{
-				if( pActionKey->m_bFullAxis )
+			return bind_input.visit< Status >( Overloaded
 				{
-					if( m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::eFull ] != Status::Up )
-						return m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::eFull ];
-				}
-				else
-				{
-					if( oBind.m_bAxisDirection && m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::ePositive ] != Status::Up )
-						return m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::ePositive];
-					
-					if( oBind.m_bAxisDirection == false && m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::eNegative ] != Status::Up )
-						return m_joysticks[ m_defaultJoystick ].axisStates[ oBind.m_eJoystickAxis ][ JoystickAxisDirection::eNegative];
-				}
-			}
+					[&]( uint32_t _joystick_button ) -> Status				{ return get_joystick_button_state( m_defaultJoystick, _joystick_button ); },
+					[&]( ActionKey::AxisInput _joystick_axis ) -> Status	{ return get_joystick_axis_state( m_defaultJoystick, _joystick_axis.m_axis, action_key->m_bFullAxis, _joystick_axis.m_axis_direction ); }
+				} );
 		}
 
 		return Status::Up;
 	}
 
-	float InputManager::GetActionValue( const char* _action )
+	float InputManager::GetActionValue( const char* _action_key ) const
 	{
-		const ActionKey* pActionKey = GetActionKey( _action );
+		const ActionKey* action_key = GetActionKey( _action_key );
 
-		if( pActionKey == nullptr )
+		if( action_key == nullptr )
 			return 0.f;
 
-		for( const ActionKey::Bind& oBind : pActionKey->m_oKeyboardBinds )
+		for( const ActionKey::BindInput& bind_input : action_key->m_oControllerBinds )
 		{
-			if( oBind.m_eKey < sf::Keyboard::KeyCount && m_keyStates[ oBind.m_eKey ] != Status::Up )
-				return 1.f;
+			float axis_value{ bind_input.visit< float >( [&]( auto&& _bind_input ) -> float
+				{
+					if constexpr( std::is_same< _bind_input, ActionKey::AxisInput > ) { return GetJoystickAxisPosition( m_defaultJoystick, _bind_input.m_axis ); }
+				} ) };
 
-			if( oBind.m_eMouseButton < sf::Mouse::Button::ButtonCount && m_buttonStates[ oBind.m_eMouseButton ] != Status::Up )
-				return 1.f;
+			if( axis_value != 0.f )
+				return axis_value;
 		}
 
-		if( m_defaultJoystick < 0 || m_joysticks[ m_defaultJoystick ].isConnected == false )
-			return 0.f;
+		const Status action_state{ GetActionState( _action_key ) };
 
-		for( const ActionKey::Bind& oBind : pActionKey->m_oControllerBinds )
-		{
-			if( oBind.m_iJoystickButton < sf::Joystick::ButtonCount && m_joysticks[ m_defaultJoystick ].states[ oBind.m_iJoystickButton ] != Status::Up )
-				return 1.f;
-
-			if( oBind.m_eJoystickAxis < sf::Joystick::AxisCount && fabs( m_joysticks[m_defaultJoystick].axes[oBind.m_eJoystickAxis] - m_joysticks[m_defaultJoystick].defaultAxisValues[oBind.m_eJoystickAxis] ) > m_joysticks[m_defaultJoystick].axesDeadZone )
-			{
-				if( pActionKey->m_bFullAxis )
-				{
-					return m_joysticks[m_defaultJoystick].axes[oBind.m_eJoystickAxis];
-				}
-				else
-				{
-					if( oBind.m_bAxisDirection && m_joysticks[m_defaultJoystick].axes[oBind.m_eJoystickAxis] > 0.f || oBind.m_bAxisDirection == false && m_joysticks[m_defaultJoystick].axes[oBind.m_eJoystickAxis] < 0.f )
-						return m_joysticks[m_defaultJoystick].axes[oBind.m_eJoystickAxis];
-				}
-			}
-		}
+		if( action_state == Status::Pressed || action_state == Status::Down )
+			return 1.f;
 
 		return 0.f;
 	}
@@ -696,9 +546,9 @@ namespace fzn
 	//Parameter : Concerned button
 	//Return value : The button is pressed (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	INT8 InputManager::IsMousePressed( sf::Mouse::Button _button )
+	INT8 InputManager::IsMousePressed( sf::Mouse::Button _button ) const
 	{
-		return ( m_buttonStates[ _button ] == Status::Pressed );
+		return _check_mouse_button_state( _button, Status::Pressed );
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -706,9 +556,9 @@ namespace fzn
 	//Parameter : Concerned button
 	//Return value : The button is down (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	INT8 InputManager::IsMouseDown( sf::Mouse::Button _button )
+	INT8 InputManager::IsMouseDown( sf::Mouse::Button _button ) const
 	{
-		return ( m_buttonStates[ _button ] == Status::Down );
+		return _check_mouse_button_state( _button, Status::Down );
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -716,9 +566,9 @@ namespace fzn
 	//Parameter : Concerned button
 	//Return value : The button is released (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	INT8 InputManager::IsMouseReleased( sf::Mouse::Button _button )
+	INT8 InputManager::IsMouseReleased( sf::Mouse::Button _button ) const
 	{
-		return ( m_buttonStates[ _button ] == Status::Released );
+		return _check_mouse_button_state( _button, Status::Released );
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -726,16 +576,24 @@ namespace fzn
 	//Parameter : Concerned button
 	//Return value : The button is up (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	INT8 InputManager::IsMouseUp( sf::Mouse::Button _button )
+	INT8 InputManager::IsMouseUp( sf::Mouse::Button _button ) const
 	{
-		return ( m_buttonStates[ _button ] == Status::Up );
+		return _check_mouse_button_state( _button, Status::Up );
+	}
+
+	InputManager::Status InputManager::get_mouse_button_state( sf::Mouse::Button _button ) const
+	{
+		if( _button < sf::Mouse::ButtonCount )
+			return m_buttonStates[ _button ];
+
+		return Status::Up;
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	//Checks if the mouse wheel is scrolling up
 	//Return value : The mouse wheel goes up (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	INT8 InputManager::IsMouseWheelGoingUp()
+	INT8 InputManager::IsMouseWheelGoingUp() const
 	{
 		if( m_mouseWheelDelta > 0 )
 			return TRUE;
@@ -746,7 +604,7 @@ namespace fzn
 	//Checks if the mouse wheel is scrolling down
 	//Return value : The mouse wheel goes down (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	INT8 InputManager::IsMouseWheelGoingDown()
+	INT8 InputManager::IsMouseWheelGoingDown() const
 	{
 		if( m_mouseWheelDelta < 0 )
 			return TRUE;
@@ -757,7 +615,7 @@ namespace fzn
 	//Accessor on the mouse wheel delta
 	//Return value : return status Down (delta < 0) or Up (delta > 0), returns "nbStates" if delta = 0
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	InputManager::Status InputManager::GetMouseWheelDirection()
+	InputManager::Status InputManager::GetMouseWheelDirection() const
 	{
 		if( m_mouseWheelDelta > 0 )
 			return Status::Up;
@@ -880,15 +738,9 @@ namespace fzn
 	//Parameter 2 : Concerned joystick button
 	//Return value : The button is pressed (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	INT8 InputManager::IsJoystickButtonPressed( INT8 _id, INT8 _button )
+	INT8 InputManager::IsJoystickButtonPressed( INT8 _id, INT8 _button ) const
 	{
-		if( _id < 0 || _id > sf::Joystick::Count || !m_joysticks[ _id ].isConnected )
-			return FALSE;
-
-		if( _button < 0 || _button > m_joysticks[ _id ].buttonCount )
-			return FALSE;
-
-		return m_joysticks[ _id ].states[ _button ] == Status::Pressed;
+		return _check_joystick_button_state( _id, _button, Status::Pressed );
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -897,15 +749,9 @@ namespace fzn
 	//Parameter 2 : Concerned joystick button
 	//Return value : The button is pressed (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	INT8 InputManager::IsJoystickButtonDown( INT8 _id, INT8 _button )
+	INT8 InputManager::IsJoystickButtonDown( INT8 _id, INT8 _button ) const
 	{
-		if( _id < 0 || _id > sf::Joystick::Count || !m_joysticks[ _id ].isConnected )
-			return FALSE;
-
-		if( _button < 0 || _button > m_joysticks[ _id ].buttonCount )
-			return FALSE;
-
-		return m_joysticks[ _id ].states[ _button ] == Status::Down;
+		return _check_joystick_button_state( _id, _button, Status::Down );
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -914,15 +760,9 @@ namespace fzn
 	//Parameter 2 : Concerned joystick button
 	//Return value : The button is pressed (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	INT8 InputManager::IsJoystickButtonReleased( INT8 _id, INT8 _button )
+	INT8 InputManager::IsJoystickButtonReleased( INT8 _id, INT8 _button ) const
 	{
-		if( _id < 0 || _id > sf::Joystick::Count || !m_joysticks[ _id ].isConnected )
-			return FALSE;
-
-		if( _button < 0 || _button > m_joysticks[ _id ].buttonCount )
-			return FALSE;
-
-		return m_joysticks[ _id ].states[ _button ] == Status::Released;
+		return _check_joystick_button_state( _id, _button, Status::Released );
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -931,19 +771,64 @@ namespace fzn
 	//Parameter 2 : Concerned joystick button
 	//Return value : The button is pressed (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	INT8 InputManager::IsJoystickButtonUp( INT8 _id, INT8 _button )
+	INT8 InputManager::IsJoystickButtonUp( INT8 _id, INT8 _button ) const
+	{
+		return _check_joystick_button_state( _id, _button, Status::Up );
+	}
+
+	InputManager::Status InputManager::get_joystick_button_state( int8_t _id, uint32_t _button ) const
 	{
 		if( _id < 0 || _id > sf::Joystick::Count || !m_joysticks[ _id ].isConnected )
-			return FALSE;
+			return Status::Up;
 
-		if( _button < 0 || _button > m_joysticks[ _id ].buttonCount )
-			return FALSE;
+		if( _button < 0 || _button >= m_joysticks[ _id ].buttonCount )
+			return Status::Up;
 
-		return m_joysticks[ _id ].states[ _button ] == Status::Up;
+		return m_joysticks[ _id ].states[ _button ];
 	}
 
 
 	/////////////////STICKS FUNCTIONS/////////////////
+
+	bool InputManager::is_joystick_axis_pressed( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction ) const
+	{
+		return _check_joystick_axis_state( _id, _axis, _full_axis, _axis_direction, Status::Pressed );
+	}
+
+	bool InputManager::is_joystick_axis_down( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction ) const
+	{
+		return _check_joystick_axis_state( _id, _axis, _full_axis, _axis_direction, Status::Down );
+	}
+
+	bool InputManager::is_joystick_axis_released( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction ) const
+	{
+		return _check_joystick_axis_state( _id, _axis, _full_axis, _axis_direction, Status::Released );
+	}
+
+	bool InputManager::is_joystick_axis_up( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction ) const
+	{
+		return _check_joystick_axis_state( _id, _axis, _full_axis, _axis_direction, Status::Up );
+	}
+
+	InputManager::Status InputManager::get_joystick_axis_state( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction ) const
+	{
+		if( _id < 0 || _id > sf::Joystick::Count || m_joysticks[ _id ].isConnected || _axis >= (sf::Joystick::Axis)sf::Joystick::AxisCount )
+			return Status::Up;
+
+		if( _full_axis )
+		{
+			return m_joysticks[ _id ].axisStates[ _axis ][ JoystickAxisDirection::eFull ];
+		}
+		else
+		{
+			if( _axis_direction )
+				return m_joysticks[ _id ].axisStates[ _axis ][ JoystickAxisDirection::ePositive ];
+			else
+				return m_joysticks[ _id ].axisStates[ _axis ][ JoystickAxisDirection::eNegative ];
+		}
+
+		return Status::Up;
+	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	//Indicates if the given axis is stopped (on its default value)
@@ -951,15 +836,9 @@ namespace fzn
 	//Parameter 2 : Concerned joystick axis
 	//Return value : The axis is stopped (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	INT8 InputManager::IsJoystickAxisStopped( INT8 _id, sf::Joystick::Axis _axis )
+	bool InputManager::IsJoystickAxisStopped( int8_t _id, sf::Joystick::Axis _axis )
 	{
-		if( _id < 0 || _id > sf::Joystick::Count || !m_joysticks[ _id ].isConnected )
-			return FALSE;
-
-		if( _axis < 0 || _axis > m_joysticks[ _id ].axisCount || m_joysticks[ _id ].defaultAxisValues == nullptr )
-			return FALSE;
-
-		return fabs( m_joysticks[ _id ].axes[ _axis ] - m_joysticks[ _id ].defaultAxisValues[ _axis ] ) < m_joysticks[ _id ].axesDeadZone;
+		return GetJoystickAxisPosition( _id, _axis ) != 0.f;
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -968,28 +847,25 @@ namespace fzn
 	//Parameter 2 : Action
 	//Return value : The axis is stopped (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	INT8 InputManager::IsJoystickAxisStopped( INT8 _id, const char* _action )
+	bool InputManager::IsJoystickAxisStopped( int8_t _id, const char* _action_key )
 	{
-		if( _id < 0 || _id > sf::Joystick::Count || !m_joysticks[ _id ].isConnected )
-			return TRUE;
+		const ActionKey* action_key = GetActionKey( _action_key );
 
-		const ActionKey* pActionKey = GetActionKey( _action );
+		if( action_key == nullptr )
+			return 0.f;
 
-		CheckNullptrReturn( pActionKey, TRUE );
-
-		for( const ActionKey::Bind& oBind : pActionKey->m_oControllerBinds )
+		for( const ActionKey::BindInput& bind_input : action_key->m_oControllerBinds )
 		{
-			if( oBind.m_iJoystickButton < sf::Joystick::ButtonCount )
-				continue;
+			float axis_value{ bind_input.visit< float >( [&]( auto&& _bind_input ) -> float
+				{
+					if constexpr( std::is_same< _bind_input, ActionKey::AxisInput > ) { return GetJoystickAxisPosition( m_defaultJoystick, _bind_input.m_axis ); }
+				} ) };
 
-			if( oBind.m_eJoystickAxis < sf::Joystick::AxisCount )
-			{
-				if( fabs( m_joysticks[ _id ].axes[ oBind.m_eJoystickAxis ] - m_joysticks[ _id ].defaultAxisValues[ oBind.m_eJoystickAxis ] ) > m_joysticks[ _id ].axesDeadZone )
-					return FALSE;
-			}
+			if( axis_value != 0.f )
+				return false;
 		}
 
-		return TRUE;
+		return true;
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1006,6 +882,9 @@ namespace fzn
 		if( _axis < 0 || _axis > m_joysticks[ _id ].axisCount )
 			return 0.f;
 
+		if( fabs( m_joysticks[ m_defaultJoystick ].axes[ _axis ] - m_joysticks[ m_defaultJoystick ].defaultAxisValues[ _axis ] ) <= m_joysticks[ m_defaultJoystick ].axesDeadZone )
+			return 0.f;
+
 		return m_joysticks[ _id ].axes[ _axis ];
 	}
 
@@ -1015,25 +894,22 @@ namespace fzn
 	//Parameter 2 : Action
 	//Return value : Axis position
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	float InputManager::GetJoystickAxisPosition( INT8 _id, const char* _action )
+	float InputManager::GetJoystickAxisPosition( INT8 _id, const char* _action_key )
 	{
-		if( _id < 0 || _id > sf::Joystick::Count || !m_joysticks[ _id ].isConnected )
+		const ActionKey* action_key = GetActionKey( _action_key );
+
+		if( action_key == nullptr )
 			return 0.f;
 
-		const ActionKey* pActionKey = GetActionKey( _action );
-
-		CheckNullptrReturn( pActionKey, 0.f );
-
-		for( const ActionKey::Bind& oBind : pActionKey->m_oControllerBinds )
+		for( const ActionKey::BindInput& bind_input : action_key->m_oControllerBinds )
 		{
-			if( oBind.m_iJoystickButton < sf::Joystick::ButtonCount )
-				continue;
+			float axis_value{ bind_input.visit< float >( [&]( auto&& _bind_input ) -> float
+				{
+					if constexpr( std::is_same< _bind_input, ActionKey::AxisInput > ) { return GetJoystickAxisPosition( m_defaultJoystick, _bind_input.m_axis ); }
+				} ) };
 
-			if( oBind.m_eJoystickAxis < sf::Joystick::AxisCount )
-			{
-				if( fabs( m_joysticks[ _id ].axes[ oBind.m_eJoystickAxis ] - m_joysticks[ _id ].defaultAxisValues[ oBind.m_eJoystickAxis ] ) > m_joysticks[ _id ].axesDeadZone )
-					return m_joysticks[ _id ].axes[ oBind.m_eJoystickAxis ];
-			}
+			if( axis_value != 0.f )
+				return axis_value;
 		}
 
 		return 0.f;
@@ -1068,32 +944,33 @@ namespace fzn
 		return iNumber;
 	}
 
-	std::string InputManager::GetActionGlyphString( const std::string& _sAction, bool _bKeyboard, bool _bAllKeys ) const
+	std::string InputManager::GetActionGlyphString( std::string_view _action_key_name, bool _keyboard, bool _all_keys ) const
 	{
-		const ActionKey* pActionKey = GetActionKey( _sAction );
+		const ActionKey* action_key = GetActionKey( _action_key_name.data() );
 
-		CheckNullptrReturn( pActionKey, "" );
+		if( action_key == nullptr )
+			return {};
 
-		std::string sDevice = _GetDeviceTag( _bKeyboard );
+		std::string sDevice = _GetDeviceTag( _keyboard );
 
 		if( sDevice.empty() == false )
 			sDevice = Tools::Sprintf( ",%s", sDevice.c_str() );
 
-		const std::vector< ActionKey::Bind >& oBinds = _bKeyboard ? pActionKey->m_oKeyboardBinds : pActionKey->m_oControllerBinds;
+		const ActionKey::Binds& binds = _keyboard ? action_key->m_oKeyboardBinds : action_key->m_oControllerBinds;
 
-		std::string sGlyphName = _GetActionKeyString( _sAction, _bKeyboard );
+		std::string sGlyphName = _GetActionKeyString( _action_key_name.data(), _keyboard );
 
 		if( sGlyphName.empty() )
-			return "";
+			return {};
 
 		std::string sRet = Tools::Sprintf( "%%%%%s%s%%%%", sGlyphName.c_str(), sDevice.c_str() );
 
-		if( oBinds.size() == 1 || _bAllKeys == false )
+		if( binds.size() == 1 || _all_keys == false )
 			return sRet;
 
-		for( int iBind = 1; iBind < (int)oBinds.size(); ++iBind )
+		for( size_t iBind = 1; iBind < binds.size(); ++iBind )
 		{
-			sGlyphName = _GetActionKeyString( _sAction, _bKeyboard, iBind );
+			sGlyphName = _GetActionKeyString( _action_key_name.data(), _keyboard, iBind );
 
 			if( sGlyphName.empty() )
 				continue;
@@ -1194,9 +1071,6 @@ namespace fzn
 				if( _uIndex >= action_key_it->m_oKeyboardBinds.size() )
 					return false;
 
-				/*action_key_it->m_oKeyboardBinds[ _uIndex ].m_eMouseButton = sf::Mouse::ButtonCount;
-				action_key_it->m_oKeyboardBinds[ _uIndex ].m_eKey = sf::Keyboard::KeyCount;*/
-
 				action_key_it->m_oKeyboardBinds.erase( action_key_it->m_oKeyboardBinds.begin() + _uIndex );
 
 				break;
@@ -1206,9 +1080,6 @@ namespace fzn
 			{
 				if( _uIndex >= action_key_it->m_oControllerBinds.size() )
 					return false;
-
-				/*action_key_it->m_oControllerBinds[ _uIndex ].m_iJoystickButton = sf::Joystick::ButtonCount;
-				action_key_it->m_oControllerBinds[ _uIndex ].m_eJoystickAxis = (sf::Joystick::Axis)sf::Joystick::AxisCount;*/
 
 				action_key_it->m_oControllerBinds.erase( action_key_it->m_oControllerBinds.begin() + _uIndex );
 				break;
@@ -1242,61 +1113,49 @@ namespace fzn
 
 	void InputManager::SaveCustomActionKeysToFile()
 	{
-		const std::string sFilePath = g_pFZN_Core->GetSaveFolderPath() + "/actionKeys.xml";
+		const std::string file_path = g_pFZN_Core->GetSaveFolderPath() + "/actionKeys.xml";
 
-		tinyxml2::XMLDocument oDestFile;
+		tinyxml2::XMLDocument dest_file;
 
-		tinyxml2::XMLNode* pActions = oDestFile.NewElement( "Actions" );
-		oDestFile.InsertEndChild( pActions );
+		tinyxml2::XMLNode* actions = dest_file.NewElement( "Actions" );
+		dest_file.InsertEndChild( actions );
 
-		for( const fzn::ActionKey& oActionKey : m_oCustomActionKeys )
+		for( const fzn::ActionKey& action_key : m_oCustomActionKeys )
 		{
-			tinyxml2::XMLElement* pAction = oDestFile.NewElement( "Action" );
+			tinyxml2::XMLElement* action{ dest_file.NewElement( "Action" ) };
 
-			pAction->SetAttribute( "Name", oActionKey.m_sName.c_str() );
-			pAction->SetAttribute( "Category", oActionKey.m_iCategory );
-			pAction->SetAttribute( "FullAxis", oActionKey.m_bFullAxis );
+			action->SetAttribute( "Name", action_key.m_sName.c_str() );
+			action->SetAttribute( "Category", action_key.m_iCategory );
+			action->SetAttribute( "FullAxis", action_key.m_bFullAxis );
 
-			for( const ActionKey::Bind& oBind : oActionKey.m_oKeyboardBinds )
+			for( const ActionKey::BindInput& bind_input : action_key.m_oKeyboardBinds )
 			{
-				tinyxml2::XMLElement* pInput = oDestFile.NewElement( "Input" );
+				tinyxml2::XMLElement* input = dest_file.NewElement( "Input" );
 
-				if( oBind.m_eKey < sf::Keyboard::KeyCount )
-				{
-					pInput->SetAttribute( "Type", "Keyboard" );
-					pInput->SetAttribute( "Map", KeyToString( oBind.m_eKey ).c_str() );
-				}
-				else
-				{
-					pInput->SetAttribute( "Type", "Mouse" );
-					pInput->SetAttribute( "Map", MouseButtonToString( oBind.m_eMouseButton ).c_str() );
-				}
+				bind_input.visit<void>( Overloaded
+					{
+						[&]( sf::Keyboard::Key _key )		{ input->SetAttribute( "Type", "Keyboard" );	input->SetAttribute( "Map", KeyToString( _key ).c_str() ); },
+						[&]( sf::Mouse::Button _button )	{ input->SetAttribute( "Type", "Mouse" );		input->SetAttribute( "Map", MouseButtonToString( _button ).c_str() ); }
+					} );
 
-				pAction->InsertEndChild( pInput );
+				action->InsertEndChild( input );
 			}
 
-			for( const ActionKey::Bind& oBind : oActionKey.m_oControllerBinds )
+			for( const ActionKey::BindInput& bind_input : action_key.m_oControllerBinds )
 			{
-				tinyxml2::XMLElement* pInput = oDestFile.NewElement( "Input" );
+				tinyxml2::XMLElement* input = dest_file.NewElement( "Input" );
 
-				if( oBind.m_iJoystickButton < sf::Joystick::ButtonCount )
-				{
-					pInput->SetAttribute( "Type", "JoystickButton" );
-					pInput->SetAttribute( "Map", JoystickButtonToString( oBind.m_iJoystickButton ).c_str() );
-				}
-				else
-				{
-					pInput->SetAttribute( "Type", "JoystickAxis" );
-					pInput->SetAttribute( "Map", JoystickAxisToString( oBind.m_eJoystickAxis, oActionKey.m_bFullAxis, oBind.m_bAxisDirection ).c_str() );
-				}
+				bind_input.visit<void>( Overloaded
+					{
+						[&]( uint32_t _button )				{ input->SetAttribute( "Type", "JoystickButton" );	input->SetAttribute( "Map", JoystickButtonToString( _button ).c_str() ); },
+						[&]( ActionKey::AxisInput _axis )	{ input->SetAttribute( "Type", "JoystickAxis" );	input->SetAttribute( "Map", JoystickAxisToString( _axis.m_axis, action_key.m_bFullAxis, _axis.m_axis_direction ).c_str() ); }
+					} );
 
-				pAction->InsertEndChild( pInput );
+				action->InsertEndChild( input );
 			}
-
-			pActions->InsertEndChild( pAction );
 		}
 
-		tinyxml2::XMLError eError = oDestFile.SaveFile( sFilePath.c_str() );
+		tinyxml2::XMLError eError = dest_file.SaveFile( file_path.c_str() );
 
 		if( eError != tinyxml2::XML_SUCCESS )
 			FZN_COLOR_LOG( "Custom action keys file save failed. XML Error %d", eError );
@@ -1983,7 +1842,7 @@ namespace fzn
 
 					const sf::Joystick::Axis eAxis = StringToJoystickAxis( mapedKey, bDirection );
 
-					_AddJoystickAxisToActionKey( oNewActionKey, eAxis, bDirection );
+					_AddJoystickAxisToActionKey( oNewActionKey, { eAxis, bDirection } );
 				}
 
 				ActionInput = ActionInput->NextSiblingElement();
@@ -1994,57 +1853,85 @@ namespace fzn
 		}
 	}
 
-	void InputManager::_AddKeyToActionKey( ActionKey& _oActionKey, const sf::Keyboard::Key& _eKey )
+	void InputManager::_AddKeyToActionKey( ActionKey& _action_key, sf::Keyboard::Key _key )
 	{
-		if( _eKey >= sf::Keyboard::Key::KeyCount )
+		if( _key >= sf::Keyboard::Key::KeyCount )
 			return;
 
-		if( std::find_if( _oActionKey.m_oKeyboardBinds.begin(), _oActionKey.m_oKeyboardBinds.end(), [ _eKey ]( const ActionKey::Bind& oBind ) { return oBind.m_eKey == _eKey; } ) != _oActionKey.m_oKeyboardBinds.end() )
+		if( std::ranges::find( _action_key.m_oKeyboardBinds, ActionKey::BindInput{ _key } ) != _action_key.m_oKeyboardBinds.end() )
 			return;
 
-		_oActionKey.m_oKeyboardBinds.push_back( _eKey );
+		_action_key.m_oKeyboardBinds.push_back( _key );
 	}
 
-	void InputManager::_AddMouseButtonToActionKey( ActionKey& _oActionKey, const sf::Mouse::Button& _eMouseButton )
+	void InputManager::_AddMouseButtonToActionKey( ActionKey& _action_key, sf::Mouse::Button _mouse_button )
 	{
-		if( _eMouseButton >= sf::Mouse::Button::ButtonCount )
+		if( _mouse_button >= sf::Mouse::Button::ButtonCount )
 			return;
 
-		if( std::find_if( _oActionKey.m_oKeyboardBinds.begin(), _oActionKey.m_oKeyboardBinds.end(), [ _eMouseButton ]( const ActionKey::Bind& oBind ) { return oBind.m_eMouseButton == _eMouseButton; } ) != _oActionKey.m_oKeyboardBinds.end() )
+		if( std::ranges::find( _action_key.m_oKeyboardBinds, ActionKey::BindInput{ _mouse_button } ) != _action_key.m_oKeyboardBinds.end() )
 			return;
 
-		_oActionKey.m_oKeyboardBinds.push_back( _eMouseButton );
+		_action_key.m_oKeyboardBinds.push_back( _mouse_button );
 	}
 
-	void InputManager::_AddJoystickButtonToActionKey( ActionKey& _oActionKey, INT8 _iJoystickButton )
+	void InputManager::_AddJoystickButtonToActionKey( ActionKey& _action_key, uint32_t _joystick_button )
 	{
-		if( _iJoystickButton >= sf::Joystick::ButtonCount )
+		if( _joystick_button >= sf::Joystick::ButtonCount )
 			return;
 
-		if( std::find_if( _oActionKey.m_oControllerBinds.begin(), _oActionKey.m_oControllerBinds.end(), [ _iJoystickButton ]( const ActionKey::Bind& oBind ) { return oBind.m_iJoystickButton == _iJoystickButton; } ) != _oActionKey.m_oControllerBinds.end() )
+		if( std::ranges::find( _action_key.m_oControllerBinds, ActionKey::BindInput{ _joystick_button } ) != _action_key.m_oControllerBinds.end() )
 			return;
 
-		_oActionKey.m_oControllerBinds.push_back( _iJoystickButton );
+		_action_key.m_oControllerBinds.push_back( _joystick_button );
 	}
 
-	void InputManager::_AddJoystickAxisToActionKey( ActionKey& _oActionKey, const sf::Joystick::Axis& _eJoystickAxis, bool _bDirection )
+	void InputManager::_AddJoystickAxisToActionKey( ActionKey& _action_key, const ActionKey::AxisInput& _axis_input )
 	{
-		if( _eJoystickAxis >= sf::Joystick::AxisCount )
+		if( _axis_input.m_axis >= sf::Joystick::AxisCount )
 			return;
 
-		if( std::find_if( _oActionKey.m_oControllerBinds.begin(), _oActionKey.m_oControllerBinds.end(), [ _eJoystickAxis ]( const ActionKey::Bind& oBind ) { return oBind.m_eJoystickAxis == _eJoystickAxis; } ) != _oActionKey.m_oControllerBinds.end() )
+		if( std::ranges::find( _action_key.m_oControllerBinds, ActionKey::BindInput{ _axis_input } ) != _action_key.m_oControllerBinds.end() )
 			return;
 
-		_oActionKey.m_oControllerBinds.push_back( { _eJoystickAxis, _bDirection } );
+		_action_key.m_oControllerBinds.push_back( _axis_input );
 	}
 
-	const ActionKey* InputManager::_GetActionKey( sf::Keyboard::Key _eKey ) const
+	const ActionKey* InputManager::_GetActionKey( sf::Keyboard::Key _key ) const
 	{
 		for( const ActionKey& oActionKey : m_oCustomActionKeys )
 		{
-			for( const ActionKey::Bind& rBind : oActionKey.m_oKeyboardBinds )
+			for( const ActionKey::BindInput& rBind : oActionKey.m_oKeyboardBinds )
 			{
-				if( rBind.m_eKey == _eKey )
+				if( rBind == _key )
+					return &oActionKey;
+			}
+		}
+
+		return nullptr;
+	}
+
+	const ActionKey* InputManager::_GetActionKey( sf::Mouse::Button _mouse_button ) const
+	{
+		for( const ActionKey& oActionKey : m_oCustomActionKeys )
+		{
+			for( const ActionKey::BindInput& rBind : oActionKey.m_oKeyboardBinds )
+			{
+				if( rBind == _mouse_button )
+					return &oActionKey;
+			}
+		}
+
+		return nullptr;
+	}
+
+	const ActionKey* InputManager::_GetActionKey( uint32_t _joystick_button ) const
+	{
+		for( const ActionKey& oActionKey : m_oCustomActionKeys )
+		{
+			for( const ActionKey::BindInput& rBind : oActionKey.m_oControllerBinds )
+			{
+				if( rBind == _joystick_button )
 				{
 					return &oActionKey;
 				}
@@ -2054,48 +1941,13 @@ namespace fzn
 		return nullptr;
 	}
 
-	const ActionKey* InputManager::_GetActionKey( sf::Mouse::Button _eMouseButton ) const
+	const ActionKey* InputManager::_GetActionKey( const ActionKey::AxisInput& _axis_input ) const
 	{
 		for( const ActionKey& oActionKey : m_oCustomActionKeys )
 		{
-			for( const ActionKey::Bind& rBind : oActionKey.m_oKeyboardBinds )
+			for( const ActionKey::BindInput& rBind : oActionKey.m_oControllerBinds )
 			{
-				if( rBind.m_eMouseButton == _eMouseButton )
-				{
-					return &oActionKey;
-				}
-			}
-		}
-
-		return nullptr;
-	}
-
-	const ActionKey* InputManager::_GetActionKey( INT8 _iJoystickButton ) const
-	{
-		for( const ActionKey& oActionKey : m_oCustomActionKeys )
-		{
-			for( const ActionKey::Bind& rBind : oActionKey.m_oControllerBinds )
-			{
-				if( rBind.m_iJoystickButton == _iJoystickButton )
-				{
-					return &oActionKey;
-				}
-			}
-		}
-
-		return nullptr;
-	}
-
-	const ActionKey* InputManager::_GetActionKey( sf::Joystick::Axis _eAxis, bool _bDirection ) const
-	{
-		for( const ActionKey& oActionKey : m_oCustomActionKeys )
-		{
-			for( const ActionKey::Bind& rBind : oActionKey.m_oControllerBinds )
-			{
-				if( oActionKey.m_bFullAxis && rBind.m_eJoystickAxis == _eAxis )
-					return &oActionKey;
-
-				if( rBind.m_eJoystickAxis == _eAxis && rBind.m_bAxisDirection == _bDirection )
+				if( rBind == _axis_input )
 					return &oActionKey;
 			}
 		}
@@ -2118,16 +1970,17 @@ namespace fzn
 	std::string InputManager::_GetActionKeyString( const std::string& _sActionOrKey, bool _bKeyboard, int _iIndex /*= 0 */ ) const
 	{
 		const ActionKey* pActionKey = GetActionKey( _sActionOrKey );
-		std::string sGlyphName = "";
+		std::string sGlyphName;
 
 		if( pActionKey != nullptr )
 		{
 			if( _bKeyboard && _iIndex < (int)pActionKey->m_oKeyboardBinds.size() )
 			{
-				sGlyphName = KeyToString( pActionKey->m_oKeyboardBinds[ _iIndex ].m_eKey );
-				
-				if( sGlyphName.empty() )
-					sGlyphName = MouseButtonToString( pActionKey->m_oKeyboardBinds[ _iIndex ].m_eMouseButton );
+				sGlyphName = pActionKey->m_oKeyboardBinds[ _iIndex ].visit< std::string >( Overloaded
+					{
+						[&]( sf::Keyboard::Key _key ) -> std::string		{ return KeyToString( _key ); },
+						[&]( sf::Mouse::Button _button ) -> std::string		{ return MouseButtonToString( _button ); }
+					} );
 
 				if( sGlyphName.empty() )
 					sGlyphName = _sActionOrKey;
@@ -2135,15 +1988,14 @@ namespace fzn
 
 			if( _bKeyboard == false && _iIndex < (int)pActionKey->m_oControllerBinds.size() )
 			{
-				sGlyphName = JoystickButtonToString( pActionKey->m_oControllerBinds[ _iIndex ].m_iJoystickButton );
-				
-				if( sGlyphName.empty() )
-				{
-					sGlyphName = JoystickAxisToString( pActionKey->m_oControllerBinds[ _iIndex ].m_eJoystickAxis, pActionKey->m_bFullAxis, pActionKey->m_oControllerBinds[_iIndex].m_bAxisDirection );
+				sGlyphName = pActionKey->m_oControllerBinds[ _iIndex ].visit< std::string >( Overloaded
+					{
+						[&]( uint32_t _joystick_button ) -> std::string						{ return JoystickButtonToString( _joystick_button ); },
+						[&]( const ActionKey::AxisInput& _joystick_axis ) -> std::string	{ return JoystickAxisToString( _joystick_axis.m_axis, pActionKey->m_bFullAxis, _joystick_axis.m_axis_direction ); }
+					} );
 
-					if( sGlyphName.empty() )
-						sGlyphName = _sActionOrKey;
-				}
+				if( sGlyphName.empty() )
+					sGlyphName = _sActionOrKey;
 			}
 		}
 		else
@@ -2158,6 +2010,54 @@ namespace fzn
 			return "Keyboard";
 
 		return "XInput";
+	}
+
+	bool InputManager::_check_keyboard_key_state( sf::Keyboard::Key _key, Status _status_to_check ) const
+	{
+		if( _key >= sf::Keyboard::KeyCount )
+			return false;
+
+		return m_keyStates[ _key ] == _status_to_check;
+	}
+
+	bool InputManager::_check_mouse_button_state( sf::Mouse::Button _button, Status _status_to_check ) const
+	{
+		if( _button >= sf::Mouse::ButtonCount )
+			return false;
+
+		return m_buttonStates[ _button ] == _status_to_check;
+	}
+
+	bool InputManager::_check_joystick_button_state( int8_t _id, uint32_t _button, Status _status_to_check ) const
+	{
+		if( _id < 0 || _id > sf::Joystick::Count || !m_joysticks[ _id ].isConnected )
+			return false;
+
+		if( _button < 0 || _button >= m_joysticks[ _id ].buttonCount )
+			return false;
+
+		return m_joysticks[ _id ].states[ _button ] == _status_to_check;
+	}
+
+	bool InputManager::_check_joystick_axis_state( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction, Status _status_to_check ) const
+	{
+		if( _id < 0 || _id > sf::Joystick::Count || m_joysticks[ _id ].isConnected || _axis >= (sf::Joystick::Axis)sf::Joystick::AxisCount )
+			return false;
+
+		if( _full_axis )
+		{
+			if( m_joysticks[ _id ].axisStates[ _axis ][ JoystickAxisDirection::eFull ] == _status_to_check )
+				return true;
+		}
+		else
+		{
+			if( _axis_direction && m_joysticks[ _id ].axisStates[ _axis ][ JoystickAxisDirection::ePositive ] == _status_to_check )
+				return true;
+			else if( _axis_direction == false && m_joysticks[ _id ].axisStates[ _axis ][ JoystickAxisDirection::eNegative ] == _status_to_check )
+				return true;
+		}
+
+		return false;
 	}
 
 	/////////////////CHARS MANAGEMENT/////////////////

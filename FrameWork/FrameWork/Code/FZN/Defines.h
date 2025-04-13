@@ -31,6 +31,11 @@
 
 #define ToString( Arg )					#Arg
 
+inline constexpr float		Flt_Max{ std::numeric_limits<float>::max() };
+inline constexpr float		Flt_Eps{ std::numeric_limits<float>::epsilon() };
+inline constexpr uint32_t	Uint32_Max{ std::numeric_limits<uint32_t>::max() };
+
+
 typedef std::vector< std::string > StringVector;
 
 namespace sf
