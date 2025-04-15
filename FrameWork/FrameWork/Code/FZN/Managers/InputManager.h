@@ -37,6 +37,11 @@ namespace fzn
 	{
 		struct AxisInput
 		{
+			bool operator==( const AxisInput& _other ) const
+			{
+				return m_axis == _other.m_axis && m_axis_direction == _other.m_axis_direction;
+			}
+
 			sf::Joystick::Axis m_axis{ (sf::Joystick::Axis)sf::Joystick::AxisCount };
 			bool m_axis_direction{ true };
 		};

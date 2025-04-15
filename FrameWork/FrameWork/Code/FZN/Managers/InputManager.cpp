@@ -189,23 +189,23 @@ namespace fzn
 			bool bBindReplaced = false;
 			if( IsWaitingInputForType( BindType::eKey ) && _event.type == sf::Event::KeyPressed )
 			{
-				//bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, _event.key.code );
+				bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, _event.key.code );
 				bResetEvent = true;
 			}
 			else if( IsWaitingInputForType( BindType::eMouseButton ) && _event.type == sf::Event::MouseButtonPressed )
 			{
-				//bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, _event.mouseButton.button );
+				bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, _event.mouseButton.button );
 				bResetEvent = true;
 			}
 			else if( IsWaitingInputForType( BindType::eJoystickButton ) && _event.type == sf::Event::JoystickButtonPressed )
 			{
-				//bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, _event.joystickButton.button );
+				bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, _event.joystickButton.button );
 				bResetEvent = true;
 			}
 			else if( IsWaitingInputForType( BindType::eJoystickAxis ) && _event.type == sf::Event::JoystickMoved && fabs( _event.joystickMove.position ) > 50.f )
 			{
 				const bool direction = _event.joystickMove.position - m_joysticks[ m_defaultJoystick ].defaultAxisValues[ _event.joystickMove.axis ] > 0;
-				//bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, ActionKey::AxisInput{ _event.joystickMove.axis, direction } );
+				bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, ActionKey::AxisInput{ _event.joystickMove.axis, direction } );
 				bResetEvent = true;
 			}
 
@@ -327,7 +327,9 @@ namespace fzn
 			if( bind_input.visit<bool>( Overloaded
 				{
 					[&]( sf::Keyboard::Key _sf_key ) -> bool { return IsKeyPressed( _sf_key ); },
-					[&]( sf::Mouse::Button _button ) -> bool { return IsMousePressed( _button ); }
+					[&]( sf::Mouse::Button _button ) -> bool { return IsMousePressed( _button ); },
+					[&]( uint32_t _joystick_button ) -> bool { return IsJoystickButtonPressed( m_defaultJoystick, _joystick_button ); },
+					[&]( ActionKey::AxisInput _joystick_axis ) -> bool { return is_joystick_axis_pressed( m_defaultJoystick, _joystick_axis.m_axis, action_key->m_bFullAxis, _joystick_axis.m_axis_direction ); }
 				} ) )
 				return true;
 		}
@@ -365,7 +367,9 @@ namespace fzn
 			if( bind_input.visit<bool>( Overloaded
 				{
 					[&]( sf::Keyboard::Key _sf_key ) -> bool { return IsKeyDown( _sf_key ); },
-					[&]( sf::Mouse::Button _button ) -> bool { return IsMouseDown( _button ); }
+					[&]( sf::Mouse::Button _button ) -> bool { return IsMouseDown( _button ); },
+					[&]( uint32_t _joystick_button ) -> bool { return IsJoystickButtonDown( m_defaultJoystick, _joystick_button ); },
+					[&]( ActionKey::AxisInput _joystick_axis ) -> bool { return is_joystick_axis_down( m_defaultJoystick, _joystick_axis.m_axis, action_key->m_bFullAxis, _joystick_axis.m_axis_direction ); }
 				} ) )
 				return true;
 		}
@@ -403,7 +407,9 @@ namespace fzn
 			if( bind_input.visit<bool>( Overloaded
 				{
 					[&]( sf::Keyboard::Key _sf_key ) -> bool { return IsKeyReleased( _sf_key ); },
-					[&]( sf::Mouse::Button _button ) -> bool { return IsMouseReleased( _button ); }
+					[&]( sf::Mouse::Button _button ) -> bool { return IsMouseReleased( _button ); },
+					[&]( uint32_t _joystick_button ) -> bool { return IsJoystickButtonReleased( m_defaultJoystick, _joystick_button ); },
+					[&]( ActionKey::AxisInput _joystick_axis ) -> bool { return is_joystick_axis_released( m_defaultJoystick, _joystick_axis.m_axis, action_key->m_bFullAxis, _joystick_axis.m_axis_direction ); }
 				} ) )
 				return true;
 		}
@@ -441,7 +447,9 @@ namespace fzn
 			if( bind_input.visit<bool>( Overloaded
 				{
 					[&]( sf::Keyboard::Key _sf_key ) -> bool { return IsKeyUp( _sf_key ); },
-					[&]( sf::Mouse::Button _button ) -> bool { return IsMouseUp( _button ); }
+					[&]( sf::Mouse::Button _button ) -> bool { return IsMouseUp( _button ); },
+					[&]( uint32_t _joystick_button ) -> bool { return IsJoystickButtonUp( m_defaultJoystick, _joystick_button ); },
+					[&]( ActionKey::AxisInput _joystick_axis ) -> bool { return is_joystick_axis_up( m_defaultJoystick, _joystick_axis.m_axis, action_key->m_bFullAxis, _joystick_axis.m_axis_direction ); }
 				} ) )
 				return true;
 		}
@@ -474,7 +482,9 @@ namespace fzn
 			return bind_input.visit< Status >( Overloaded
 				{
 					[&]( sf::Keyboard::Key _sf_key ) -> Status { return get_key_state( _sf_key ); },
-					[&]( sf::Mouse::Button _button ) -> Status { return get_mouse_button_state( _button ); }
+					[&]( sf::Mouse::Button _button ) -> Status { return get_mouse_button_state( _button ); },
+					[&]( uint32_t _joystick_button ) -> Status { return get_joystick_button_state( m_defaultJoystick, _joystick_button ); },
+					[&]( ActionKey::AxisInput _joystick_axis ) -> Status { return get_joystick_axis_state( m_defaultJoystick, _joystick_axis.m_axis, action_key->m_bFullAxis, _joystick_axis.m_axis_direction ); }
 				} );
 		}
 
@@ -504,7 +514,10 @@ namespace fzn
 		{
 			float axis_value{ bind_input.visit< float >( [&]( auto&& _bind_input ) -> float
 				{
-					if constexpr( std::is_same< _bind_input, ActionKey::AxisInput > ) { return GetJoystickAxisPosition( m_defaultJoystick, _bind_input.m_axis ); }
+					if constexpr( std::is_same_v< decltype( _bind_input ), ActionKey::AxisInput > )
+						return GetJoystickAxisPosition( m_defaultJoystick, _bind_input.m_axis );
+					else
+						return 0.f;
 				} ) };
 
 			if( axis_value != 0.f )
@@ -858,7 +871,10 @@ namespace fzn
 		{
 			float axis_value{ bind_input.visit< float >( [&]( auto&& _bind_input ) -> float
 				{
-					if constexpr( std::is_same< _bind_input, ActionKey::AxisInput > ) { return GetJoystickAxisPosition( m_defaultJoystick, _bind_input.m_axis ); }
+					if constexpr( std::is_same_v< decltype( _bind_input ), ActionKey::AxisInput > )
+						return GetJoystickAxisPosition( m_defaultJoystick, _bind_input.m_axis );
+					else
+						return 0.f;
 				} ) };
 
 			if( axis_value != 0.f )
@@ -905,7 +921,10 @@ namespace fzn
 		{
 			float axis_value{ bind_input.visit< float >( [&]( auto&& _bind_input ) -> float
 				{
-					if constexpr( std::is_same< _bind_input, ActionKey::AxisInput > ) { return GetJoystickAxisPosition( m_defaultJoystick, _bind_input.m_axis ); }
+					if constexpr( std::is_same_v< decltype( _bind_input ), ActionKey::AxisInput > )
+						return GetJoystickAxisPosition( m_defaultJoystick, _bind_input.m_axis );
+					else
+						return 0.f;
 				} ) };
 
 			if( axis_value != 0.f )
@@ -1049,6 +1068,8 @@ namespace fzn
 		m_oActionKeyBindInfo.m_mask = _mask;
 		m_oActionKeyBindInfo.m_bind_index = _index;
 		m_oActionKeyBindInfo.m_same_category_only = _same_category_only;
+
+		return true;
 	}
 
 	bool InputManager::RemoveActionKeyBind( const std::string& _sActionKey, BindType _eBind, uint32_t _uIndex /*= 0*/ )
@@ -1135,7 +1156,9 @@ namespace fzn
 				bind_input.visit<void>( Overloaded
 					{
 						[&]( sf::Keyboard::Key _key )		{ input->SetAttribute( "Type", "Keyboard" );	input->SetAttribute( "Map", KeyToString( _key ).c_str() ); },
-						[&]( sf::Mouse::Button _button )	{ input->SetAttribute( "Type", "Mouse" );		input->SetAttribute( "Map", MouseButtonToString( _button ).c_str() ); }
+						[&]( sf::Mouse::Button _button )	{ input->SetAttribute( "Type", "Mouse" );		input->SetAttribute( "Map", MouseButtonToString( _button ).c_str() ); },
+						[&]( uint32_t _button ) { input->SetAttribute( "Type", "JoystickButton" );	input->SetAttribute( "Map", JoystickButtonToString( _button ).c_str() ); },
+						[&]( ActionKey::AxisInput _axis ) { input->SetAttribute( "Type", "JoystickAxis" );	input->SetAttribute( "Map", JoystickAxisToString( _axis.m_axis, action_key.m_bFullAxis, _axis.m_axis_direction ).c_str() ); }
 					} );
 
 				action->InsertEndChild( input );
@@ -1979,7 +2002,9 @@ namespace fzn
 				sGlyphName = pActionKey->m_oKeyboardBinds[ _iIndex ].visit< std::string >( Overloaded
 					{
 						[&]( sf::Keyboard::Key _key ) -> std::string		{ return KeyToString( _key ); },
-						[&]( sf::Mouse::Button _button ) -> std::string		{ return MouseButtonToString( _button ); }
+						[&]( sf::Mouse::Button _button ) -> std::string		{ return MouseButtonToString( _button ); },
+						[&]( uint32_t _joystick_button ) -> std::string { return JoystickButtonToString( _joystick_button ); },
+						[&]( const ActionKey::AxisInput& _joystick_axis ) -> std::string { return JoystickAxisToString( _joystick_axis.m_axis, pActionKey->m_bFullAxis, _joystick_axis.m_axis_direction ); }
 					} );
 
 				if( sGlyphName.empty() )
