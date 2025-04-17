@@ -29,6 +29,15 @@ namespace fzn
 {
 	class Animation;
 
+	static constexpr sf::Joystick::Axis JoystickAxisCount{ static_cast<sf::Joystick::Axis>( sf::Joystick::AxisCount ) };
+	enum JoystickAxisDirection : uint8_t
+	{
+		JoystickAxisDirection_Full,
+		JoystickAxisDirection_Positive,
+		JoystickAxisDirection_Negative,
+		JoystickAxisDirection_Count
+	};
+
 	//=========================================================
 	//========================ActionKey========================
 	//=========================================================
@@ -42,16 +51,16 @@ namespace fzn
 				return m_axis == _other.m_axis && m_axis_direction == _other.m_axis_direction;
 			}
 
-			sf::Joystick::Axis m_axis{ (sf::Joystick::Axis)sf::Joystick::AxisCount };
-			bool m_axis_direction{ true };
+			sf::Joystick::Axis		m_axis				{ JoystickAxisCount };
+			JoystickAxisDirection	m_axis_direction	{ JoystickAxisDirection_Full };
 		};
-		using BindInput = fzn::Variant< sf::Keyboard::Key, sf::Mouse::Button, uint32_t, AxisInput >;
 
+		using BindInput = fzn::Variant< sf::Keyboard::Key, sf::Mouse::Button, uint32_t, AxisInput >;
 		using Binds = std::vector< BindInput >;
 
-		std::string			m_sName = "";
-		int					m_iCategory = 0;
-		bool				m_bFullAxis = true;	// The action is using the complete axis (true) or only half of it.
+		std::string			m_sName;
+		int					m_iCategory{ 0 };
+		bool				m_bFullAxis{ true };	// The action is using the complete axis (true) or only half of it.
 		Binds				m_oKeyboardBinds;
 		Binds				m_oControllerBinds;
 	};
@@ -125,21 +134,13 @@ namespace fzn
 		//======================JoystickInfo===========================
 		//=========================================================
 
-		enum JoystickAxisDirection
-		{
-			eFull,
-			ePositive,
-			eNegative,
-			eNbAxisDirections
-		};
-
 		struct JoystickInfo
 		{
 			InputManager::Status states[ sf::Joystick::ButtonCount ];	//Array containing the state of each joystick button
 			INT8 basicStates[ sf::Joystick::ButtonCount ];				//Array containing all button basic states (up or down)
 			float axes[ sf::Joystick::AxisCount ];						//Array containing the state of each joystick axis
 			float basicAxes[ sf::Joystick::AxisCount ];					//Array containing all axis basic states 
-			InputManager::Status axisStates[ sf::Joystick::AxisCount ][ JoystickAxisDirection::eNbAxisDirections ];	//Array containing the state of each joystick axis (when treated as a button, 0/1 input)
+			InputManager::Status axisStates[ sf::Joystick::AxisCount ][ JoystickAxisDirection_Count ];	//Array containing the state of each joystick axis (when treated as a button, 0/1 input)
 			sf::Joystick::Identification* informations = nullptr;		//Joystick identification (name, vendorID and productID)
 			float defaultAxisValues[ sf::Joystick::AxisCount ];			//Default values for each axis (can differ with the product)
 			float axesDeadZone = 10.f;									//Value under which positions will not be taken into consideration (abs value)
@@ -391,11 +392,11 @@ namespace fzn
 
 		/////////////////STICKS FUNCTIONS/////////////////
 
-		bool is_joystick_axis_pressed( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction ) const;
-		bool is_joystick_axis_down( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction ) const;
-		bool is_joystick_axis_released( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction ) const;
-		bool is_joystick_axis_up( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction ) const;
-		Status get_joystick_axis_state( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction ) const;
+		bool is_joystick_axis_pressed( int8_t _id, const ActionKey::AxisInput& _axis_input ) const;
+		bool is_joystick_axis_down( int8_t _id, const ActionKey::AxisInput& _axis_input ) const;
+		bool is_joystick_axis_released( int8_t _id, const ActionKey::AxisInput& _axis_input ) const;
+		bool is_joystick_axis_up( int8_t _id, const ActionKey::AxisInput& _axis_input ) const;
+		Status get_joystick_axis_state( int8_t _id, const ActionKey::AxisInput& _axis_input ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Indicates if the given axis is stopped (on its default value)
 		//Parameter 1 : Joystick ID
@@ -416,7 +417,7 @@ namespace fzn
 		//Parameter 2 : Concerned joystick axis
 		//Return value : Axis position
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		float GetJoystickAxisPosition( INT8 _id, sf::Joystick::Axis _axis );
+		float GetJoystickAxisPosition( INT8 _id, sf::Joystick::Axis _axis ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Accessor on the position of the axis corresponding to an action
 		//Parameter 1 : Joystick ID
@@ -600,7 +601,7 @@ namespace fzn
 		bool _check_keyboard_key_state( sf::Keyboard::Key _key, Status _status_to_check ) const;
 		bool _check_mouse_button_state( sf::Mouse::Button _button, Status _status_to_check ) const;
 		bool _check_joystick_button_state( int8_t _id, uint32_t _button, Status _status_to_check ) const;
-		bool _check_joystick_axis_state( int8_t _id, sf::Joystick::Axis _axis, bool _full_axis, bool _axis_direction, Status _status_to_check ) const;
+		bool _check_joystick_axis_state( int8_t _id, const ActionKey::AxisInput& _axis_input, Status _status_to_check ) const;
 
 
 		/////////////////CHARS MANAGEMENT/////////////////
@@ -661,8 +662,8 @@ namespace fzn
 		//Parameter : Concerned string
 		//Return value : Corresponding joystick axis
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		sf::Joystick::Axis StringToJoystickAxis( const std::string& _button, bool& _bDirection ) const;
-		std::string JoystickAxisToString( const sf::Joystick::Axis& _eAxis, bool _bFullAxis, bool _bAxisDirection ) const;
+		ActionKey::AxisInput string_to_axis_input( const std::string& _button ) const;
+		std::string axis_input_to_string( const ActionKey::AxisInput& _axis_input ) const;
 
 
 		/////////////////MEMBER VARIABLES/////////////////
