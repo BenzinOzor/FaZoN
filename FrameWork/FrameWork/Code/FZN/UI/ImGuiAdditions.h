@@ -91,8 +91,10 @@ namespace ImGui_fzn
 	FZN_EXPORT bool InputTextTable( std::string_view _label, std::string& _buffer, ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = nullptr, void* user_data = nullptr );
 
 	FZN_EXPORT bool SliderBool( bool& _slider_value, std::string_view _label_left, std::string_view _label_right );
+	FZN_EXPORT bool slider_uint8( std::string_view _label, uint8_t& _value, uint8_t _min, uint8_t _max, const char* _format = "%u", ImGuiSliderFlags _flags = 0 );
 
-	FZN_EXPORT bool small_slider_float( const char* label, float* v, float v_min, float v_max, const char* format );
+	FZN_EXPORT bool small_slider_float( const char* _label, float& _value, float _min, float _max, const char* _format = "%.3f", ImGuiSliderFlags _flags = 0 );
+	FZN_EXPORT bool small_slider_uint8( std::string_view _label, uint8_t& _value, uint8_t _min, uint8_t _max, const char* _format = "%u", ImGuiSliderFlags _flags = 0 );
 
 	template< typename ...Args >
 	void custom_font_text_colored( ImFont* _font, const ImColor& _color, std::string_view _text, Args... _args )

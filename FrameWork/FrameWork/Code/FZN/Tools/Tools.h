@@ -204,6 +204,7 @@ namespace fzn
 		//Parameter 2 : Texture to apply
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		FZN_EXPORT void SpriteChangeTexture( sf::Sprite& _sprite, const sf::Texture& _texture );
+		FZN_EXPORT void sprite_change_alpha( sf::Sprite _sprite, uint8_t _alpha );
 
 
 		/////////////////TEXT FUNCTIONS/////////////////

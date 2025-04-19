@@ -63,6 +63,7 @@ namespace fzn
 
 			if( m_oEvent.type == sf::Event::Closed )
 			{
+				ProcessEventsCallBacks();
 				m_pWindow->close();
 				return;
 			}

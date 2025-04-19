@@ -768,6 +768,16 @@ namespace fzn
 		}
 
 
+		void sprite_change_alpha( sf::Sprite _sprite, uint8_t _alpha )
+		{
+			if( _alpha > 255 )
+				_alpha = 255;
+
+			sf::Color color{ _sprite.getColor() };
+			color.a = _alpha;
+			_sprite.setColor( color );
+		}
+
 		/////////////////TEXT FUNCTIONS/////////////////
 
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------

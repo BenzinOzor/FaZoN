@@ -63,12 +63,28 @@ namespace ImGui_fzn
 		return false;
 	}
 
-	bool small_slider_float( const char* label, float* v, float v_min, float v_max, const char* format )
+	bool slider_uint8( std::string_view _label, uint8_t& _value, uint8_t _min, uint8_t _max, const char* _format /*= "%u"*/, ImGuiSliderFlags _flags /*= 0 */ )
 	{
-		float backup_padding_y = ImGui::GetStyle().FramePadding.y;
-		ImGui::GetStyle().FramePadding.y = 0.0f;
-		bool pressed = ImGui::SliderFloat( label, v, v_min, v_max, format );
-		ImGui::GetStyle().FramePadding.y = backup_padding_y;
+		return ImGui::SliderScalar( _label.data(), ImGuiDataType_U8, &_value, &_min, &_max, _format, _flags );
+	}
+
+	bool small_slider_float( const char* _label, float& _value, float _min, float _max, const char* _format /*= "%.3f"*/, ImGuiSliderFlags _flags /*= 0*/ )
+	{
+		ImGui::PushStyleVar( ImGuiStyleVar_FramePadding, { 0.f, 0.f } );
+
+		const bool pressed{ ImGui::SliderFloat( _label, &_value, _min, _max, _format, _flags ) };
+
+		ImGui::PopStyleVar();
+		return pressed;
+	}
+
+	bool small_slider_uint8( std::string_view _label, uint8_t& _value, uint8_t _min, uint8_t _max, const char* _format /*= "%u"*/, ImGuiSliderFlags _flags /*= 0 */ )
+	{
+		ImGui::PushStyleVar( ImGuiStyleVar_FramePadding, { 0.f, 0.f } );
+
+		const bool pressed{ slider_uint8( _label, _value, _min, _max, _format, _flags ) };
+
+		ImGui::PopStyleVar();
 		return pressed;
 	}
 

@@ -1124,7 +1124,9 @@ namespace fzn
 
 			action->SetAttribute( "Name", action_key.m_sName.c_str() );
 			action->SetAttribute( "Category", action_key.m_iCategory );
-			action->SetAttribute( "FullAxis", action_key.m_bFullAxis );
+
+			if( action_key.m_bFullAxis == false )
+				action->SetAttribute( "FullAxis", action_key.m_bFullAxis );
 
 			for( const ActionKey::BindInput& bind_input : action_key.m_oKeyboardBinds )
 			{
