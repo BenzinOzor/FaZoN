@@ -216,7 +216,7 @@ namespace fzn
 
 			// Resetting so event the code using events won't get this one.
 			if( bResetEvent )
-				_event = sf::Event();
+				_event.type = sf::Event::Count;
 
 			if( bBindReplaced )
 			{
