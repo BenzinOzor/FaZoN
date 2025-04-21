@@ -138,4 +138,6 @@ namespace ImGui_fzn
 	FZN_EXPORT ImVec4 color_diff_alpha( const ImVec4& _color, float _new_alpha );
 
 	FZN_EXPORT bool Filter( std::string& _buffer, const char* _hint );
+
+	FZN_EXPORT void simple_tooltip_on_hover( const std::string_view _tooltip );
 }

@@ -808,9 +808,10 @@ void RenderDrawLists(ImDrawData* draw_data) {
                           (int)(pcmd->ClipRect.z - pcmd->ClipRect.x),
                           (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
                 glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
-                               GL_UNSIGNED_SHORT, idx_buffer);
+					sizeof( ImDrawIdx ) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
+					idx_buffer + pcmd->IdxOffset );
             }
-            idx_buffer += pcmd->ElemCount;
+            //idx_buffer += pcmd->ElemCount;
         }
     }
 #ifdef GL_VERSION_ES_CL_1_1

@@ -266,4 +266,11 @@ namespace ImGui_fzn
 
 		return bFilterChanged;
 	}
+
+	void simple_tooltip_on_hover( const std::string_view _tooltip )
+	{
+		if( ImGui::IsItemHovered() )
+			ImGui::SetTooltip( _tooltip.data() );
+	}
+
 }
