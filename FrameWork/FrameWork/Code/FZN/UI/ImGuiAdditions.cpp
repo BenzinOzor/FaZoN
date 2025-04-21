@@ -225,15 +225,19 @@ namespace ImGui_fzn
 		return ImGui::Button( _label, { _size <= 0.f ? ImGui::GetFrameHeight() : _size, 0.f } );
 	}
 
-	bool deactivable_button( const char* _label, bool _disable, const ImVec2& _size /*= { 0.f, 0.f } */ )
+	bool deactivable_button( const char* _label, bool _disable, bool _bold_on_enable /*= false*/, const ImVec2& _size /*= { 0.f, 0.f } */ )
 	{
 		if( _disable )
 			ImGui::BeginDisabled();
+		else if( _bold_on_enable )
+			ImGui::PushFont( ImGui_fzn::s_ImGuiFormatOptions.m_pFontBold );
 
 		const bool result = ImGui::Button( _label, _size );
 
 		if( _disable )
 			ImGui::EndDisabled();
+		else if( _bold_on_enable )
+			ImGui::PopFont();
 
 		return result;
 	}
@@ -271,6 +275,12 @@ namespace ImGui_fzn
 	{
 		if( ImGui::IsItemHovered() )
 			ImGui::SetTooltip( _tooltip.data() );
+	}
+
+	void helper_simple_tooltip( const std::string_view _tooltip )
+	{
+		ImGui::TextColored( color::dark_gray, "(?)" );
+		simple_tooltip_on_hover( _tooltip );
 	}
 
 }

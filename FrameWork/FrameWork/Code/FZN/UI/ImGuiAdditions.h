@@ -133,11 +133,13 @@ namespace ImGui_fzn
 
 	FZN_EXPORT bool square_button( const char* _label, float _size = 0.f );
 
-	FZN_EXPORT bool deactivable_button( const char* _label, bool _disable, const ImVec2& _size = { 0.f, 0.f } );
+	FZN_EXPORT bool deactivable_button( const char* _label, bool _disable, bool _bold_enable = false, const ImVec2& _size = { 0.f, 0.f } );
 
 	FZN_EXPORT ImVec4 color_diff_alpha( const ImVec4& _color, float _new_alpha );
 
 	FZN_EXPORT bool Filter( std::string& _buffer, const char* _hint );
 
 	FZN_EXPORT void simple_tooltip_on_hover( const std::string_view _tooltip );
+
+	FZN_EXPORT void helper_simple_tooltip( const std::string_view _tooltip );
 }
