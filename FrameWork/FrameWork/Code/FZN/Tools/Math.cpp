@@ -39,6 +39,16 @@ namespace fzn
 			return ( Square( _iValue ) + _iValue ) / 2;
 		}
 
+		uint8_t get_number_of_digits( uint32_t _number )
+		{
+			if( _number == 0 )
+				return 1;
+
+			const auto number{ static_cast< double >( _number ) };
+
+			return static_cast< uint8_t >( log10( number ) ) + 1;
+		}
+
 		/////////////////VECTORS FUNCTIONS/////////////////
 
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------

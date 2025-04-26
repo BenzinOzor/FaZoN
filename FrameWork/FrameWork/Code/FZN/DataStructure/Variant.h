@@ -1,6 +1,7 @@
 #pragma once
 
 #include <variant>
+#include <type_traits>
 
 
 namespace fzn
@@ -20,13 +21,13 @@ namespace fzn
 		Variant( Variant&& _variant ) noexcept { std::swap( m_value, _variant.m_value ); }
 		template <class _Ty,
 			std::enable_if_t< sizeof...( Types ) != 0
-			&& std::is_same_v< std::remove_cvref_t<_Ty>, Variant > == false,
+			&& std::is_same_v< std::_Remove_cvref_t<_Ty>, Variant > == false,
 			int> = 0 >
 		Variant( _Ty&& _obj ) : m_value( _obj ) {}
 
 		template <class _Ty,
 			std::enable_if_t< sizeof...( Types ) != 0
-			&& std::is_same_v< std::remove_cvref_t<_Ty>, Variant > == false,
+			&& std::is_same_v< std::_Remove_cvref_t<_Ty>, Variant > == false,
 			int> = 0 >
 		Variant& operator=( _Ty&& _Obj )						{ return m_value = _Obj; }
 		Variant& operator=( const Variant& _variant )			{ m_value = _variant.m_value; return *this; }

@@ -37,6 +37,7 @@ namespace fzn
 		FZN_EXPORT				float	DegToRad( const float& _fDeg );
 		FZN_EXPORT				float	RadToDeg( const float& _fRad );
 		FZN_EXPORT				int		SimgaSum( const int& _iValue );
+		FZN_EXPORT				uint8_t get_number_of_digits( uint32_t _number );
 
 
 		/////////////////VECTORS FUNCTIONS/////////////////
