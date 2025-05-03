@@ -142,4 +142,8 @@ namespace ImGui_fzn
 	FZN_EXPORT void simple_tooltip_on_hover( const std::string_view _tooltip );
 
 	FZN_EXPORT void helper_simple_tooltip( const std::string_view _tooltip );
+
+	// Selectable that turns the text bold when it is selected
+	FZN_EXPORT bool bold_selectable( const char* _label, bool _selected = false, ImGuiSelectableFlags _flags = 0, const ImVec2& _size = ImVec2( 0.f, 0.f ) );
+	FZN_EXPORT bool bold_selectable( const char* _label, bool* _selected, ImGuiSelectableFlags _flags = 0, const ImVec2& _size = ImVec2( 0.f, 0.f ) );
 }

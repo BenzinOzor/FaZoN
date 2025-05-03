@@ -230,7 +230,7 @@ namespace ImGui_fzn
 		if( _disable )
 			ImGui::BeginDisabled();
 		else if( _bold_on_enable )
-			ImGui::PushFont( ImGui_fzn::s_ImGuiFormatOptions.m_pFontBold );
+			ImGui::PushFont( s_ImGuiFormatOptions.m_pFontBold );
 
 		const bool result = ImGui::Button( _label, _size );
 
@@ -281,6 +281,32 @@ namespace ImGui_fzn
 	{
 		ImGui::TextColored( color::dark_gray, "(?)" );
 		simple_tooltip_on_hover( _tooltip );
+	}
+
+	bool bold_selectable( const char* _label, bool _selected /*= false*/, ImGuiSelectableFlags _flags /*= 0*/, const ImVec2& _size /*= ImVec2( 0.f, 0.f ) */ )
+	{
+		if( _selected && s_ImGuiFormatOptions.m_pFontBold != nullptr )
+			ImGui::PushFont( s_ImGuiFormatOptions.m_pFontBold );
+
+		const bool ret = ImGui::Selectable( _label, _selected, _flags, _size );
+
+		if( _selected && s_ImGuiFormatOptions.m_pFontBold != nullptr )
+			ImGui::PopFont();
+
+		return ret;
+	}
+
+	bool bold_selectable( const char* _label, bool* _selected, ImGuiSelectableFlags _flags /*= 0*/, const ImVec2& _size /*= ImVec2( 0.f, 0.f ) */ )
+	{
+		if( _selected != nullptr && *_selected && s_ImGuiFormatOptions.m_pFontBold != nullptr )
+			ImGui::PushFont( s_ImGuiFormatOptions.m_pFontBold );
+
+		const bool ret = ImGui::Selectable( _label, _selected, _flags, _size );
+
+		if( _selected != nullptr && *_selected && s_ImGuiFormatOptions.m_pFontBold != nullptr )
+			ImGui::PopFont();
+
+		return ret;
 	}
 
 }
