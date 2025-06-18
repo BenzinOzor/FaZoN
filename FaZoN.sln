@@ -66,7 +66,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TruthTable", "Utilities\Tru
 		{1C147141-A28A-4876-96D4-49821AA357C2} = {1C147141-A28A-4876-96D4-49821AA357C2}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "1Y1G Splits Manager", "Utilities\1Y1G Splits Manager\Code\1Y1G Splits Manager.vcxproj", "{6AB43FED-B744-4970-84F0-72D8EF0B3D12}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "1Y1G_SplitsManager", "Utilities\1Y1G_SplitsManager\Code\1Y1G_SplitsManager.vcxproj", "{6AB43FED-B744-4970-84F0-72D8EF0B3D12}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1C147141-A28A-4876-96D4-49821AA357C2} = {1C147141-A28A-4876-96D4-49821AA357C2}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
