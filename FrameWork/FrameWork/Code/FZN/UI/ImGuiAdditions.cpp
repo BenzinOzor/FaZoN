@@ -88,6 +88,18 @@ namespace ImGui_fzn
 		return pressed;
 	}
 
+	void push_bold_font()
+	{
+		if( s_ImGuiFormatOptions.m_pFontBold != nullptr )
+			ImGui::PushFont( s_ImGuiFormatOptions.m_pFontBold );
+	}
+
+	void pop_bold_font()
+	{
+		if( s_ImGuiFormatOptions.m_pFontBold != nullptr )
+			ImGui::PopFont();
+	}
+
 	bool is_color_valid( const ImVec4& _color )
 	{
 		if( _color.x < 0.f || _color.y < 0.f || _color.z < 0.f || _color.w < 0.f )

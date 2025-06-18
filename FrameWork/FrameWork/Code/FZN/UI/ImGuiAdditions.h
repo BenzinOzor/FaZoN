@@ -30,7 +30,7 @@ namespace ImGui_fzn
 		inline constexpr ImVec4 light_green		{ 0.3f, 0.95f, 0.3f, 1.f };
 		inline constexpr ImVec4 dark_green		{ 0.15f, 0.45f, 0.15f, 1.f };
 
-		inline constexpr ImVec4 blue			{ 0.2f, 0.8f, 0.2f, 1.f };
+		inline constexpr ImVec4 blue			{ 0.2f, 0.2f, 0.8f, 1.f };
 		inline constexpr ImVec4 bright_blue		{ 0.f, 0.f, 1.f, 1.f };
 		inline constexpr ImVec4 light_blue		{ 0.3f, 0.95f, 0.3f, 1.f };
 		inline constexpr ImVec4 dark_blue		{ 0.15f, 0.45f, 0.15f, 1.f };
@@ -95,6 +95,9 @@ namespace ImGui_fzn
 
 	FZN_EXPORT bool small_slider_float( const char* _label, float& _value, float _min, float _max, const char* _format = "%.3f", ImGuiSliderFlags _flags = 0 );
 	FZN_EXPORT bool small_slider_uint8( std::string_view _label, uint8_t& _value, uint8_t _min, uint8_t _max, const char* _format = "%u", ImGuiSliderFlags _flags = 0 );
+
+	FZN_EXPORT void push_bold_font();
+	FZN_EXPORT void pop_bold_font();
 
 	template< typename ...Args >
 	void custom_font_text_colored( ImFont* _font, const ImColor& _color, std::string_view _text, Args... _args )
