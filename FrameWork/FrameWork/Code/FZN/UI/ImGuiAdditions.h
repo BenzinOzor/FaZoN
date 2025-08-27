@@ -127,6 +127,14 @@ namespace ImGui_fzn
 		custom_font_text_colored( s_ImGuiFormatOptions.m_pFontBold, color::white, _text, _args... );
 	}
 
+	template< typename ...Args >
+	void bicolor_text( const ImVec4& _color_1, const ImVec4& _color_2, std::string_view _text_1, std::string_view _text_2_fmt, Args... _args )
+	{
+		ImGui::TextColored( _color_1, _text_1.data() );
+		ImGui::SameLine();
+		ImGui::TextColored( _color_2, _text_2_fmt.data(), _args... );
+	}
+
 	FZN_EXPORT std::string convert_markdown_to_imgui_format( const std::string_view _text, const ImGui_fzn::ImGuiFormatOptions* _format_options = nullptr );
 	//FZN_EXPORT std::string create_color_tag( const ImVec4& _color, const ImGui_fzn::ImGuiFormatOptions* _format_options = nullptr );
 
