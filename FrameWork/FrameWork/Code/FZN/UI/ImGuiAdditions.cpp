@@ -256,7 +256,7 @@ namespace ImGui_fzn
 
 	ImVec4 color_diff_alpha( const ImVec4& _color, float _new_alpha )
 	{
-		return { _color.x, _color.x, _color.x, _new_alpha };
+		return { _color.x, _color.y, _color.z, _new_alpha };
 	}
 
 	bool Filter( std::string& _buffer, const char* _hint )
