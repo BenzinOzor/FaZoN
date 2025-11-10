@@ -37,3 +37,6 @@
 [submodule "Utilities/1Y1G Splits Manager"]
 	path = Utilities/1Y1G_SplitsManager
 	url = https://github.com/BenzinOzor/1Y1G_splits_manager
+[submodule "Utilities/Pixeler"]
+	path = Utilities/Pixeler
+	url = http://github.com/BenzinOzor/Pixeler
