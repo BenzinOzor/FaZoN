@@ -23,7 +23,7 @@
 	path = Games/TSOIRebirth
 	url = https://github.com/BenzinOzor/TSOIRebirth
 [submodule "Utilities/PerlerMaker"]
-	path = Utilities/PerlerMaker
+	path = Utilities/Pixeler
 	url = https://github.com/BenzinOzor/PerlerMaker
 [submodule "Utilities/MarathonMessageCreator"]
 	path = Utilities/MarathonMessageCreator

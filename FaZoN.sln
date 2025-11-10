@@ -51,7 +51,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HadesBoonHelper", "Utilitie
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TSOIRebirth", "Games\TSOIRebirth\Code\TSOIRebirth.vcxproj", "{A7F9572E-05B3-4141-8E9B-2D375DD29C93}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PerlerMaker", "Utilities\PerlerMaker\Code\PerlerMaker.vcxproj", "{E7EE1568-0879-4B92-96F8-A05187328194}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Pixeler", "Utilities\Pixeler\Code\Pixeler.vcxproj", "{E7EE1568-0879-4B92-96F8-A05187328194}"
 	ProjectSection(ProjectDependencies) = postProject
 		{1C147141-A28A-4876-96D4-49821AA357C2} = {1C147141-A28A-4876-96D4-49821AA357C2}
 	EndProjectSection
