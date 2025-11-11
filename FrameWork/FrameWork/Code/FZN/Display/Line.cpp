@@ -85,8 +85,10 @@ namespace fzn
 
 	void Line::draw( sf::RenderTarget& _target, sf::RenderStates _states ) const
 	{
-		_target.draw( m_line, _states );
-		_target.draw( m_triangles, _states );
+		if( m_thickness <= 1.f )
+			_target.draw( m_line, _states );
+		else
+			_target.draw( m_triangles, _states );
 	}
 
 	void Line::_from_lines( const sf::VertexArray& _lines )
@@ -95,8 +97,8 @@ namespace fzn
 			return;
 
 		// First, we get the first line
-		m_line.append( _lines[ 0 ] );
-		m_line.append( _lines[ 1 ] );
+		m_line.append( { _lines[ 0 ].position, m_color } );
+		m_line.append( { _lines[ 1 ].position, m_color } );
 
 		if( _lines.getVertexCount() == 2 )
 			return;
@@ -144,7 +146,7 @@ namespace fzn
 				m_line.append( transparent_vertex );
 				transparent_vertex.position = vertices.begin()->position;
 				m_line.append( transparent_vertex );
-				m_line.append( *vertices.begin() );
+				m_line.append( { vertices.begin()->position, m_color } );
 
 				continue;
 			}
@@ -165,7 +167,7 @@ namespace fzn
 				it_start_point = vertices.begin() + point_id;
 			}
 
-			m_line.append( vertices[ point_id ] );
+			m_line.append( { vertices[ point_id ].position, m_color } );
 
 			auto next_valid_it{ vertices.erase( it_start_point ) };
 			vertices.erase( next_valid_it );
