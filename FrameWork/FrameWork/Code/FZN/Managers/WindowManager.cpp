@@ -580,6 +580,17 @@ namespace fzn
 		m_oWindows[ _id ]->ToggleFullScreen( _bFullScreen );
 	}
 
+	bool WindowManager::IsWindowFullScreen( int _id /*= -1 */ ) const
+	{
+		if( _id < 0 )
+			_id = m_iMainWindow;
+
+		if( m_oWindows.empty() || m_oWindows[ _id ] == nullptr )
+			return false;
+
+		return m_oWindows[ _id ]->IsFullScreen();
+	}
+
 	void WindowManager::DetermineNewMainWindow()
 	{
 		for( int iWindow = 0 ; iWindow < (int)m_oWindows.size() ; ++ iWindow )

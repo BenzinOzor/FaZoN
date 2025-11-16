@@ -195,6 +195,7 @@ namespace fzn
 		sf::Event GetWindowEvent( int _id = -1 );
 		void ToggleWindowFullScreen( int _id = -1 );
 		void ToggleWindowFullScreen( bool _bFullScreen, int _id = -1 );
+		bool IsWindowFullScreen( int _id = -1 ) const;
 
 		void DetermineNewMainWindow();
 
