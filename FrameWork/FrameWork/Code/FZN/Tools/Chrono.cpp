@@ -30,7 +30,12 @@ namespace fzn
 		m_chrono = std::chrono::milliseconds( 0 );
 	}
 
-	bool Chrono::is_paused()
+	bool Chrono::has_started() const
+	{
+		return m_chrono > std::chrono::milliseconds( 0 );
+	}
+
+	bool Chrono::is_paused() const
 	{
 		return m_paused;
 	}

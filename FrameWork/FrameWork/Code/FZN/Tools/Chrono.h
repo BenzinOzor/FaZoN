@@ -16,7 +16,8 @@ namespace fzn
 		void toggle_pause();
 		void stop();
 
-		bool is_paused();
+		bool has_started() const;
+		bool is_paused() const;
 
 		void update();
 		const std::chrono::duration< int, std::milli >& get_time() { return m_chrono; }
