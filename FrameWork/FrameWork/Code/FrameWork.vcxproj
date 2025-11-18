@@ -315,6 +315,7 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
     <ClInclude Include="FZN\Game\StateMachine\FZNStateMachine.h" />
     <ClInclude Include="FZN\Includes.h" />
     <ClInclude Include="FZN\Tools\Callbacks.h" />
+    <ClInclude Include="FZN\Tools\Chrono.h" />
     <ClInclude Include="FZN\Tools\DataCallback.h" />
     <ClInclude Include="FZN\Tools\Event.h" />
     <ClInclude Include="FZN\Tools\HermiteCubicSpline.h" />
@@ -378,6 +379,7 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
     <ClCompile Include="FZN\Game\BehaviorTree\BTComposites.cpp" />
     <ClCompile Include="FZN\Game\BehaviorTree\BTDecorators.cpp" />
     <ClCompile Include="FZN\Game\StateMachine\FZNStateMachine.cpp" />
+    <ClCompile Include="FZN\Tools\Chrono.cpp" />
     <ClCompile Include="FZN\Tools\HermiteCubicSpline.cpp" />
     <ClCompile Include="FZN\Tools\Logging.cpp" />
     <ClCompile Include="FZN\Tools\Math.cpp" />
