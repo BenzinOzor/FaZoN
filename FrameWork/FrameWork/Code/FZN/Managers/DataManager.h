@@ -106,6 +106,7 @@ namespace fzn
 		//Return value : Loaded (or allready existing) texture
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		sf::Texture* LoadTexture( const std::string& _name, const std::string& _path, bool _bCryptedFile = USINGCRYPTEDFILES );
+		sf::Texture* load_texture_from_memory( const std::string& _name, const void* _data, std::size_t _size, const sf::IntRect& _area = sf::IntRect() );
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Accessor on a texture in the map
 		//Parameter : Texture name

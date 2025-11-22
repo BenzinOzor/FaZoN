@@ -206,6 +206,25 @@ namespace fzn
 		return it->second;
 	}
 
+	sf::Texture* DataManager::load_texture_from_memory( const std::string& _name, const void* _data, std::size_t _size, const sf::IntRect& _area /*= sf::IntRect() */ )
+	{
+		MapTextures::iterator it = m_mapTextures.find( _name );
+
+		if( it == m_mapTextures.end() )
+		{
+			sf::Texture* tmpTexture = new sf::Texture;
+			tmpTexture->loadFromMemory( _data, _size, _area );
+			tmpTexture->setSmooth( m_bSmoothTextures );
+
+			FZN_LOG( "Loading texture \"%s\" from memory.", _name.c_str() );
+
+			_SendFileLoadedEvent();
+			return m_mapTextures[ _name ] = tmpTexture;
+		}
+
+		return it->second;
+	}
+
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	//Accessor on a texture in the map
 	//Parameter : Texture name
