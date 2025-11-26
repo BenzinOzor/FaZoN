@@ -226,6 +226,9 @@ namespace fzn
 			return;
 		}
 
+		if( m_eInputSystem == InputSystems::ScanSystem )
+			return;
+
 		switch( _event.type )
 		{
 		case sf::Event::KeyPressed:
@@ -1290,11 +1293,17 @@ namespace fzn
 	{
 		if( eSystem >= 0 && eSystem < InputSystems::nbInputSystems )
 			m_eInputSystem = eSystem;
+
+		if( m_eInputSystem == InputSystems::ScanSystem )
+			_add_action_keys_to_scan_list();
 	}
 
 	void InputManager::AddInputToScan( sf::Keyboard::Key _eInput )
 	{
 		if( _eInput < 0 && _eInput >= sf::Keyboard::KeyCount )
+			return;
+
+		if( std::ranges::find( m_lScannedInputs[ 0 ], _eInput ) != m_lScannedInputs[ 0 ].end() )
 			return;
 
 		m_lScannedInputs[ 0 ].push_back( (int)_eInput );
@@ -1303,6 +1312,9 @@ namespace fzn
 	void InputManager::AddInputToScan( sf::Mouse::Button _eInput )
 	{
 		if( _eInput < 0 && _eInput >= sf::Mouse::ButtonCount )
+			return;
+
+		if( std::ranges::find( m_lScannedInputs[ 1 ], _eInput ) != m_lScannedInputs[ 1 ].end() )
 			return;
 
 		m_lScannedInputs[ 1 ].push_back( (int)_eInput );
@@ -1897,6 +1909,23 @@ namespace fzn
 			return;
 
 		_action_key.m_oControllerBinds.push_back( _axis_input );
+	}
+
+	void InputManager::_add_action_keys_to_scan_list()
+	{
+		for( const ActionKey& action_key : m_oCustomActionKeys )
+		{
+			for( const ActionKey::BindInput& bind_input : action_key.m_oKeyboardBinds )
+			{
+				bind_input.visit<void>( Overloaded
+					{
+						[&]( sf::Keyboard::Key _key ) { AddInputToScan( _key ); },
+						[&]( sf::Mouse::Button _button ) { AddInputToScan( _button ); },
+						[&]( uint32_t _button ) {},
+						[&]( ActionKey::AxisInput _axis ) {}
+					} );
+			}
+		}
 	}
 
 	const ActionKey* InputManager::_GetActionKey( sf::Keyboard::Key _key ) const

@@ -588,6 +588,7 @@ namespace fzn
 		void _AddMouseButtonToActionKey( ActionKey& _action_key, sf::Mouse::Button _mouse_button );
 		void _AddJoystickButtonToActionKey( ActionKey& _action_key, uint32_t _joystick_button );
 		void _AddJoystickAxisToActionKey( ActionKey& _action_key, const ActionKey::AxisInput& _axis_input );
+		void _add_action_keys_to_scan_list();
 
 		const ActionKey* _GetActionKey( sf::Keyboard::Key _key ) const;
 		const ActionKey* _GetActionKey( sf::Mouse::Button _mouse_button ) const;
