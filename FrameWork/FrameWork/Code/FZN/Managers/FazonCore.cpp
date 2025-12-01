@@ -146,6 +146,13 @@ namespace fzn
 
 		_CreateSaveFolder();
 
+		if( Tools::mask_has_flag_raised( _oDesc.m_uModules, CoreModuleFlags_WindowModule ) && m_pWindowManager == nullptr )
+		{
+			m_pWindowManager = new WindowManager;
+			m_iActivatedModulesNbr++;
+		}
+
+		// Input manager check the creation state of the window manager for determining what input system will be used.
 		if( Tools::mask_has_flag_raised( _oDesc.m_uModules, CoreModuleFlags_InputModule ) && m_pInputManager == nullptr )
 		{
 			m_pInputManager = new InputManager;
@@ -164,12 +171,6 @@ namespace fzn
 			m_iActivatedModulesNbr++;
 
 			//m_oThread = new sf::Thread( &AnimManager::Update, m_pAnimManager );
-		}
-
-		if( Tools::mask_has_flag_raised( _oDesc.m_uModules, CoreModuleFlags_WindowModule ) && m_pWindowManager == nullptr )
-		{
-			m_pWindowManager = new WindowManager;
-			m_iActivatedModulesNbr++;
 		}
 
 		if( Tools::mask_has_flag_raised( _oDesc.m_uModules, CoreModuleFlags_AudioModule ) && m_pAudioManager == nullptr )

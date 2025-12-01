@@ -30,10 +30,10 @@ namespace ImGui_fzn
 		inline constexpr ImVec4 light_green		{ 0.3f, 0.95f, 0.3f, 1.f };
 		inline constexpr ImVec4 dark_green		{ 0.15f, 0.45f, 0.15f, 1.f };
 
-		inline constexpr ImVec4 blue			{ 0.2f, 0.2f, 0.8f, 1.f };
+		inline constexpr ImVec4 blue			{ 0.f, 0.45f, 1.f, 1.f };
 		inline constexpr ImVec4 bright_blue		{ 0.f, 0.f, 1.f, 1.f };
-		inline constexpr ImVec4 light_blue		{ 0.3f, 0.95f, 0.3f, 1.f };
-		inline constexpr ImVec4 dark_blue		{ 0.15f, 0.45f, 0.15f, 1.f };
+		inline constexpr ImVec4 light_blue		{ 0.09f, 0.65f, 1.f, 1.f };
+		inline constexpr ImVec4 dark_blue		{ 0.03f, 0.2f, 0.45f, 1.f };
 
 		inline constexpr ImVec4 yellow			{ 0.8f, 0.8f, 0.2f, 1.f };
 		inline constexpr ImVec4 bright_yellow	{ 1.f, 1.f, 0.f, 1.f };
