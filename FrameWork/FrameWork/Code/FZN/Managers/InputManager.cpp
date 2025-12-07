@@ -6,6 +6,8 @@
 
 #include <fstream>
 #include <filesystem>
+#include <regex>
+#include <algorithm>
 
 #include "FZN/Includes.h"
 #include "FZN/Managers/FazonCore.h"
@@ -21,6 +23,8 @@ FZN_EXPORT fzn::InputManager* g_pFZN_InputMgr = nullptr;
 
 namespace fzn
 {
+	static const std::unordered_map< sf::Keyboard::Key, int > modifiers_order{ { sf::Keyboard::Key::LControl, 0 }, { sf::Keyboard::Key::LAlt, 1 }, { sf::Keyboard::Key::LShift, 2 }, { sf::Keyboard::Key::RControl, 3 }, { sf::Keyboard::Key::RAlt, 4 }, { sf::Keyboard::Key::RShift, 5 } };
+
 	/////////////////CONSTRUCTOR / DESTRUCTOR/////////////////
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -165,28 +169,32 @@ namespace fzn
 			FZN_LOG( "Joystick disconnected - %s (ID : %d)", m_joysticks[ _event.joystickConnect.joystickId ].informations->name.toAnsiString().c_str(), _event.joystickConnect.joystickId );
 		}
 
-		switch( _event.type )
-		{
-		case sf::Event::KeyReleased:
-			m_keyBasicStates[ _event.key.code ] = FALSE;
-			break;
-		case sf::Event::MouseButtonReleased:
-			m_buttonBasicStates[ _event.mouseButton.button ] = FALSE;
-			break;
-		case sf::Event::JoystickButtonReleased:
-			m_joysticks[ _event.joystickButton.joystickId ].basicStates[ _event.joystickButton.button ] = FALSE;
-			break;
-		};
-
 		// Handling pressed event for eventual key binds before updating basic states so the event used for the bind doesn't trigger anything else.
 		if( IsWaitingActionKeyBind() )
 		{
 			bool bResetEvent = false;
 			bool bBindReplaced = false;
-			if( IsWaitingInputForType( BindType::eKey ) && _event.type == sf::Event::KeyPressed )
+			if( IsWaitingInputForType( BindType::eKey ) )
 			{
-				bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, _event.key.code );
-				bResetEvent = true;
+				if( _event.type == sf::Event::KeyPressed )
+				{
+					if( is_modifier_key( _event.key.code ) )
+					{
+						_add_currently_pressed_modifier( _event.key.code );
+					}
+					// Considering the combo done when a non modifier key is pressed.
+					else
+					{
+						bBindReplaced = set_action_key_bind( m_oCustomActionKeys, m_oActionKeyBindInfo, ActionKey::KeyBind{ m_currently_pressed_modifiers, _event.key.code } );
+						bResetEvent = true;
+						m_currently_pressed_modifiers.clear();
+					}
+				}
+				// If a key is released, we don't want to put it in the current key combo, so we have to remove it.
+				else if( _event.type == sf::Event::KeyReleased )
+				{
+					_remove_currently_pressed_modifier( _event.key.code );
+				}
 			}
 			else if( IsWaitingInputForType( BindType::eMouseButton ) && _event.type == sf::Event::MouseButtonPressed )
 			{
@@ -214,7 +222,7 @@ namespace fzn
 				bResetEvent = true;
 			}
 
-			// Resetting so event the code using events won't get this one.
+			// Resetting so even the code using events won't get this one.
 			if( bResetEvent )
 				_event.type = sf::Event::Count;
 
@@ -233,6 +241,8 @@ namespace fzn
 		{
 		case sf::Event::KeyPressed:
 			m_keyBasicStates[ _event.key.code ] = TRUE;
+			if( is_modifier_key( _event.key.code ) )
+				_add_currently_pressed_modifier( _event.key.code );
 			break;
 		case sf::Event::MouseButtonPressed:
 			m_buttonBasicStates[ _event.mouseButton.button ] = TRUE;
@@ -249,6 +259,17 @@ namespace fzn
 		case sf::Event::JoystickMoved:
 			m_joysticks[ _event.joystickButton.joystickId ].basicAxes[ _event.joystickMove.axis ] = m_joysticks[ _event.joystickButton.joystickId ].axes[ _event.joystickMove.axis ];
 			m_joysticks[ _event.joystickButton.joystickId ].axes[ _event.joystickMove.axis ] = _event.joystickMove.position;
+			break;
+		case sf::Event::KeyReleased:
+			m_keyBasicStates[ _event.key.code ] = FALSE;
+			if( is_modifier_key( _event.key.code ) )
+				_remove_currently_pressed_modifier( _event.key.code );
+			break;
+		case sf::Event::MouseButtonReleased:
+			m_buttonBasicStates[ _event.mouseButton.button ] = FALSE;
+			break;
+		case sf::Event::JoystickButtonReleased:
+			m_joysticks[ _event.joystickButton.joystickId ].basicStates[ _event.joystickButton.button ] = FALSE;
 			break;
 		};
 	}
@@ -278,7 +299,7 @@ namespace fzn
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	//Key press test (maintained donw)
+	//Key press test (maintained down)
 	//Parameter : Concerned key
 	//Return value : The key is down (true) or not
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -316,6 +337,189 @@ namespace fzn
 	}
 
 
+	bool InputManager::is_modifier_key( sf::Keyboard::Key _key ) const
+	{
+		switch( _key )
+		{
+			case sf::Keyboard::LControl:
+			case sf::Keyboard::LShift:
+			case sf::Keyboard::LAlt:
+			case sf::Keyboard::RControl:
+			case sf::Keyboard::RShift:
+			case sf::Keyboard::RAlt:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	* @brief Single press test on a keys combo (transition from Up to Down)
+	* @param _key_bind : Concerned keys combo
+	* @return True if the keys combo is pressed (modifiers pressed/down, key pressed)
+	**/
+	bool InputManager::is_key_bind_pressed( const ActionKey::KeyBind& _key_bind ) const
+	{
+		// if the modifiers of the key bind don't correspond to the currently pressed ones, the action key can't be valid.
+		if( _key_bind.m_modifiers != m_currently_pressed_modifiers )
+			return false;
+
+		for( sf::Keyboard::Key key : _key_bind.m_modifiers )
+		{
+			if( _check_keyboard_key_state_flag( key, StatusFlag_Released | StatusFlag_Up ) )
+				return false;
+		}
+
+		return _check_keyboard_key_state( _key_bind.m_key, Status::Pressed );
+	}
+
+	/**
+	* @brief Press test on a keys combo (maintained down)
+	* @param _key_bind : Concerned keys combo
+	* @return True if all the modifiers and the key are down
+	**/
+	bool InputManager::is_key_bind_down( const ActionKey::KeyBind& _key_bind ) const
+	{
+		// if the modifiers of the key bind don't correspond to the currently pressed ones, the action key can't be valid.
+		if( _key_bind.m_modifiers != m_currently_pressed_modifiers )
+			return false;
+
+		for( sf::Keyboard::Key key : _key_bind.m_modifiers )
+		{
+			if( _check_keyboard_key_state( key, Status::Down ) == false )
+				return false;
+		}
+
+		return _check_keyboard_key_state( _key_bind.m_key, Status::Down );
+	}
+
+	/**
+	* @brief Release test on a keys combo (transition from Down to Up)
+	* @param _key_bind : Concerned keys combo
+	* @return True if the keys combo is released (one - modifier or key - released, all others down)
+	**/
+	bool InputManager::is_key_bind_released( const ActionKey::KeyBind& _key_bind ) const
+	{
+		uint8_t number_of_keys_down{ 0 };
+		uint8_t number_of_keys_released{ 0 };
+
+		for( sf::Keyboard::Key key : _key_bind.m_modifiers )
+		{
+			if( _check_keyboard_key_state( key, Status::Down ) )
+				++number_of_keys_down;
+
+			if( _check_keyboard_key_state( key, Status::Released ) )
+				++number_of_keys_released;
+		}
+
+		if( _check_keyboard_key_state( _key_bind.m_key, Status::Down ) )
+			++number_of_keys_down;
+
+		if( _check_keyboard_key_state( _key_bind.m_key, Status::Released ) )
+			++number_of_keys_released;
+
+		if( number_of_keys_down == _key_bind.m_modifiers.size() && number_of_keys_released == 1 )
+			return true;
+
+		return false;
+	}
+
+	/**
+	* @brief Keys combo not pressed test (staying up)
+	* @param _key_bind : Concerned keys combo
+	* @return True if all the keys are up
+	**/
+	bool InputManager::is_key_bind_up( const ActionKey::KeyBind& _key_bind ) const
+	{
+		for( sf::Keyboard::Key key : _key_bind.m_modifiers )
+		{
+			if( _check_keyboard_key_state( key, Status::Up ) == false )
+				return false;
+		}
+
+		return true;
+	}
+
+	/**
+	* @brief Retrieve the state of the keys combo
+	* @param _key_bind : Concerned keys combo
+	* @return All keys Down: Down | All keys Down/Pressed + one Pressed: Pressed | All keys Up: Up | All keys Down/Released + one Released: Released
+	**/
+	fzn::InputManager::Status InputManager::get_key_bind_state( const ActionKey::KeyBind& _key_bind ) const
+	{
+		const size_t total_number_of_keys{ _key_bind.m_modifiers.size() + 1 };
+		uint8_t key_states_numbers[ Status::nbStates ]{};
+
+		for( sf::Keyboard::Key key : _key_bind.m_modifiers )
+		{
+			switch( get_key_state( key ) )
+			{
+				case Status::Pressed:
+				{
+					++key_states_numbers[ Status::Pressed ];
+					break;
+				}
+				case Status::Down:
+				{
+					++key_states_numbers[ Status::Down ];
+					break;
+				}
+				case Status::Released:
+				{
+					++key_states_numbers[ Status::Released ];
+					break;
+				}
+				case Status::Up:
+				{
+					++key_states_numbers[ Status::Up ];
+					break;
+				}
+			};
+		}
+
+		switch( get_key_state( _key_bind.m_key ) )
+		{
+			case Status::Pressed:
+			{
+				++key_states_numbers[ Status::Pressed ];
+				break;
+			}
+			case Status::Down:
+			{
+				++key_states_numbers[ Status::Down ];
+				break;
+			}
+			case Status::Released:
+			{
+				++key_states_numbers[ Status::Released ];
+				break;
+			}
+			case Status::Up:
+			{
+				++key_states_numbers[ Status::Up ];
+				break;
+			}
+		};
+
+		// As soon as one key is up, the combo can't be used so the key bind is considered Up.
+		if( key_states_numbers[ Status::Up ] > 0 )
+			return Status::Up;
+
+		// If all keys are maintained down, the keys combo is Down.
+		if( key_states_numbers[ Status::Down ] == total_number_of_keys )
+			return Status::Down;
+
+		// If all the keys are either down or pressed, the combo is pressed. We don't want any other state.
+		if( key_states_numbers[ Status::Down ] + key_states_numbers[ Status::Pressed ] == total_number_of_keys )
+			return Status::Pressed;
+
+		// If at least one key is released, the combo is released.
+		if( key_states_numbers[ Status::Pressed ] == 0 && key_states_numbers[ Status::Released ] > 0 )
+			return Status::Released;
+
+		return Status::Up;
+	}
+
 	/////////////////ACTIONKEYS TESTS/////////////////
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -332,10 +536,10 @@ namespace fzn
 
 		static const Overloaded pressed_overloads
 		{
-			[&]( sf::Keyboard::Key _sf_key ) -> bool			{ return IsKeyPressed( _sf_key ); },
-			[&]( sf::Mouse::Button _button ) -> bool			{ return IsMousePressed( _button ); },
-			[&]( uint32_t _joystick_button ) -> bool			{ return IsJoystickButtonPressed( m_defaultJoystick, _joystick_button ); },
-			[&]( ActionKey::AxisInput _joystick_axis ) -> bool	{ return is_joystick_axis_pressed( m_defaultJoystick, _joystick_axis ); }
+			[&]( const ActionKey::KeyBind& _key_bind ) -> bool		{ return is_key_bind_pressed( _key_bind ); },
+			[&]( sf::Mouse::Button _button ) -> bool				{ return IsMousePressed( _button ); },
+			[&]( uint32_t _joystick_button ) -> bool				{ return IsJoystickButtonPressed( m_defaultJoystick, _joystick_button ); },
+			[&]( ActionKey::AxisInput _joystick_axis ) -> bool		{ return is_joystick_axis_pressed( m_defaultJoystick, _joystick_axis ); }
 		};
 
 		for( const ActionKey::BindInput& bind_input : action_key->m_oKeyboardBinds )
@@ -370,7 +574,7 @@ namespace fzn
 
 		static const Overloaded down_overloads
 		{
-			[&]( sf::Keyboard::Key _sf_key ) -> bool			{ return IsKeyDown( _sf_key ); },
+			[&]( const ActionKey::KeyBind& _key_bind ) -> bool	{ return is_key_bind_down( _key_bind ); },
 			[&]( sf::Mouse::Button _button ) -> bool			{ return IsMouseDown( _button ); },
 			[&]( uint32_t _joystick_button ) -> bool			{ return IsJoystickButtonDown( m_defaultJoystick, _joystick_button ); },
 			[&]( ActionKey::AxisInput _joystick_axis ) -> bool	{ return is_joystick_axis_down( m_defaultJoystick, _joystick_axis ); }
@@ -408,7 +612,7 @@ namespace fzn
 
 		static const Overloaded released_overloads
 		{
-			[&]( sf::Keyboard::Key _sf_key ) -> bool			{ return IsKeyReleased( _sf_key ); },
+			[&]( const ActionKey::KeyBind& _key_bind ) -> bool	{ return is_key_bind_released( _key_bind ); },
 			[&]( sf::Mouse::Button _button ) -> bool			{ return IsMouseReleased( _button ); },
 			[&]( uint32_t _joystick_button ) -> bool			{ return IsJoystickButtonReleased( m_defaultJoystick, _joystick_button ); },
 			[&]( ActionKey::AxisInput _joystick_axis ) -> bool	{ return is_joystick_axis_released( m_defaultJoystick, _joystick_axis ); }
@@ -446,7 +650,7 @@ namespace fzn
 
 		static const Overloaded up_overloads
 		{
-			[&]( sf::Keyboard::Key _sf_key ) -> bool			{ return IsKeyUp( _sf_key ); },
+			[&]( const ActionKey::KeyBind& _key_bind ) -> bool	{ return is_key_bind_up( _key_bind ); },
 			[&]( sf::Mouse::Button _button ) -> bool			{ return IsMouseUp( _button ); },
 			[&]( uint32_t _joystick_button ) -> bool			{ return IsJoystickButtonUp( m_defaultJoystick, _joystick_button ); },
 			[&]( ActionKey::AxisInput _joystick_axis ) -> bool	{ return is_joystick_axis_up( m_defaultJoystick, _joystick_axis ); }
@@ -479,7 +683,7 @@ namespace fzn
 
 		static const Overloaded state_overloads
 		{
-			[&]( sf::Keyboard::Key _sf_key ) -> Status				{ return get_key_state( _sf_key ); },
+			[&]( const ActionKey::KeyBind& _key_bind ) -> Status	{ return get_key_bind_state( _key_bind ); },
 			[&]( sf::Mouse::Button _button ) -> Status				{ return get_mouse_button_state( _button ); },
 			[&]( uint32_t _joystick_button ) -> Status				{ return get_joystick_button_state( m_defaultJoystick, _joystick_button ); },
 			[&]( ActionKey::AxisInput _joystick_axis ) -> Status	{ return get_joystick_axis_state( m_defaultJoystick, _joystick_axis ); }
@@ -1137,10 +1341,10 @@ namespace fzn
 
 				bind_input.visit<void>( Overloaded
 					{
-						[&]( sf::Keyboard::Key _key )		{ input->SetAttribute( "Type", "Keyboard" );		input->SetAttribute( "Map", KeyToString( _key ).c_str() ); },
-						[&]( sf::Mouse::Button _button )	{ input->SetAttribute( "Type", "Mouse" );			input->SetAttribute( "Map", MouseButtonToString( _button ).c_str() ); },
-						[&]( uint32_t _button )				{ input->SetAttribute( "Type", "JoystickButton" );	input->SetAttribute( "Map", JoystickButtonToString( _button ).c_str() ); },
-						[&]( ActionKey::AxisInput _axis )	{ input->SetAttribute( "Type", "JoystickAxis" );	input->SetAttribute( "Map", axis_input_to_string( _axis ).c_str() ); }
+						[&]( const ActionKey::KeyBind& _key_bind )	{ input->SetAttribute( "Type", "Keyboard" );		input->SetAttribute( "Map", key_bind_to_string( _key_bind ).c_str() ); },
+						[&]( sf::Mouse::Button _button )			{ input->SetAttribute( "Type", "Mouse" );			input->SetAttribute( "Map", MouseButtonToString( _button ).c_str() ); },
+						[&]( uint32_t _button )						{ input->SetAttribute( "Type", "JoystickButton" );	input->SetAttribute( "Map", JoystickButtonToString( _button ).c_str() ); },
+						[&]( ActionKey::AxisInput _axis )			{ input->SetAttribute( "Type", "JoystickAxis" );	input->SetAttribute( "Map", axis_input_to_string( _axis ).c_str() ); }
 					} );
 
 				action->InsertEndChild( input );
@@ -1152,8 +1356,10 @@ namespace fzn
 
 				bind_input.visit<void>( Overloaded
 					{
-						[&]( uint32_t _button )				{ input->SetAttribute( "Type", "JoystickButton" );	input->SetAttribute( "Map", JoystickButtonToString( _button ).c_str() ); },
-						[&]( ActionKey::AxisInput _axis )	{ input->SetAttribute( "Type", "JoystickAxis" );	input->SetAttribute( "Map", axis_input_to_string( _axis ).c_str() ); }
+						[&]( const ActionKey::KeyBind& _key_bind )	{},
+						[&]( sf::Mouse::Button _button )			{},
+						[&]( uint32_t _button )						{ input->SetAttribute( "Type", "JoystickButton" );	input->SetAttribute( "Map", JoystickButtonToString( _button ).c_str() ); },
+						[&]( ActionKey::AxisInput _axis )			{ input->SetAttribute( "Type", "JoystickAxis" );	input->SetAttribute( "Map", axis_input_to_string( _axis ).c_str() ); }
 					} );
 
 				action->InsertEndChild( input );
@@ -1320,6 +1526,16 @@ namespace fzn
 		m_lScannedInputs[ 1 ].push_back( (int)_eInput );
 	}
 	
+	void InputManager::add_input_to_scan( const ActionKey::KeyBind& _key_bind )
+	{
+		for( sf::Keyboard::Key key : _key_bind.m_modifiers )
+		{
+			AddInputToScan( key );
+		}
+
+		AddInputToScan( _key_bind.m_key );
+	}
+
 	bool InputManager::IsUsingKeyboard() const
 	{
 		return m_bUsingKeyboard;
@@ -1846,17 +2062,20 @@ namespace fzn
 			{
 				mapedKey = Tools::XMLStringAttribute( ActionInput, "Map" );
 
-				if( Tools::XMLStringAttribute( ActionInput, "Type" ) ==  "Keyboard" )
-					_AddKeyToActionKey( oNewActionKey, ( this->*m_pStringToKey[ m_bIsKeyboardFrench ] )( mapedKey ) );
-				else if( Tools::XMLStringAttribute( ActionInput, "Type" ) ==  "Mouse" )
-					_AddMouseButtonToActionKey( oNewActionKey, StringToMouseButton( mapedKey ) );
-				else if( Tools::XMLStringAttribute( ActionInput, "Type" ) ==  "JoystickButton" )
-					_AddJoystickButtonToActionKey( oNewActionKey, StringToJoystickButton( mapedKey ) );
-				else if( Tools::XMLStringAttribute( ActionInput, "Type" ) ==  "JoystickAxis" )
+				if( mapedKey.empty() == false )
 				{
-					const ActionKey::AxisInput axis_input = string_to_axis_input( mapedKey );
+					if( Tools::XMLStringAttribute( ActionInput, "Type" ) == "Keyboard" )
+						_add_key_bind_to_action_key( oNewActionKey, mapedKey );
+					else if( Tools::XMLStringAttribute( ActionInput, "Type" ) == "Mouse" )
+						_AddMouseButtonToActionKey( oNewActionKey, StringToMouseButton( mapedKey ) );
+					else if( Tools::XMLStringAttribute( ActionInput, "Type" ) == "JoystickButton" )
+						_AddJoystickButtonToActionKey( oNewActionKey, StringToJoystickButton( mapedKey ) );
+					else if( Tools::XMLStringAttribute( ActionInput, "Type" ) == "JoystickAxis" )
+					{
+						const ActionKey::AxisInput axis_input = string_to_axis_input( mapedKey );
 
-					_AddJoystickAxisToActionKey( oNewActionKey, axis_input );
+						_AddJoystickAxisToActionKey( oNewActionKey, axis_input );
+					}
 				}
 
 				ActionInput = ActionInput->NextSiblingElement();
@@ -1872,10 +2091,47 @@ namespace fzn
 		if( _key >= sf::Keyboard::Key::KeyCount )
 			return;
 
-		if( std::ranges::find( _action_key.m_oKeyboardBinds, ActionKey::BindInput{ _key } ) != _action_key.m_oKeyboardBinds.end() )
+		ActionKey::KeyBind new_combo{ .m_key = _key };
+
+		if( std::ranges::find( _action_key.m_oKeyboardBinds, ActionKey::BindInput{ new_combo } ) != _action_key.m_oKeyboardBinds.end() )
 			return;
 
-		_action_key.m_oKeyboardBinds.push_back( _key );
+		_action_key.m_oKeyboardBinds.push_back( new_combo );
+	}
+
+	void InputManager::_add_key_bind_to_action_key( ActionKey& _action_key, const std::string& _key_bind )
+	{
+		std::regex reg( "\\w+" );
+		std::smatch matches;
+		std::regex_match( _key_bind, matches, reg );
+
+		ActionKey::KeyBind new_combo;
+		std::string::const_iterator text_iter = _key_bind.cbegin();
+
+		while( std::regex_search( text_iter, _key_bind.end(), matches, reg ) )
+		{
+			sf::Keyboard::Key key = ( this->*m_pStringToKey[ m_bIsKeyboardFrench ] )( std::string( matches[ 0 ].first, matches[ 0 ].second ) );
+
+			if( key == sf::Keyboard::Unknown )
+			{
+				FZN_COLOR_LOG( DBG_MSG_COL_RED, "Invalid key bind : %s", _key_bind.c_str() );
+				return;
+			}
+
+			if( is_modifier_key( key ) )
+				new_combo.m_modifiers.push_back( key );
+			else
+				new_combo.m_key = key;
+
+			text_iter = matches[ 0 ].second;
+		}
+
+		_sort_key_bind( new_combo.m_modifiers );
+
+		if( std::ranges::find( _action_key.m_oKeyboardBinds, ActionKey::BindInput{ new_combo } ) != _action_key.m_oKeyboardBinds.end() )
+			return;
+
+		_action_key.m_oKeyboardBinds.push_back( new_combo );
 	}
 
 	void InputManager::_AddMouseButtonToActionKey( ActionKey& _action_key, sf::Mouse::Button _mouse_button )
@@ -1919,7 +2175,7 @@ namespace fzn
 			{
 				bind_input.visit<void>( Overloaded
 					{
-						[&]( sf::Keyboard::Key _key ) { AddInputToScan( _key ); },
+						[&]( const ActionKey::KeyBind& _key_bind ) { add_input_to_scan( _key_bind ); },
 						[&]( sf::Mouse::Button _button ) { AddInputToScan( _button ); },
 						[&]( uint32_t _button ) {},
 						[&]( ActionKey::AxisInput _axis ) {}
@@ -1928,13 +2184,53 @@ namespace fzn
 		}
 	}
 
-	const ActionKey* InputManager::_GetActionKey( sf::Keyboard::Key _key ) const
+	void InputManager::_add_currently_pressed_modifier( sf::Keyboard::Key _key )
+	{
+		if( is_modifier_key( _key ) == false || std::ranges::find( m_currently_pressed_modifiers, _key ) != m_currently_pressed_modifiers.end() )
+			return;
+
+		m_currently_pressed_modifiers.push_back( _key );
+		_sort_key_bind( m_currently_pressed_modifiers );
+	}
+
+	void InputManager::_remove_currently_pressed_modifier( sf::Keyboard::Key _released_key )
+	{
+		if( is_modifier_key( _released_key ) == false )
+			return;
+
+		std::erase_if( m_currently_pressed_modifiers, [_released_key]( const sf::Keyboard::Key& _key )
+		{
+			return _key == _released_key;
+		} );
+	}
+
+	void InputManager::_sort_key_bind( Keys& _key_bind )
+	{
+		std::ranges::sort( _key_bind, [&]( sf::Keyboard::Key _a, sf::Keyboard::Key _b )
+		{
+			const bool key_a_sorted = modifiers_order.count( _a ) > 0;
+			const bool key_b_sorted = modifiers_order.count( _b ) > 0;
+
+			if( key_a_sorted == false && key_b_sorted == false )
+				return _a < _b;
+
+			if( key_a_sorted == false )
+				return false;
+
+			if( key_b_sorted == false )
+				return true;
+
+			return modifiers_order.at( _a ) < modifiers_order.at( _b );
+		});
+	}
+
+	const ActionKey* InputManager::_GetActionKey( const ActionKey::KeyBind& _key_bind ) const
 	{
 		for( const ActionKey& oActionKey : m_oCustomActionKeys )
 		{
 			for( const ActionKey::BindInput& rBind : oActionKey.m_oKeyboardBinds )
 			{
-				if( rBind == _key )
+				if( rBind == _key_bind )
 					return &oActionKey;
 			}
 		}
@@ -2005,7 +2301,7 @@ namespace fzn
 
 		static const Overloaded input_string_overloads
 		{
-			[&]( sf::Keyboard::Key _key ) -> std::string						{ return KeyToString( _key ); },
+			[&]( const ActionKey::KeyBind& _key_bind ) -> std::string			{ return key_bind_to_string( _key_bind ); },
 			[&]( sf::Mouse::Button _button ) -> std::string						{ return MouseButtonToString( _button ); },
 			[&]( uint32_t _joystick_button ) -> std::string						{ return JoystickButtonToString( _joystick_button ); },
 			[&]( const ActionKey::AxisInput& _joystick_axis ) -> std::string	{ return axis_input_to_string( _joystick_axis ); }
@@ -2049,6 +2345,14 @@ namespace fzn
 			return false;
 
 		return m_keyStates[ _key ] == _status_to_check;
+	}
+
+	bool InputManager::_check_keyboard_key_state_flag( sf::Keyboard::Key _key, StatusMask _state_mask ) const
+	{
+		if( _key >= sf::Keyboard::KeyCount )
+			return false;
+
+		return Tools::mask_has_flag_raised( _state_mask, 1 << m_keyStates[ _key ] );
 	}
 
 	bool InputManager::_check_mouse_button_state( sf::Mouse::Button _button, Status _status_to_check ) const
@@ -2613,6 +2917,14 @@ namespace fzn
 		case sf::Keyboard::Num7:		return "7";
 		case sf::Keyboard::Num8:		return "8";
 		case sf::Keyboard::Num9:		return "9";
+		case sf::Keyboard::LControl:	return "LControl";
+		case sf::Keyboard::LShift:		return "LShift";
+		case sf::Keyboard::LAlt:		return "LAlt";
+		case sf::Keyboard::LSystem:		return "LSystem";
+		case sf::Keyboard::RControl:	return "RControl";
+		case sf::Keyboard::RShift:		return "RShift";
+		case sf::Keyboard::RAlt:		return "RAlt";
+		case sf::Keyboard::RSystem:		return "RSystem";
 		case sf::Keyboard::LBracket:	return "LBracket";
 		case sf::Keyboard::RBracket:	return "RBracket";
 		case sf::Keyboard::SemiColon:	return "SemiColon";
@@ -2628,6 +2940,12 @@ namespace fzn
 		case sf::Keyboard::Return:		return "Return";
 		case sf::Keyboard::BackSpace:	return "BackSpace";
 		case sf::Keyboard::Tab:			return "Tab";
+		case sf::Keyboard::PageUp:		return "PageUp";
+		case sf::Keyboard::PageDown:	return "PageDown";
+		case sf::Keyboard::End:			return "End";
+		case sf::Keyboard::Home:		return "Home";
+		case sf::Keyboard::Insert:		return "Inser";
+		case sf::Keyboard::Delete:		return "Delete";
 		case sf::Keyboard::Add:			return "Add";
 		case sf::Keyboard::Subtract:	return "Substract";
 		case sf::Keyboard::Multiply:	return "Multiply";
@@ -2662,10 +2980,31 @@ namespace fzn
 		case sf::Keyboard::Left:		return "Left";
 		case sf::Keyboard::Right:		return "Right";
 		case sf::Keyboard::Escape:		return "Escape";
-		case sf::Keyboard::LShift:		return "LShift";
-		case sf::Keyboard::RShift:		return "RShift";
 		default:						return "";
 		};
+	}
+
+	std::string InputManager::key_bind_to_string( const ActionKey::KeyBind& _key_bind ) const
+	{
+		std::string result{};
+		std::string key_string{};
+
+		auto key_to_string = [&result,&key_string,this]( sf::Keyboard::Key _key )
+		{
+			key_string = KeyToString( _key );
+
+			if( key_string.empty() == false )
+				result += ( result.empty() ? "" : " + " ) + key_string;
+		};
+
+		for( sf::Keyboard::Key key : _key_bind.m_modifiers )
+		{
+			key_to_string( key );
+		}
+
+		key_to_string( _key_bind.m_key );
+
+		return result;
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------

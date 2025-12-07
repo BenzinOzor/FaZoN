@@ -38,12 +38,24 @@ namespace fzn
 		JoystickAxisDirection_Count
 	};
 
+	using Keys = std::vector< sf::Keyboard::Key >;
+
 	//=========================================================
 	//========================ActionKey========================
 	//=========================================================
 
 	struct ActionKey
 	{
+		struct KeyBind
+		{
+			bool operator==( const KeyBind& _other ) const
+			{
+				return m_modifiers == _other.m_modifiers && m_key == _other.m_key;
+			}
+
+			Keys m_modifiers;
+			sf::Keyboard::Key m_key{ sf::Keyboard::Unknown };
+		};
 		struct AxisInput
 		{
 			bool operator==( const AxisInput& _other ) const
@@ -55,7 +67,7 @@ namespace fzn
 			JoystickAxisDirection	m_axis_direction	{ JoystickAxisDirection_Full };
 		};
 
-		using BindInput = fzn::Variant< sf::Keyboard::Key, sf::Mouse::Button, uint32_t, AxisInput >;
+		using BindInput = fzn::Variant< KeyBind, sf::Mouse::Button, uint32_t, AxisInput >;
 		using Binds = std::vector< BindInput >;
 
 		std::string			m_sName;
@@ -90,6 +102,14 @@ namespace fzn
 			Up,
 			nbStates
 		};
+		enum StatusFlag
+		{
+			StatusFlag_Pressed		= 1 << Status::Pressed,
+			StatusFlag_Down			= 1 << Status::Down,
+			StatusFlag_Released		= 1 << Status::Released,
+			StatusFlag_Up			= 1 << Status::Up
+		};
+		typedef sf::Uint8 StatusMask;
 
 		enum BindType
 		{
@@ -190,7 +210,7 @@ namespace fzn
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		bool IsKeyPressed( sf::Keyboard::Key _key ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		//Key press test (maintained donw)
+		//Key press test (maintained down)
 		//Parameter : Concerned key
 		//Return value : The key is down (true) or not
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -208,6 +228,40 @@ namespace fzn
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		bool IsKeyUp( sf::Keyboard::Key _key ) const;
 		Status get_key_state( sf::Keyboard::Key _key ) const;
+		bool is_modifier_key( sf::Keyboard::Key _key ) const;
+
+		/////////////////KEY COMBOS/////////////////
+
+		/**
+		* @brief Single press test on a keys combo (transition from Up to Down)
+		* @param _key_bind : Concerned keys combo
+		* @return True if the keys combo is pressed (modifiers pressed/down, key pressed)
+		**/
+		bool is_key_bind_pressed( const ActionKey::KeyBind& _key_bind ) const;
+		/**
+		* @brief Press test on a keys combo (maintained down)
+		* @param _key_bind : Concerned keys combo
+		* @return True if all the modifiers and the key are down
+		**/
+		bool is_key_bind_down( const ActionKey::KeyBind& _key_bind ) const;
+		/**
+		* @brief Release test on a keys combo (transition from Down to Up)
+		* @param _key_bind : Concerned keys combo
+		* @return True if the keys combo is released (one - modifier or key - released, all others down)
+		**/
+		bool is_key_bind_released( const ActionKey::KeyBind& _key_bind ) const;
+		/**
+		* @brief Keys combo not pressed test (staying up)
+		* @param _key_bind : Concerned keys combo
+		* @return True if all the keys are up
+		**/
+		bool is_key_bind_up( const ActionKey::KeyBind& _key_bind ) const;
+		/**
+		* @brief Retrieve the state of the keys combo
+		* @param _key_bind : Concerned keys combo
+		* @return All keys Down: Down | All keys Down/Pressed + one Pressed: Pressed | All keys Up: Up | All keys Up/Released + one Released: Released
+		**/
+		Status get_key_bind_state( const ActionKey::KeyBind& _key_bind ) const;
 
 		/////////////////ACTIONKEYS TESTS/////////////////
 
@@ -514,6 +568,7 @@ namespace fzn
 		InputSystems GetInputSystem() const;
 		void SetInputSystem( InputSystems eSystem );
 		void AddInputToScan( sf::Keyboard::Key _eInput );
+		void add_input_to_scan( const ActionKey::KeyBind& _key_bind );
 		void AddInputToScan( sf::Mouse::Button _eInput );
 
 
@@ -583,14 +638,18 @@ namespace fzn
 		//Reads the XML file containing corresponding keys to each game action
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		void LoadActionKeysFromXML( ActionKeys& _oActionKeysArray, const std::string& _sXMLPath, bool _bCrypted );
-		
+
 		void _AddKeyToActionKey( ActionKey& _action_key, sf::Keyboard::Key _key );
+		void _add_key_bind_to_action_key( ActionKey& _action_key, const std::string& _key_bind );
 		void _AddMouseButtonToActionKey( ActionKey& _action_key, sf::Mouse::Button _mouse_button );
 		void _AddJoystickButtonToActionKey( ActionKey& _action_key, uint32_t _joystick_button );
 		void _AddJoystickAxisToActionKey( ActionKey& _action_key, const ActionKey::AxisInput& _axis_input );
 		void _add_action_keys_to_scan_list();
+		void _add_currently_pressed_modifier( sf::Keyboard::Key _key );
+		void _remove_currently_pressed_modifier( sf::Keyboard::Key _released_key );
+		void _sort_key_bind( Keys& _key_bind );
 
-		const ActionKey* _GetActionKey( sf::Keyboard::Key _key ) const;
+		const ActionKey* _GetActionKey( const ActionKey::KeyBind& _key ) const;
 		const ActionKey* _GetActionKey( sf::Mouse::Button _mouse_button ) const;
 		const ActionKey* _GetActionKey( uint32_t _joystick_button ) const;
 		const ActionKey* _GetActionKey( const ActionKey::AxisInput& _axis_input ) const;
@@ -600,6 +659,7 @@ namespace fzn
 		std::string _GetDeviceTag( bool _bKeyboard ) const;
 
 		bool _check_keyboard_key_state( sf::Keyboard::Key _key, Status _status_to_check ) const;
+		bool _check_keyboard_key_state_flag( sf::Keyboard::Key _key, StatusMask _state_mask ) const;
 		bool _check_mouse_button_state( sf::Mouse::Button _button, Status _status_to_check ) const;
 		bool _check_joystick_button_state( int8_t _id, uint32_t _button, Status _status_to_check ) const;
 		bool _check_joystick_axis_state( int8_t _id, const ActionKey::AxisInput& _axis_input, Status _status_to_check ) const;
@@ -644,6 +704,7 @@ namespace fzn
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		sf::Keyboard::Key StringToENKey( const std::string& _key ) const;
 		std::string KeyToString( const sf::Keyboard::Key& _key ) const;
+		std::string key_bind_to_string( const ActionKey::KeyBind& _key_bind ) const;
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Returns the corresponding mouse button to a string
 		//Parameter : Concerned string
@@ -685,7 +746,8 @@ namespace fzn
 		char( InputManager::*m_pGetUpperKeyChar[2] )( const sf::Keyboard::Key& _key ) const;		//Function pointer to the key upper char accessor (FR or EN)
 		sf::Keyboard::Key( InputManager::*m_pStringToKey[2] )( const std::string& _key ) const;		//Function pointer to the key upper char accessor (FR or EN)
 		HKL m_keyboardLayout;																		//Container of the keyboard layout
-		INT8 m_bIsKeyboardFrench;																	//Indicates if the keyboard layout is French (true) or not 
+		INT8 m_bIsKeyboardFrench;																	//Indicates if the keyboard layout is French (true) or not
+		std::vector< sf::Keyboard::Key > m_currently_pressed_modifiers;
 
 		/////////////////MOUSE/////////////////
 
