@@ -1976,7 +1976,28 @@ namespace fzn
 			for( int iInput = 0; iInput < iScannedInputSize; ++iInput )
 			{
 				iCurrentKey = ( *pScannedInputs )[ iInput ];
-				pInputList[ iInputType ][ iCurrentKey ] = ( iInputType == 0 ) ? sf::Keyboard::isKeyPressed( ( sf::Keyboard::Key )iCurrentKey ) == true : sf::Mouse::isButtonPressed( ( sf::Mouse::Button )iCurrentKey ) == true;
+
+				if( iInputType == 0 )
+				{
+					const auto current_key{ static_cast< sf::Keyboard::Key >( iCurrentKey ) };
+
+					if( sf::Keyboard::isKeyPressed( current_key ) )
+					{
+						if( pInputList[ iInputType ][ iCurrentKey ] == false && is_modifier_key( current_key ) )
+							_add_currently_pressed_modifier( current_key );
+
+						pInputList[ iInputType ][ iCurrentKey ] = TRUE;
+					}
+					else
+					{
+						if( pInputList[ iInputType ][ iCurrentKey ] && is_modifier_key( current_key ) )
+							_remove_currently_pressed_modifier( current_key );
+
+						pInputList[ iInputType ][ iCurrentKey ] = FALSE;
+					}
+				}
+				else
+					pInputList[ iInputType ][ iCurrentKey ] = sf::Mouse::isButtonPressed( ( sf::Mouse::Button )iCurrentKey ) == true;
 			}
 		}
 	}
