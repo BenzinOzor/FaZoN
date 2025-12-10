@@ -238,16 +238,41 @@ namespace fzn
 			return sFileName.substr( 0, sFileName.find_last_of( "." ) );
 		}
 
-		StringVector split( std::string_view _text, char _delimiter /*= ' '*/ )
+		StringVector split( std::string_view _text, char _delimiter /*= ' '*/, bool _trim_ends /*= true*/ )
 		{
 			auto line_stream = std::stringstream( _text.data() );
 			auto item = std::string{};
 			auto items = StringVector{};
 
 			while( std::getline( line_stream, item, _delimiter ) )
-				items.push_back( item );
+			{
+				if( _trim_ends )
+					items.push_back( std::string{ trim_ends( item ) } );
+				else
+					items.push_back( item );
+			}
 
 			return items;
+		}
+
+		std::string_view trim_ends( std::string_view _text )
+		{
+			if( _text.empty() )
+				return {};
+
+			auto iBegin = 0L;
+			auto iEnd = std::max( 0UL, _text.size() - 1L );
+
+			while( iBegin < iEnd && std::isspace( _text[ iBegin ] ) )
+				++iBegin;
+
+			while( iBegin < iEnd && std::isspace( _text[ iEnd ] ) )
+				--iEnd;
+
+			if( iBegin == ( iEnd + 1L ) )
+				return {};
+
+			return _text.substr( iBegin, ( iEnd + 1L ) - iBegin );
 		}
 
 		bool is_number( std::string_view _text )

@@ -73,7 +73,8 @@ namespace fzn
 		FZN_EXPORT void			ConvertToAntiSlashes( std::string& _sPath );
 		FZN_EXPORT std::string	ConvertToAntiSlashes( const std::string& _sPath );
 		FZN_EXPORT std::string	GetFileNameFromPath( const std::string& _sPath, bool _keep_extension = false );
-		FZN_EXPORT StringVector	split( std::string_view _text, char _delimiter = ' ' );
+		FZN_EXPORT StringVector	split( std::string_view _text, char _delimiter = ' ', bool _trim_ends = true );
+		FZN_EXPORT std::string_view trim_ends( std::string_view _text );
 		FZN_EXPORT bool			is_number( std::string_view _text );
 		FZN_EXPORT std::vector< int > extract_numbers( std::string_view _text, char _delimiter = ' ' );
 

@@ -186,6 +186,23 @@ namespace ImGui_fzn
 		}
 	}
 
+	void bicolor_number_with_leading_zeros( const ImVec4& _color_1, const ImVec4& _color_2, uint32_t _nb_zeros, uint32_t _number )
+	{
+		ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, { 0.f, 0.f } );
+
+		ImGui::TextColored( _color_1, "%.*d", _nb_zeros, 0 );
+		ImGui::SameLine();
+		ImGui::TextColored( _color_2, "%d", _number );
+		/*const int zeros_to_add{ current_palette->m_nb_digits_in_IDs - fzn::Math::get_number_of_digits( _id ) };
+
+		if( zeros_to_add <= 0 )
+			return result;
+
+		result.insert( 0, zeros_to_add, '0' );*/
+
+		ImGui::PopStyleVar();
+	}
+
 	std::string convert_markdown_to_imgui_format( const std::string_view _text, const ImGuiFormatOptions* _format_options /*= nullptr */ )
 	{
 		auto formated_text = std::string{ _text };

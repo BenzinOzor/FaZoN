@@ -135,6 +135,8 @@ namespace ImGui_fzn
 		ImGui::TextColored( _color_2, _text_2_fmt.data(), _args... );
 	}
 
+	FZN_EXPORT void bicolor_number_with_leading_zeros( const ImVec4& _color_1, const ImVec4& _color_2, uint32_t _nb_zeros, uint32_t _number );
+
 	FZN_EXPORT std::string convert_markdown_to_imgui_format( const std::string_view _text, const ImGui_fzn::ImGuiFormatOptions* _format_options = nullptr );
 	//FZN_EXPORT std::string create_color_tag( const ImVec4& _color, const ImGui_fzn::ImGuiFormatOptions* _format_options = nullptr );
 
