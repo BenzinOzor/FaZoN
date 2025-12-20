@@ -225,6 +225,12 @@ namespace fzn
 		FZN_EXPORT void Text_SetRelativOrigin( sf::Text* _text, const sf::Vector2f& _vRatios );
 		FZN_EXPORT std::string Sprintf( const char* pFormat, ... );
 
+		template< typename ...Args >
+		void sprintf_cat( std::string& _str, const char* _format, Args... _args )
+		{
+			_str += Sprintf( _format, _args... );
+		}
+
 
 		/////////////////DISPLAY FUNCTIONS/////////////////
 
