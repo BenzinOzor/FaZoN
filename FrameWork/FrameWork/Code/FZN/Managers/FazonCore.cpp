@@ -14,11 +14,11 @@
 #include "FZN/Managers/InputManager.h"
 #include "FZN/Managers/DataManager.h"
 #include "FZN/Managers/AnimManager.h"
-//#include "FZN/Managers/WindowManager.h"
 #include "FZN/Managers/AudioManager.h"
 #include "FZN/Managers/SteeringManager.h"
 #include "FZN/Managers/MessageManager.h"
 #include "FZN/Managers/AIManager.h"
+#include "FZN/Managers/LocalisationManager.h"
 #include "FZN/Managers/FazonCore.h"
 #include "FZN/Tools/Callbacks.h"
 
@@ -45,20 +45,6 @@ namespace fzn
 		m_sSaveFolderName = "FaZoN_App";
 
 		m_sSaveFolderPath = "";
-		m_eProjectType = FZNProjectType::COUNT_PROJECT_TYPES;
-
-		m_iActivatedModulesNbr = 0;
-
-		m_pInputManager = nullptr;
-		m_pDataManager = nullptr;
-		m_pAnimManager = nullptr;
-		m_pWindowManager = nullptr;
-		m_pAudioManager = nullptr;
-		m_pSteeringManager = nullptr;
-		m_pAIManager = nullptr;
-		m_pMessageManager = nullptr;
-
-		m_bExitApp = false;
 
 		m_console = GetConsoleWindow();
 
@@ -169,13 +155,17 @@ namespace fzn
 		{
 			m_pAnimManager = new AnimManager;
 			m_iActivatedModulesNbr++;
-
-			//m_oThread = new sf::Thread( &AnimManager::Update, m_pAnimManager );
 		}
 
 		if( Tools::mask_has_flag_raised( _oDesc.m_uModules, CoreModuleFlags_AudioModule ) && m_pAudioManager == nullptr )
 		{
 			m_pAudioManager = new AudioManager( _oDesc.m_bUseFMOD );
+			m_iActivatedModulesNbr++;
+		}
+
+		if( Tools::mask_has_flag_raised( _oDesc.m_uModules, CoreModuleFlags_LocalisationModule ) && m_localisation_manager == nullptr )
+		{
+			m_localisation_manager = new Localisation::Manager();
 			m_iActivatedModulesNbr++;
 		}
 	}
@@ -236,6 +226,13 @@ namespace fzn
 				m_iActivatedModulesNbr++;
 			}
 			break;
+		case CoreModules::LocalisationModule:
+			if( m_localisation_manager == nullptr )
+			{
+				m_localisation_manager = new Localisation::Manager;
+				m_iActivatedModulesNbr++;
+			}
+			break;
 		default:
 			break;
 		};
@@ -283,10 +280,6 @@ namespace fzn
 
 		if( m_pAnimManager != nullptr )
 		{
-			/*m_oThread->terminate();
-
-			delete m_oThread;*/
-
 			delete m_pAnimManager;
 			m_pAnimManager = nullptr;
 			if( m_iActivatedModulesNbr > 0 ) m_iActivatedModulesNbr--;
@@ -324,6 +317,13 @@ namespace fzn
 		{
 			delete m_pMessageManager;
 			m_pMessageManager = nullptr;
+			if( m_iActivatedModulesNbr > 0 ) m_iActivatedModulesNbr--;
+		}
+
+		if( m_localisation_manager != nullptr )
+		{
+			delete m_localisation_manager;
+			m_localisation_manager = nullptr;
 			if( m_iActivatedModulesNbr > 0 ) m_iActivatedModulesNbr--;
 		}
 	}
@@ -396,6 +396,14 @@ namespace fzn
 			{
 				delete m_pMessageManager;
 				m_pMessageManager = nullptr;
+				m_iActivatedModulesNbr--;
+			}
+			break;
+		case CoreModules::LocalisationModule:
+			if( m_localisation_manager != nullptr )
+			{
+				delete m_localisation_manager;
+				m_localisation_manager = nullptr;
 				m_iActivatedModulesNbr--;
 			}
 			break;
@@ -692,6 +700,11 @@ namespace fzn
 		return m_pMessageManager;
 	}
 
+	Localisation::Manager* FazonCore::get_localisation_manager()
+	{
+		return m_localisation_manager;
+	}
+
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	//Accessor on the application global timer
 	//Return value : Elapsed time
@@ -728,6 +741,8 @@ namespace fzn
 			return m_pSteeringManager != nullptr;
 		case CoreModules::MessageModule:
 			return m_pMessageManager != nullptr;
+		case CoreModules::LocalisationModule:
+			return m_localisation_manager != nullptr;
 		default:
 			return FALSE;
 		};

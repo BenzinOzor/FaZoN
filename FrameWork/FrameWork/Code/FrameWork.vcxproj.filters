@@ -243,6 +243,9 @@
     <ClInclude Include="FZN\Tools\Chrono.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FZN\Managers\LocalisationManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FZN\Managers\AIManager.cpp">
@@ -402,6 +405,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FZN\Tools\Chrono.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FZN\Managers\LocalisationManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

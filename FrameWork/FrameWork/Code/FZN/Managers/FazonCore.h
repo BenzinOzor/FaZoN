@@ -44,6 +44,12 @@ namespace fzn
 	class InputManager;
 	class MessageManager;
 	class SteeringManager;
+	
+	namespace Localisation
+	{
+		class Manager;
+	}
+
 	typedef void(*CallBack)(void*);					//Function pointer
 
 
@@ -59,18 +65,20 @@ namespace fzn
 			AudioModule,
 			SteeringModule,
 			MessageModule,
+			LocalisationModule,
 			CoreModulesCount
 		};
 
 		enum CoreModuleFlags_ : uint8_t
 		{
-			CoreModuleFlags_InputModule		= 1 << CoreModules::InputModule,
-			CoreModuleFlags_DataModule		= 1 << CoreModules::DataModule,
-			CoreModuleFlags_AnimModule		= 1 << CoreModules::AnimModule,
-			CoreModuleFlags_WindowModule	= 1 << CoreModules::WindowModule,
-			CoreModuleFlags_AudioModule		= 1 << CoreModules::AudioModule,
-			CoreModuleFlags_SteeringModule	= 1 << CoreModules::SteeringModule,
-			CoreModuleFlags_MessageModule	= 1 << CoreModules::MessageModule,
+			CoreModuleFlags_InputModule			= 1 << CoreModules::InputModule,
+			CoreModuleFlags_DataModule			= 1 << CoreModules::DataModule,
+			CoreModuleFlags_AnimModule			= 1 << CoreModules::AnimModule,
+			CoreModuleFlags_WindowModule		= 1 << CoreModules::WindowModule,
+			CoreModuleFlags_AudioModule			= 1 << CoreModules::AudioModule,
+			CoreModuleFlags_SteeringModule		= 1 << CoreModules::SteeringModule,
+			CoreModuleFlags_MessageModule		= 1 << CoreModules::MessageModule,
+			CoreModuleFlags_LocalisationModule	= 1 << CoreModules::LocalisationModule,
 		};
 
 		using CoreModulesMask = uint8_t;
@@ -235,6 +243,7 @@ namespace fzn
 		//Return value : Message manager
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		MessageManager* GetMessageManager();
+		Localisation::Manager* get_localisation_manager();
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//Accessor on the application global timer
 		//Return value : Elapsed time
@@ -292,8 +301,8 @@ namespace fzn
 		void PushEvent( void* _pUserData );
 		const Event& GetEvent() const;
 
+		
 
-		sf::Thread*				m_oThread;
 	private :
 		/////////////////CONSTRUCTOR / DESTRUCTOR/////////////////
 
@@ -317,22 +326,23 @@ namespace fzn
 		static FazonCore* m_singleton;							//Unic instance
 		
 		std::string				m_sProjectName;
-		FZNProjectType			m_eProjectType;
-		bool					m_bUseCryptedData;
+		FZNProjectType			m_eProjectType{ FZNProjectType::COUNT_PROJECT_TYPES };
+		bool					m_bUseCryptedData{ false };
 
-		InputManager*			m_pInputManager;
-		DataManager*			m_pDataManager;
-		AnimManager*			m_pAnimManager;
-		WindowManager*			m_pWindowManager;
-		AudioManager*			m_pAudioManager;
-		SteeringManager*		m_pSteeringManager;
-		AIManager*				m_pAIManager;
-		MessageManager*			m_pMessageManager;
+		InputManager*			m_pInputManager{ nullptr };
+		DataManager*			m_pDataManager{ nullptr };
+		AnimManager*			m_pAnimManager{ nullptr };
+		WindowManager*			m_pWindowManager{ nullptr };
+		AudioManager*			m_pAudioManager{ nullptr };
+		SteeringManager*		m_pSteeringManager{ nullptr };
+		AIManager*				m_pAIManager{ nullptr };
+		MessageManager*			m_pMessageManager{ nullptr };
+		Localisation::Manager*	m_localisation_manager{ nullptr };
 		
 		DataCallbacksHolder		m_oCallbacksHolder;
-		INT8					m_bExitApp;
+		bool					m_bExitApp{ false };
 
-		int						m_iActivatedModulesNbr;		//Number of modules created.
+		int						m_iActivatedModulesNbr{ 0 };		//Number of modules created.
 
 		sf::Clock				m_GlobalTime;					//Application global timer.
 
