@@ -27,6 +27,8 @@ namespace TR
 		oIO.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
 		ImGui_fzn::s_ImGuiFormatOptions.m_pFontRegular = oIO.Fonts->AddFontFromFileTTF( DATAPATH( "Display/CascadiaMono.ttf" ), 14.f );
+		ImGui_fzn::s_ImGuiFormatOptions.m_pFontBold = oIO.Fonts->AddFontFromFileTTF( DATAPATH( "Display/CascadiaMono-Bold.otf" ), 14.f );
+		ImGui_fzn::s_ImGuiFormatOptions.m_pFontItalic = oIO.Fonts->AddFontFromFileTTF( DATAPATH( "Display/CascadiaMono-Italic.otf" ), 14.f );
 	}
 
 	TranslatR::~TranslatR()
@@ -150,56 +152,132 @@ namespace TR
 
 	}
 
+	static float get_max_entry_width( float _letter_width, const fzn::Localisation::Entries& _entries )
+	{
+		float max_width{ 0.f };
+
+		for( const fzn::Localisation::Entry& entry : _entries )
+		{
+			// Approximate text size to be lightweight.
+			if( _letter_width * entry.m_name.size() > max_width )
+				max_width = _letter_width * entry.m_name.size();
+		}
+
+		return max_width;
+	}
+
 	/**
 	* @brief Display and manage localisation entries.
 	**/
 	void TranslatR::_display_entries()
 	{
 		const uint32_t nb_columns{ m_languages.size() + 2 };		// One column per language and two for entries IDs (number) and name (future enum)
+		const float letter_width{ ImGui::CalcTextSize( "W" ).x };
+		const float first_column_width{ fzn::Math::get_number_of_digits( m_entries.size() ) * letter_width };
 		uint32_t entry_id{ 0 };
 
 		ImGui::Button( "Add Language" );
 		ImGui::PushStyleColor( ImGuiCol_FrameBg, ImGui_fzn::color::transparent );
 
 		ImGui::BeginChild( "LocEntriesChild", ImVec2{ 0.f, ImGui::GetContentRegionAvail().y } );
-		if( ImGui::BeginTable( "LocEntries", nb_columns, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg ) )
+		if( ImGui::BeginTable( "LocEntries", nb_columns, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY ) )
 		{
-			ImGui::TableSetupColumn( "#" );
-			ImGui::TableSetupColumn( "Entry" );
-			
-			for( const std::string& language : m_languages )
-				ImGui::TableSetupColumn( language.c_str() );
+			ImGui::PushStyleVar( ImGuiStyleVar_FramePadding, ImVec2{ 0.f, 0.f } );
+			ImGui::TableSetupColumn( "#", ImGuiTableColumnFlags_WidthFixed, first_column_width );
+			ImGui::TableSetupColumn( "Entry", ImGuiTableColumnFlags_WidthFixed, get_max_entry_width( letter_width, m_entries ) );
 
-			ImGui::TableSetupScrollFreeze( 0, 1 );
+			for( const std::string& language : m_languages )
+				ImGui::TableSetupColumn( language.c_str(), ImGuiTableColumnFlags_WidthFixed, 600.f );
+
+			ImGui::TableSetupScrollFreeze( 2, 1 );
 			ImGui::TableHeadersRow();
+
+			StringVector missing_translations;
+			missing_translations.reserve( m_languages.size() );
+			std::string missing_translations_tooltip;
 
 			for( fzn::Localisation::Entry& entry : m_entries )
 			{
+				missing_translations.clear();
+				missing_translations_tooltip.clear();
+
 				ImGui::PushID( &entry );
 
 				ImGui::TableNextColumn();
+				ImGui::AlignTextToFramePadding();
 				ImGui::Text( "%d", entry_id );
 
 				ImGui::TableNextColumn();
 				ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
+				uint32_t nb_mmissing_translations{ 0 };
+				uint8_t translation_id{ 0 };
+
+				// First pass on the translations to determine which languages are missing. It has to be done here so we know if we have to change the entry text color or not.
+				for( std::string& translation : entry.m_translations )
+				{
+					if( translation.empty() )
+					{
+						ImGui_fzn::simple_tooltip_on_hover( translation );
+						missing_translations.push_back( m_languages[ translation_id ] );
+						++nb_mmissing_translations;
+					}
+				}
+
+				if( nb_mmissing_translations > 0 )
+				{
+					ImGui::PushStyleColor( ImGuiCol_Text, ImGui_fzn::color::light_red );
+					ImGui::PushFont( ImGui_fzn::s_ImGuiFormatOptions.m_pFontBold );
+				}
+
 				ImGui::InputTextWithHint("##EntryName", "<Entry Name>", &entry.m_name );
 
-				uint8_t translation_id{ 0 };
+				if( nb_mmissing_translations > 0 )
+				{
+					ImGui::PopFont();
+					ImGui::PopStyleColor();
+				}
+
+				const bool entry_hovered{ ImGui::IsItemHovered() };
+
+				translation_id = 0;
 				for( std::string& translation : entry.m_translations )
 				{
 					ImGui::TableNextColumn();
 					ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
+
+					const bool no_translation{ translation.empty() };
+
+					if( no_translation )
+						ImGui::PushFont( ImGui_fzn::s_ImGuiFormatOptions.m_pFontItalic );
+
 					ImGui::InputTextWithHint( fzn::Tools::Sprintf( "##%s_translation_%d", entry.m_name.c_str(), translation_id ).c_str(), "<No Translation>", &translation );
 
-					if( translation.empty() == false )
+					if( no_translation )
+						ImGui::PopFont();
+					else
 						ImGui_fzn::simple_tooltip_on_hover( translation );
+
 					++translation_id;
 				}
+
+				if( entry_hovered && missing_translations.empty() == false )
+				{
+					for( const std::string& language : missing_translations )
+					{
+						fzn::Tools::sprintf_cat( missing_translations_tooltip, "%s%s", missing_translations_tooltip.empty() ? "" : ", ", language.c_str() );
+					}
+
+					ImGui::SetTooltip( "%d missing translations: %s", missing_translations.size(), missing_translations_tooltip.c_str() );
+				}
+
+				if( ImGui::TableGetHoveredRow() - 1 == entry_id )
+					ImGui::GetCurrentTable()->RowBgColor[ 1 ] = ImGui::GetColorU32( ImGui::GetStyleColorVec4( ImGuiCol_Header ) );
 
 				++entry_id;
 				ImGui::PopID();
 			}
 
+			ImGui::PopStyleVar();
 			ImGui::EndTable();
 		}
 

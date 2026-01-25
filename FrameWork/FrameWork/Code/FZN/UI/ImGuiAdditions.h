@@ -80,8 +80,10 @@ namespace ImGui_fzn
 		std::string m_sOption_Bold = "b";
 		std::string m_sOption_Color = "c";
 
+		// @todo turn this into an unordered map< font name, font ptr>
 		ImFont* m_pFontRegular = nullptr;
 		ImFont* m_pFontBold = nullptr;
+		ImFont* m_pFontItalic = nullptr;
 	};
 
 
