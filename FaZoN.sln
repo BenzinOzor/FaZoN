@@ -69,6 +69,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "1Y1G_SplitsManager", "Utili
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TranslatR", "FrameWork\TranslatR\Code\TranslatR.vcxproj", "{E6D4DF82-93C4-41B0-BDA3-12DCA6C419F4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1C147141-A28A-4876-96D4-49821AA357C2} = {1C147141-A28A-4876-96D4-49821AA357C2}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

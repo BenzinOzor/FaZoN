@@ -18,6 +18,9 @@
     <ClCompile Include="TR\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TR\TranslatR.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Data\XMLFiles\Resources" />
@@ -29,5 +32,10 @@
     <ResourceCompile Include="..\Data\res.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="TR\TranslatR.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

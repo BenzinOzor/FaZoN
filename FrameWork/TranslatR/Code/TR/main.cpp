@@ -10,10 +10,15 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 
+#include "TR/TranslatR.h"
+
 
 int main()
 {
-	fzn::FazonCore::CreateInstance( { "TranslatR", FZNProjectType::Application } );
+	fzn::FazonCore::ProjectDesc desc{ "TranslatR", FZNProjectType::Application };
+	fzn::Tools::MaskRaiseFlag( desc.m_uModules, fzn::FazonCore::CoreModuleFlags_InputModule );
+
+	fzn::FazonCore::CreateInstance( desc );
 
 	//Changing the titles of the window and the console
 	g_pFZN_Core->ConsoleTitle( g_pFZN_Core->GetProjectName().c_str() );
@@ -31,7 +36,7 @@ int main()
 	
 	g_pFZN_WindowMgr->SetIcon( DATAPATH( "Misc/fzn.png" ) );
 
-	FZN_COLOR_LOG( fzn::DBG_MSG_COLORS::DBG_MSG_COL_CYAN, "Hello World!" );
+	auto app = TR::TranslatR{};
 
 	//Game loop (add callbacks to your functions so they can be called in there)
 	g_pFZN_Core->GameLoop();

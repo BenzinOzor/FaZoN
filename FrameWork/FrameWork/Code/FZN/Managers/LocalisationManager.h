@@ -38,6 +38,13 @@ namespace fzn
 			* @param _path The path to the entries definition file.
 			**/
 			void load_entries( std::string_view _path );
+			/**
+			* @brief Load translation entries from localisation json.
+			* @param _path The path to the entries definition file.
+			* @param [out] _entries An entries vector to fill with the entries contained in the given file.
+			* @param [out] _languages A vector to fill with all the available languages.
+			**/
+			static void load_entries( std::string_view _path, Entries& _entries, StringVector& _languages );
 
 			/**
 			* @brief Retrieve an entry translation from its ID. The two params will be casted in uint32_t in the function, allowing to use project local types to call the function.
@@ -97,10 +104,12 @@ namespace fzn
 			LanguageType get_current_language() const { return static_cast<LanguageType>( m_current_language ); }
 
 			uint32_t get_language_id( std::string_view _language ) const;
+			static uint32_t get_language_id( std::string_view _language, const StringVector& _languages );
 			std::string_view get_language_name( uint32_t _language_id ) const;
+			static std::string_view get_language_name( uint32_t _language_id, const StringVector& _languages );
 
 		private:
-			void _load_entry( const Json::Value& _entry );
+			static void _load_entry( const Json::Value& _entry, Entries& _entries, const StringVector& _languages );
 
 			Entries			m_entries;					// All the translated entries.
 			StringVector	m_languages;				// All the languages available.

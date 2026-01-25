@@ -273,6 +273,8 @@ namespace fzn
 
 		FZN_EXPORT size_t FindWholeWord( const std::string& _sText, const std::string& _sWord, size_t _Off );
 		FZN_EXPORT void replace_word( std::string& _text, const std::string& _word, const std::string& _new_word, size_t _off, bool _whole_word = false );
+
+		FZN_EXPORT std::string open_file( std::string_view _filter = {} );
 	} //namespace Tools
 } //namespace fzn
 

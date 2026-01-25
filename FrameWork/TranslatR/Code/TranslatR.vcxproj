@@ -248,6 +248,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="TR\main.cpp" />
+    <ClCompile Include="TR\TranslatR.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Data\XMLFiles\Resources">
@@ -261,6 +262,9 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Data\res.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="TR\TranslatR.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
