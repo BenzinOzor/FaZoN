@@ -275,6 +275,7 @@ namespace fzn
 		FZN_EXPORT void replace_word( std::string& _text, const std::string& _word, const std::string& _new_word, size_t _off, bool _whole_word = false );
 
 		FZN_EXPORT std::string open_file( std::string_view _filter = {} );
+		FZN_EXPORT std::string save_file_as( std::string_view _filter = {}, std::string_view _force_extension = {} );
 	} //namespace Tools
 } //namespace fzn
 

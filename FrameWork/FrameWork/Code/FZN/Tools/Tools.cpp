@@ -1291,5 +1291,38 @@ namespace fzn
 			return {};
 		}
 
+		std::string save_file_as( std::string_view _filter /*= {}*/, std::string_view _force_extension /*= {} */ )
+		{
+			char file[ 100 ];
+			OPENFILENAME open_file_name;
+			ZeroMemory( &open_file_name, sizeof( open_file_name ) );
+
+			open_file_name.lStructSize = sizeof( open_file_name );
+			open_file_name.hwndOwner = NULL;
+			open_file_name.lpstrFile = file;
+			open_file_name.lpstrFile[ 0 ] = '\0';
+			open_file_name.nMaxFile = sizeof( file );
+			open_file_name.lpstrFileTitle = NULL;
+			open_file_name.nMaxFileTitle = 0;
+			open_file_name.lpstrFilter = _filter.data();
+			GetSaveFileName( &open_file_name );
+
+			if( open_file_name.lpstrFile[ 0 ] != '\0' )
+			{
+				std::string file_path = open_file_name.lpstrFile;
+
+				if( _force_extension.empty() == false )
+				{
+					size_t last_slash = file_path.find_last_of( '\\' );
+					if( last_slash != std::string::npos && file_path.find( '.', last_slash ) == std::string::npos )
+						file_path = file_path + _force_extension.data();
+				}
+
+				return file_path;
+			}
+
+			return {};
+		}
+
 	} //namespace Tools
 } //namespace fzn
