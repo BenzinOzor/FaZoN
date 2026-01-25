@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Externals/json/json.h>
+
 #include <FZN/Defines.h>
 #include <FZN/Managers/LocalisationManager.h>
 
@@ -39,10 +41,17 @@ namespace TR
 		void _save_json_as();
 		void _load_json();
 
+		void _write_languages( Json::Value& _root );
+		void _write_entries( Json::Value& _root );
+
+		void _generate_enum_file();
+		void _generate_enum_file_as();
+
 	private:
 		fzn::Localisation::Entries	m_entries;
 		StringVector				m_languages;
 
 		std::string					m_entries_path{};
+		std::string					m_enum_file_path{};
 	};
 }
