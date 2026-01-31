@@ -35,7 +35,16 @@ namespace TR
 		* @brief Display and manage localisation entries.
 		**/
 		void _display_entries();
+		/**
+		* @brief Display the last table line that is used to add an entry to the localisation.
+		* @param _row_id The last table row number
+		**/
+		void _display_new_entry( uint32_t _row_id );
 
+		void _show_new_language_popup();
+		void _add_language_popup();
+		void _add_new_languages();
+		
 		void _create_json();
 		void _save_json();
 		void _save_json_as();
@@ -50,6 +59,11 @@ namespace TR
 	private:
 		fzn::Localisation::Entries	m_entries;
 		StringVector				m_languages;
+
+		std::string					m_new_entry{};
+		StringVector				m_new_languages{};
+		std::string					m_new_language{};
+		bool						m_show_new_language_popup{ false };
 
 		std::string					m_entries_path{};
 		std::string					m_enum_file_path{};
