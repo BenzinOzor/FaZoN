@@ -205,6 +205,9 @@ namespace TR
 		const float letter_width{ ImGui::CalcTextSize( "W" ).x };
 		const float first_column_width{ fzn::Math::get_number_of_digits( m_entries.size() ) * letter_width };
 		uint32_t entry_id{ 0 };
+		static int hovered_column{ -1 };
+		int language_id_to_erase{ -1 };
+		static std::string last_hovered_language{};
 
 		ImGui::PushStyleColor( ImGuiCol_FrameBg, ImGui_fzn::color::transparent );
 
@@ -219,7 +222,32 @@ namespace TR
 				ImGui::TableSetupColumn( language.c_str(), ImGuiTableColumnFlags_WidthFixed, 600.f );
 
 			ImGui::TableSetupScrollFreeze( 2, 1 );
-			ImGui::TableHeadersRow();
+			ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+			for( uint32_t column_id = 0; column_id < nb_columns; column_id++ )
+			{
+				if( !ImGui::TableSetColumnIndex( column_id ) )
+					continue;
+				ImGui::TableHeader( ImGui::TableGetColumnName( column_id ) );
+				
+				if( ImGui::IsItemHovered() )
+				{
+					hovered_column = column_id;
+					last_hovered_language = ImGui::TableGetColumnName( column_id );
+				}
+			}
+
+			// Append to context menu only of hovering a language.
+			if( hovered_column >= 2 && ImGui::TableBeginContextMenuPopup( ImGui::GetCurrentTable() ) )
+			{
+					ImGui::Separator();
+					ImGui::PushStyleColor( ImGuiCol_HeaderHovered, ImGui_fzn::color::dark_red );
+
+					if( ImGui::MenuItem( fzn::Tools::Sprintf( "Remove %s", last_hovered_language.c_str() ).c_str() ) )
+						language_id_to_erase = hovered_column - 2;
+
+					ImGui::PopStyleColor();
+				ImGui::EndPopup();
+			}
 
 			StringVector missing_translations;
 			missing_translations.reserve( m_languages.size() );
@@ -327,6 +355,9 @@ namespace TR
 
 		ImGui::EndChild();
 		ImGui::PopStyleColor();
+
+		if( language_id_to_erase >= 0 )
+			_remove_language( language_id_to_erase );
 	}
 
 	/**
@@ -455,6 +486,23 @@ namespace TR
 		{
 			entry.m_translations.resize( m_languages.size() );
 		}
+	}
+
+	void TranslatR::_remove_language( uint32_t _language_id )
+	{
+		if( _language_id >= m_languages.size() )
+			return;
+
+		const std::string language_to_remove = m_languages[ _language_id ];
+
+		FZN_DBLOG( "Removing '%s'...", language_to_remove.c_str() );
+
+		for( fzn::Localisation::Entry& entry : m_entries )
+			entry.m_translations.erase( entry.m_translations.begin() + _language_id );
+
+		m_languages.erase( m_languages.begin() + _language_id );
+
+		FZN_DBLOG( "'%s' removed successfully.", language_to_remove.c_str() );
 	}
 
 	void TranslatR::_create_json()

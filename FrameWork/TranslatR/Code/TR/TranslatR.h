@@ -44,6 +44,7 @@ namespace TR
 		void _show_new_language_popup();
 		void _add_language_popup();
 		void _add_new_languages();
+		void _remove_language( uint32_t _language_id );
 		
 		void _create_json();
 		void _save_json();
