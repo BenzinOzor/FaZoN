@@ -206,6 +206,7 @@ namespace TR
 		const float first_column_width{ fzn::Math::get_number_of_digits( m_entries.size() ) * letter_width };
 		uint32_t entry_id{ 0 };
 		static int hovered_column{ -1 };
+		static int hovered_row{ -1 };
 		int language_id_to_erase{ -1 };
 		static std::string last_hovered_language{};
 
@@ -242,7 +243,7 @@ namespace TR
 					ImGui::Separator();
 					ImGui::PushStyleColor( ImGuiCol_HeaderHovered, ImGui_fzn::color::dark_red );
 
-					if( ImGui::MenuItem( fzn::Tools::Sprintf( "Remove %s", last_hovered_language.c_str() ).c_str() ) )
+					if( ImGui::MenuItem( fzn::Tools::Sprintf( "Remove '%s'", last_hovered_language.c_str() ).c_str() ) )
 						language_id_to_erase = hovered_column - 2;
 
 					ImGui::PopStyleColor();
@@ -291,7 +292,7 @@ namespace TR
 					ImGui::PushFont( ImGui_fzn::s_ImGuiFormatOptions.m_pFontBold );
 				}
 
-				ImGui::InputTextWithHint("##EntryName", "<Entry Name>", &entry.m_name );
+				ImGui::InputTextWithHint( "##EntryName", "<Entry Name>", &entry.m_name );
 
 				if( nb_mmissing_translations > 0 )
 				{
@@ -318,7 +319,7 @@ namespace TR
 						ImGui::PopFont();
 					else
 						ImGui_fzn::simple_tooltip_on_hover( translation );
-
+					
 					++translation_id;
 				}
 
@@ -334,9 +335,12 @@ namespace TR
 						ImGui::SetTooltip( "%d missing translations: %s", missing_translations.size(), missing_translations_tooltip.c_str() );
 					}
 				}
-				
+
 				if( ImGui::TableGetHoveredRow() - 1 == entry_id )
+				{
 					ImGui::GetCurrentTable()->RowBgColor[ 1 ] = ImGui::GetColorU32( ImGui::GetStyleColorVec4( ImGuiCol_Header ) );
+					hovered_row = entry_id;
+				}
 				else if( missing_translations.empty() == false )
 				{
 					missing_translations_bg_color = ImLerp( darker_yellow, darker_red, missing_translations_ratio );
@@ -349,6 +353,31 @@ namespace TR
 
 			_display_new_entry( entry_id );
 
+			if( ImGui::TableGetHoveredRow() - 1 == entry_id )
+			{
+				ImGui::GetCurrentTable()->RowBgColor[ 1 ] = ImGui::GetColorU32( ImGui::GetStyleColorVec4( ImGuiCol_Header ) );
+				hovered_row = -1;
+			}
+
+			if( hovered_row >= 0 && hovered_row < m_entries.size() )
+			{
+				if( ImGui::IsMouseReleased( ImGuiMouseButton_Right ) )
+					ImGui::OpenPopup( "entry_right_click" );
+				if( ImGui::BeginPopup( "entry_right_click" ) )
+				{
+					ImGui::PushStyleColor( ImGuiCol_HeaderHovered, ImGui_fzn::color::dark_red );
+
+					if( ImGui::MenuItem( fzn::Tools::Sprintf( "Remove '%s'", m_entries[ hovered_row ].m_name.c_str() ).c_str() ) )
+					{
+						m_entries.erase( m_entries.begin() + hovered_row );
+						hovered_row = -1;
+					}
+
+					ImGui::PopStyleColor();
+					ImGui::EndPopup();
+				}
+			}
+
 			ImGui::PopStyleVar();
 			ImGui::EndTable();
 		}
@@ -357,7 +386,11 @@ namespace TR
 		ImGui::PopStyleColor();
 
 		if( language_id_to_erase >= 0 )
+		{
 			_remove_language( language_id_to_erase );
+			last_hovered_language.clear();
+			hovered_column = -1;
+		}
 	}
 
 	/**
