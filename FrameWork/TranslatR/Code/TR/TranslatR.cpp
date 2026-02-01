@@ -98,69 +98,24 @@ namespace TR
 	{
 		auto menu_item = [ & ]( const char* _label, bool _disable, std::function< void( void ) > _fct )
 			{
-				if( _disable )
-					ImGui::BeginDisabled();
-
-				if( ImGui::MenuItem( _label ) )
+				if( ImGui::MenuItem( _label, nullptr, false, !_disable ) )
 					_fct();
-
-				if( _disable )
-					ImGui::EndDisabled();
 			};
 
 		if( ImGui::BeginMainMenuBar() )
 		{
-			const bool entries_path_invalid = m_file_manager.m_entries_path.empty();
-			const bool enum_file_path_invalid = m_file_manager.m_enum_file_path.empty();
-
-			if( ImGui::BeginMenu( "File" ) )
-			{
-				//const bool no_games = m_splits_mgr.are_there_games() == false;
-				if( ImGui::BeginMenu( "Entries List" ) )
-				{
-					menu_item( "Create...", false, [ & ]() { _create_json(); } );
-					ImGui_fzn::simple_tooltip_on_hover( "Close current file and create a new one." );
-
-					menu_item( "Open...", false, [ & ]() { m_file_manager.open_entries_file( m_loc_data ); } );
-					menu_item( "Save", entries_path_invalid, [ & ]() { m_file_manager.save_entries( m_loc_data ); } );
-					ImGui_fzn::simple_tooltip_on_hover( fzn::Tools::Sprintf( "Loaded file path: %s", m_file_manager.m_entries_path.empty() ? "<example path>" : m_file_manager.m_entries_path.c_str() ) );
-
-					menu_item( "Save As...", entries_path_invalid, [ & ]() { m_file_manager.save_entries_as( m_loc_data ); } );
-
-					ImGui::EndMenu();
-				}
-				if( ImGui::BeginMenu( "Enum File", m_loc_data.m_entries.size() > 0 ) )
-				{
-					menu_item( "Generate", enum_file_path_invalid, [ & ]() { m_file_manager.generate_enum_file( m_loc_data ); } );
-					ImGui_fzn::simple_tooltip_on_hover( fzn::Tools::Sprintf( "Enum file path: %s", m_file_manager.m_enum_file_path.empty() ? "<example path>" : m_file_manager.m_enum_file_path.c_str() ) );
-					menu_item( "Generate New...", false, [ & ]() { m_file_manager.generate_enum_file_as( m_loc_data ); } );
-					ImGui::EndMenu();
-				}
-				if( ImGui::BeginMenu( "TranslatR Project" ) )
-				{
-					menu_item( "Close", false, [ & ]() {} );
-					ImGui::EndMenu();
-				}
-
-				ImGui::Separator();
-				menu_item( "Options...", false, [ & ]() {} );
-
-				ImGui::EndMenu();
-			}
-
-			if( entries_path_invalid )
-				ImGui::BeginDisabled();
+			m_file_manager.display_menu_bar_items( m_loc_data );
 
 			if( ImGui::BeginMenu( "Edit" ) )
 			{
 				if( ImGui::MenuItem( "Add Language(s)" ) )
 					_show_new_language_popup();
 
+				ImGui::Separator();
+				menu_item( "Options...", false, [ & ]() {} );
+
 				ImGui::EndMenu();
 			}
-
-			if( entries_path_invalid )
-				ImGui::EndDisabled();
 
 			const std::string version{ fzn::Tools::Sprintf( "Ver. %d.%d.%d.%d%s", version_major, version_minor, version_feature, version_bugfix, WIP_version ? " - WIP" : "" ) };
 			const ImVec2 version_size{ ImGui::CalcTextSize( version.c_str() ) };
@@ -317,7 +272,7 @@ namespace TR
 					if( no_translation )
 						ImGui::PopFont();
 					else
-						ImGui_fzn::simple_tooltip_on_hover( translation );
+						ImGui_fzn::simple_tooltip_on_hover( translation.c_str() );
 					
 					++translation_id;
 				}

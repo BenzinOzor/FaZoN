@@ -11,6 +11,11 @@ namespace TR
 	class FileManager
 	{
 	public:
+		/**
+		* @brief Manage the File Manager part of the menu bar in the interface.
+		**/
+		void display_menu_bar_items( fzn::Localisation::LocalisationData& _loc_data );
+
 		void open_entries_file( fzn::Localisation::LocalisationData& _loc_data );
 		void save_entries( fzn::Localisation::LocalisationData& _loc_data );
 		void save_entries_as( fzn::Localisation::LocalisationData& _loc_data );
