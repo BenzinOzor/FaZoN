@@ -300,18 +300,6 @@ namespace ImGui_fzn
 		return bFilterChanged;
 	}
 
-	void simple_tooltip_on_hover( const std::string_view _tooltip )
-	{
-		if( ImGui::IsItemHovered() )
-			ImGui::SetTooltip( _tooltip.data() );
-	}
-
-	void helper_simple_tooltip( const std::string_view _tooltip )
-	{
-		ImGui::TextColored( color::dark_gray, "(?)" );
-		simple_tooltip_on_hover( _tooltip );
-	}
-
 	bool bold_selectable( const char* _label, bool _selected /*= false*/, ImGuiSelectableFlags _flags /*= 0*/, const ImVec2& _size /*= ImVec2( 0.f, 0.f ) */ )
 	{
 		if( _selected && s_ImGuiFormatOptions.m_pFontBold != nullptr )
