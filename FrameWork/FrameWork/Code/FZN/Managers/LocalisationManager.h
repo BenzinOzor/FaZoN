@@ -19,10 +19,19 @@ namespace fzn
 		************************************************************************/
 		struct Entry
 		{
-			std::string m_name;				// The enum name that will be used in the project using localisation.
-			StringVector m_translations;	// All the corresponding translations for this entry. Will always be a size corresponding to the total number of languages in the project.
+			std::string		m_name;				// The enum name that will be used in the project using localisation.
+			StringVector	m_translations;		// All the corresponding translations for this entry. Will always be a size corresponding to the total number of languages in the project.
 		};
 		using Entries = std::vector< Entry >;
+
+		/************************************************************************
+		* @brief A struct keeping together the two elements of a localisation file, the entries and the available languages.
+		************************************************************************/
+		struct LocalisationData
+		{
+			Entries			m_entries;		// All the translated entries.
+			StringVector	m_languages;	// All the languages available.
+		};
 
 		/************************************************************************
 		* @brief The manager that will handle translation querries in the project. Takes an enum value, and a language ID, returns the translation.
@@ -40,11 +49,10 @@ namespace fzn
 			void load_entries( std::string_view _path );
 			/**
 			* @brief Load translation entries from localisation json.
-			* @param _path The path to the entries definition file.
-			* @param [out] _entries An entries vector to fill with the entries contained in the given file.
-			* @param [out] _languages A vector to fill with all the available languages.
+			* @param _path						The path to the entries definition file.
+			* @param [out] _localisation_data	The localisation data to be filled with the entries contained in the given file and all the available languages.
 			**/
-			static void load_entries( std::string_view _path, Entries& _entries, StringVector& _languages );
+			static void load_entries( std::string_view _path, LocalisationData& _localisation_data );
 
 			/**
 			* @brief Retrieve an entry translation from its ID. The two params will be casted in uint32_t in the function, allowing to use project local types to call the function.
@@ -57,17 +65,17 @@ namespace fzn
 				auto entry_id = static_cast< uint32_t >( _entry );
 				auto language_id = static_cast< uint32_t >( _language );
 
-				if( entry_id >= m_entries.size() )
+				if( entry_id >= m_loc_data.m_entries.size() )
 				{
-					FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Entry #%d not found. (nb entries: %d)", entry_id, m_entries.size() );
+					FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Entry #%d not found. (nb entries: %d)", entry_id, m_loc_data.m_entries.size() );
 					return {};
 				}
 
-				const Entry& entry{ m_entries[ entry_id ] };
+				const Entry& entry{ m_loc_data.m_entries[ entry_id ] };
 
 				if( language_id >= entry.m_translations.size() )
 				{
-					FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Language #%d for entry %s (#%d) not found. (max nb languages: %d, nb translations for entry: %d)", language_id, entry.m_name.c_str(), entry_id, m_languages.size(), entry.m_translations.size() );
+					FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Language #%d for entry %s (#%d) not found. (max nb languages: %d, nb translations for entry: %d)", language_id, entry.m_name.c_str(), entry_id, m_loc_data.m_languages.size(), entry.m_translations.size() );
 					return {};
 				}
 
@@ -109,10 +117,14 @@ namespace fzn
 			static std::string_view get_language_name( uint32_t _language_id, const StringVector& _languages );
 
 		private:
-			static void _load_entry( const Json::Value& _entry, Entries& _entries, const StringVector& _languages );
+			/**
+			* @brief Retrieve the data of a single localisation entry.
+			* @param _entry						The json value the data come from.
+			* @param [out] _localisation_data	The localisation data to be filled.
+			**/
+			static void _load_entry( const Json::Value& _entry, LocalisationData& _localisation_data );
 
-			Entries			m_entries;					// All the translated entries.
-			StringVector	m_languages;				// All the languages available.
+			LocalisationData m_loc_data;
 
 			uint32_t	m_current_language{ 0 };	// Currently selected language for the software.
 		};

@@ -5,6 +5,8 @@
 #include <FZN/Defines.h>
 #include <FZN/Managers/LocalisationManager.h>
 
+#include "FileManager.h"
+
 
 namespace TR
 {
@@ -47,26 +49,15 @@ namespace TR
 		void _remove_language( uint32_t _language_id );
 		
 		void _create_json();
-		void _save_json();
-		void _save_json_as();
-		void _load_json();
-
-		void _write_languages( Json::Value& _root );
-		void _write_entries( Json::Value& _root );
-
-		void _generate_enum_file();
-		void _generate_enum_file_as();
 
 	private:
-		fzn::Localisation::Entries	m_entries;
-		StringVector				m_languages;
+		fzn::Localisation::LocalisationData	m_loc_data;
 
-		std::string					m_new_entry{};
-		StringVector				m_new_languages{};
-		std::string					m_new_language{};
-		bool						m_show_new_language_popup{ false };
+		FileManager		m_file_manager;
 
-		std::string					m_entries_path{};
-		std::string					m_enum_file_path{};
+		std::string		m_new_entry{};
+		StringVector	m_new_languages{};
+		std::string		m_new_language{};
+		bool			m_show_new_language_popup{ false };
 	};
 }

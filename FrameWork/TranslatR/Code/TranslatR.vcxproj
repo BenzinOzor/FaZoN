@@ -247,6 +247,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="TR\FileManager.cpp" />
     <ClCompile Include="TR\main.cpp" />
     <ClCompile Include="TR\TranslatR.cpp" />
   </ItemGroup>
@@ -264,6 +265,7 @@
     <ResourceCompile Include="..\Data\res.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="TR\FileManager.h" />
     <ClInclude Include="TR\TranslatR.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
