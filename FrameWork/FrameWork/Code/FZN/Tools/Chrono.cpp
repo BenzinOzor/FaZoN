@@ -47,7 +47,7 @@ namespace fzn
 
 		const std::chrono::steady_clock::time_point current_clock = std::chrono::steady_clock::now();
 
-		std::chrono::duration< int, std::milli > delta = std::chrono::duration_cast<std::chrono::milliseconds>( current_clock - m_previous_clock );
+		Milli delta = std::chrono::duration_cast<std::chrono::milliseconds>( current_clock - m_previous_clock );
 
 		m_chrono += delta;
 
