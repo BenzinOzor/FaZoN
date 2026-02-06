@@ -370,6 +370,9 @@ namespace TR
 		}
 	}
 
+	/**
+	* @brief Enable the new language popup and clear new language strings.
+	**/
 	void TranslatR::_show_new_language_popup()
 	{
 		m_show_new_language_popup = true;
@@ -377,6 +380,9 @@ namespace TR
 		m_new_language.clear();
 	}
 
+	/**
+	* @brief Display and manage the new language popup.
+	**/
 	void TranslatR::_add_language_popup()
 	{
 		if( m_show_new_language_popup == false )
@@ -454,6 +460,9 @@ namespace TR
 		}
 	}
 
+	/**
+	* @brief Validate the new languages entered in the popup and add them to the projects available languages.
+	**/
 	void TranslatR::_add_new_languages()
 	{
 		std::erase_if( m_new_languages, [&]( const std::string& _language )
@@ -475,6 +484,10 @@ namespace TR
 		}
 	}
 
+	/**
+	* @brief Remove the given language from the projects available ones and from all the entries.
+	* @param _language_id The ID of the language in the languages vector.
+	**/
 	void TranslatR::_remove_language( uint32_t _language_id )
 	{
 		if( _language_id >= m_loc_data.m_languages.size() )
@@ -490,10 +503,5 @@ namespace TR
 		m_loc_data.m_languages.erase( m_loc_data.m_languages.begin() + _language_id );
 
 		FZN_DBLOG( "'%s' removed successfully.", language_to_remove.c_str() );
-	}
-
-	void TranslatR::_create_json()
-	{
-
 	}
 } // namespace TR
