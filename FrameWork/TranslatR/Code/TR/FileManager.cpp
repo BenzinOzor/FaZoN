@@ -10,11 +10,12 @@ namespace TR
 
 	/**
 	* @brief Manage the File Manager part of the menu bar in the interface.
+	* @param [in,out] _loc_data The entries and languages of the current project.
 	**/
 	void FileManager::display_menu_bar_items( fzn::Localisation::LocalisationData& _loc_data )
 	{
-		const bool entries_path_valid = m_entries_path.size() > 0;
-		const bool enum_file_path_valid = m_enum_file_path.size() > 0;
+		const bool entries_path_valid = m_project.m_entries_path.size() > 0;
+		const bool enum_file_path_valid = m_project.m_enum_file_path.size() > 0;
 		const bool has_entries = _loc_data.m_entries.size() > 0;
 
 		if( ImGui::BeginMenu( "File" ) )
@@ -30,7 +31,7 @@ namespace TR
 
 				if( ImGui::MenuItem( "Save", nullptr, false, entries_path_valid ) )
 					save_entries( _loc_data );
-				ImGui_fzn::simple_tooltip_on_hover( "Loaded file path: %s", m_entries_path.c_str() );
+				ImGui_fzn::simple_tooltip_on_hover( "Loaded file path: %s", m_project.m_entries_path.c_str() );
 
 				if( ImGui::MenuItem( "Save As...", nullptr, false, has_entries ) )
 					save_entries_as( _loc_data );
@@ -41,7 +42,7 @@ namespace TR
 			{
 				if( ImGui::MenuItem( "Generate", nullptr, false, enum_file_path_valid ) )
 					generate_enum_file( _loc_data );
-				ImGui_fzn::simple_tooltip_on_hover( "Enum file path: %s", m_enum_file_path.c_str() );
+				ImGui_fzn::simple_tooltip_on_hover( "Enum file path: %s", m_project.m_enum_file_path.c_str() );
 
 				if( ImGui::MenuItem( "Generate New", nullptr, false, has_entries ) )
 					generate_enum_file_as( _loc_data );
@@ -57,20 +58,28 @@ namespace TR
 		}
 	}
 
+	/**
+	* @brief Show an open file dialog to select the entries file and fill the given localisation data with it.
+	* @param [out] _loc_data The localisation data to be filled.
+	**/
 	void FileManager::open_entries_file( fzn::Localisation::LocalisationData& _loc_data )
 	{
-		m_entries_path = fzn::Tools::open_file( "(*.json) Localisation Entries List\0*.json\0"
+		m_project.m_entries_path = fzn::Tools::open_file( "(*.json) Localisation Entries List\0*.json\0"
 			"(*.*) All files \0*.*\0" );
 
-		fzn::Localisation::Manager::load_entries( m_entries_path, _loc_data );
+		fzn::Localisation::Manager::load_entries( m_project.m_entries_path, _loc_data );
 	}
 
-	void FileManager::save_entries( fzn::Localisation::LocalisationData& _loc_data )
+	/**
+	* @brief Save the given localisation data to the previously selected path.
+	* @param [out] _loc_data The localisation data to be saved.
+	**/
+	void FileManager::save_entries( fzn::Localisation::LocalisationData& _loc_data ) const
 	{
-		if( m_entries_path.empty() )
+		if( m_project.m_entries_path.empty() )
 			return;
 
-		auto file = std::ofstream{ m_entries_path };
+		auto file = std::ofstream{ m_project.m_entries_path };
 		auto root = Json::Value{};
 
 		Json::StyledWriter json_writer;
@@ -80,6 +89,10 @@ namespace TR
 		file << json_writer.write( root );
 	}
 
+	/**
+	* @brief Show a save file dialog to select where to save the given localisation data.
+	* @param [out] _loc_data The localisation data to be saved.
+	**/
 	void FileManager::save_entries_as( fzn::Localisation::LocalisationData& _loc_data )
 	{
 		std::string new_path = fzn::Tools::save_file_as( "(*.json) Localisation Entries List\0*.json\0"
@@ -89,16 +102,20 @@ namespace TR
 		if( new_path.empty() )
 			return;
 
-		m_entries_path = new_path;
+		m_project.m_entries_path = new_path;
 		save_entries( _loc_data );
 	}
 
-	void FileManager::generate_enum_file( fzn::Localisation::LocalisationData& _loc_data )
+	/**
+	* @brief Generate the enum file using the given localisation data to the previously selected path.
+	* @param [out] _loc_data The localisation data to be used.
+	**/
+	void FileManager::generate_enum_file( fzn::Localisation::LocalisationData& _loc_data ) const
 	{
-		if( m_enum_file_path.empty() || _loc_data.m_entries.empty() )
+		if( m_project.m_enum_file_path.empty() || _loc_data.m_entries.empty() )
 			return;
 
-		std::ofstream output( m_enum_file_path );
+		std::ofstream output( m_project.m_enum_file_path );
 
 		output << "#pragma once\n\n" << enum_file_message << "\n\nenum class LocID\n{\n";
 
@@ -117,6 +134,10 @@ namespace TR
 		output.close();
 	}
 
+	/**
+	* @brief Show a fave ile dialog to select where to generate the enum file using the given localisation data.
+	* @param [out] _loc_data The localisation data to be used.
+	**/
 	void FileManager::generate_enum_file_as( fzn::Localisation::LocalisationData& _loc_data )
 	{
 		std::string new_path = fzn::Tools::save_file_as( "(*.h) Header File\0*.h\0"
@@ -126,11 +147,16 @@ namespace TR
 		if( new_path.empty() )
 			return;
 
-		m_enum_file_path = new_path;
+		m_project.m_enum_file_path = new_path;
 		generate_enum_file( _loc_data );
 	}
 
-	void FileManager::_write_languages( Json::Value& _root, fzn::Localisation::LocalisationData& _loc_data )
+	/**
+	* @brief Write the languages section of the given localisation data in the given json root.
+	* @param [in,out] _root The json root to fill with the data.
+	* @param _loc_data The localisation data to use.
+	**/
+	void FileManager::_write_languages( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const
 	{
 		// "available_languages" : ["english","french","spanish"],
 
@@ -140,7 +166,12 @@ namespace TR
 		}
 	}
 
-	void FileManager::_write_entries( Json::Value& _root, fzn::Localisation::LocalisationData& _loc_data )
+	/**
+	* @brief Write the entries section of the given localisation data in the given json root.
+	* @param [in,out] _root The json root to fill with the data.
+	* @param _loc_data The localisation data to use.
+	**/
+	void FileManager::_write_entries( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const
 	{
 		/*{
 			"name" : "yes",
