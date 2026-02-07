@@ -34,7 +34,7 @@ int main()
 	g_pFZN_WindowMgr->SetWindowFramerate(60);
 	g_pFZN_WindowMgr->SetWindowClearColor( sf::Color::Black );
 	
-	g_pFZN_WindowMgr->SetIcon( DATAPATH( "Misc/fzn.png" ) );
+	g_pFZN_WindowMgr->SetIcon( DATAPATH( "Misc/TranslatR.png" ) );
 
 	auto app = TR::TranslatR{};
 
