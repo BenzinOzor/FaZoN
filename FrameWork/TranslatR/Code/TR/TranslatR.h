@@ -26,6 +26,11 @@ namespace TR
 
 	private:
 		/**
+		* @brief Actions tracking and handling.
+		**/
+		void _handle_actions();
+
+		/**
 		* @brief Display the window menu bar.
 		**/
 		void _display_menu_bar();

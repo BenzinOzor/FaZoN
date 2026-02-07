@@ -85,6 +85,35 @@ namespace TR
 
 		ImGui::PopStyleVar( 1 );
 		ImGui::PopStyleColor( 8 );
+
+		_handle_actions();
+	}
+
+	/**
+	* @brief Actions tracking and handling.
+	**/
+	void TranslatR::_handle_actions()
+	{
+		if( g_pFZN_InputMgr->IsActionPressed( "Open Project" ) )
+		{
+			m_file_manager.open_project_file( m_loc_data );
+		}
+		else if( g_pFZN_InputMgr->IsActionPressed( "Save Entries" ) )
+		{
+			m_file_manager.save_entries( m_loc_data );
+		}
+		else if( g_pFZN_InputMgr->IsActionPressed( "Save Entries As" ) )
+		{
+			m_file_manager.save_entries_as( m_loc_data );
+		}
+		else if( g_pFZN_InputMgr->IsActionPressed( "Generate Enum File" ) )
+		{
+			m_file_manager.generate_enum_file( m_loc_data );
+		}
+		else if( g_pFZN_InputMgr->IsActionPressed( "Generate Enum File As" ) )
+		{
+			m_file_manager.generate_enum_file_as( m_loc_data );
+		}
 	}
 
 	/**

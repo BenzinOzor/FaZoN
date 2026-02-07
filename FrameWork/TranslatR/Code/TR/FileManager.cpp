@@ -59,10 +59,13 @@ namespace TR
 
 		if( ImGui::BeginMenu( "File" ) )
 		{
+			/************************************************************************
+			* Projects
+			************************************************************************/
 			if( ImGui::BeginMenu( "TranslatR Project" ) )
 			{
-				if( ImGui::MenuItem( "Open..." ) )
-					_open_project_file( _loc_data );
+				if( ImGui::MenuItem( "Open...", g_pFZN_InputMgr->GetActionKeyString( "Open Project", true ).c_str() ) )
+					open_project_file( _loc_data );
 
 				if( ImGui::BeginMenu( "Open Recent", m_recent_paths[ FileType::project ].size() > 0 ) )
 				{
@@ -71,11 +74,11 @@ namespace TR
 				}
 
 				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_green, "Save", {}, false, project_path_valid ) )
-					_save_project();
+					save_project();
 				ImGui_fzn::simple_tooltip_on_hover( "Opened project path: %s", m_project.m_project_path.c_str() );
 
 				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_green, "Save As...", {}, false, has_entries ) )
-					_save_project_as();
+					save_project_as();
 
 				ImGui::Separator();
 				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_red, "Close", {}, false, project_path_valid ) )
@@ -84,10 +87,13 @@ namespace TR
 				ImGui::EndMenu();
 			}
 
+			/************************************************************************
+			* Entries
+			************************************************************************/
 			if( ImGui::BeginMenu( "Entries List" ) )
 			{
 				if( ImGui::MenuItem( "Open..." ) )
-					_open_entries_file( _loc_data );
+					open_entries_file( _loc_data );
 
 				if( ImGui::BeginMenu( "Open Recent", m_recent_paths[ FileType::entries ].size() > 0 ) )
 				{
@@ -95,28 +101,31 @@ namespace TR
 					ImGui::EndMenu();
 				}
 
-				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_green, "Save", {}, false, entries_path_valid ) )
-					_save_entries( _loc_data );
+				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_green, "Save", g_pFZN_InputMgr->GetActionKeyString( "Save Entries", true ), false, entries_path_valid ) )
+					save_entries( _loc_data );
 				ImGui_fzn::simple_tooltip_on_hover( "Opened file path: %s", m_project.m_entries_path.c_str() );
 
-				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_green, "Save As...", {}, false, has_entries ) )
-					_save_entries_as( _loc_data );
+				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_green, "Save As...", g_pFZN_InputMgr->GetActionKeyString( "Save Entries As", true ), false, has_entries ) )
+					save_entries_as( _loc_data );
 
 				ImGui::Separator();
 				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_red, "Close", {}, false, has_entries ) )
-					_close_entries( _loc_data );
+					close_entries( _loc_data );
 
 				ImGui::EndMenu();
 			}
 
+			/************************************************************************
+			* Enum files
+			************************************************************************/
 			if( ImGui::BeginMenu( "Enum File", has_entries ) )
 			{
-				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_green, "Generate", {}, false, enum_file_path_valid ) )
-					_generate_enum_file( _loc_data );
+				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_green, "Generate", g_pFZN_InputMgr->GetActionKeyString( "Generate Enum File", true ), false, enum_file_path_valid ) )
+					generate_enum_file( _loc_data );
 				ImGui_fzn::simple_tooltip_on_hover( "Enum file path: %s", m_project.m_enum_file_path.c_str() );
 
-				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_green, "Generate New", {}, false, has_entries ) )
-					_generate_enum_file_as( _loc_data );
+				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_green, "Generate New", g_pFZN_InputMgr->GetActionKeyString( "Generate Enum File As", true ), false, has_entries ) )
+					generate_enum_file_as( _loc_data );
 
 				if( ImGui::BeginMenu( "Generate From Recent Path", m_recent_paths[ FileType::enum_file ].size() > 0 ) )
 				{
@@ -133,6 +142,62 @@ namespace TR
 
 
 	/************************************************************************
+	* PROJECT
+	************************************************************************/
+
+	/**
+	* @brief Show an open file dialog to select the project file and load the corresponding entries file to fill the given localisation data with it.
+	* @param [out] _loc_data The localisation data to be filled.
+	**/
+	void FileManager::open_project_file( fzn::Localisation::LocalisationData& _loc_data )
+	{
+		const std::string path = fzn::Tools::open_file( "(*.trproj) TranslatR Project\0*.trproj\0"
+			"(*.*) All files \0*.*\0" );
+
+		_open_project_file( path, _loc_data );
+		_add_recent_path( FileType::project, path );
+	}
+
+	/**
+	* @brief Save the current project to the previously selected path.
+	**/
+	void FileManager::save_project()
+	{
+		if( m_project.m_project_path.empty() )
+			return;
+
+		auto file = std::ofstream{ m_project.m_project_path };
+		auto root = Json::Value{};
+		Json::StreamWriterBuilder writer_builder;
+
+		writer_builder.settings_[ "emitUTF8" ] = true;
+		std::unique_ptr<Json::StreamWriter> writer( writer_builder.newStreamWriter() );
+
+		root[ "entries_path" ] = m_project.m_entries_path.c_str();
+		root[ "enum_file_path" ] = m_project.m_enum_file_path.c_str();
+
+		writer->write( root, &file );
+		_add_recent_path( FileType::project, m_project.m_project_path );
+	}
+
+	/**
+	* @brief Show a save file dialog to select where to save the current project.
+	**/
+	void FileManager::save_project_as()
+	{
+		std::string new_path = fzn::Tools::save_file_as( "(*.trproj) TranslatR Project\0*.trproj\0"
+			"(*.*) All files \0*.*\0",
+			".trproj" );
+
+		if( new_path.empty() )
+			return;
+
+		m_project.m_project_path = new_path;
+		save_project();
+	}
+
+
+	/************************************************************************
 	* ENTRIES
 	************************************************************************/
 
@@ -140,7 +205,7 @@ namespace TR
 	* @brief Show an open file dialog to select the entries file and fill the given localisation data with it.
 	* @param [out] _loc_data The localisation data to be filled.
 	**/
-	void FileManager::_open_entries_file( fzn::Localisation::LocalisationData& _loc_data )
+	void FileManager::open_entries_file( fzn::Localisation::LocalisationData& _loc_data )
 	{
 		const std::string path = fzn::Tools::open_file( "(*.json) Localisation Entries List\0*.json\0"
 			"(*.*) All files \0*.*\0" );
@@ -153,21 +218,10 @@ namespace TR
 	}
 
 	/**
-	* @brief Show an open file dialog to select the entries file and fill the given localisation data with it.
-	* @param _path The path to the entries file.
-	* @param [out] _loc_data The localisation data to be filled.
-	**/
-	void FileManager::_open_entries_file( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data )
-	{
-		m_project.m_entries_path = _path;
-		fzn::Localisation::Manager::load_entries( m_project.m_entries_path, _loc_data );
-	}
-
-	/**
 	* @brief Save the given localisation data to the previously selected path.
 	* @param [out] _loc_data The localisation data to be saved.
 	**/
-	void FileManager::_save_entries( fzn::Localisation::LocalisationData& _loc_data )
+	void FileManager::save_entries( fzn::Localisation::LocalisationData& _loc_data )
 	{
 		if( m_project.m_entries_path.empty() )
 			return;
@@ -177,8 +231,8 @@ namespace TR
 
 		Json::StyledWriter json_writer;
 
-		_write_languages( root, _loc_data );
-		_write_entries( root, _loc_data );
+		write_languages( root, _loc_data );
+		write_entries( root, _loc_data );
 		file << json_writer.write( root );
 
 		_add_recent_path( FileType::entries, m_project.m_entries_path );
@@ -188,7 +242,7 @@ namespace TR
 	* @brief Show a save file dialog to select where to save the given localisation data.
 	* @param [out] _loc_data The localisation data to be saved.
 	**/
-	void FileManager::_save_entries_as( fzn::Localisation::LocalisationData& _loc_data )
+	void FileManager::save_entries_as( fzn::Localisation::LocalisationData& _loc_data )
 	{
 		std::string new_path = fzn::Tools::save_file_as( "(*.json) Localisation Entries List\0*.json\0"
 			"(*.*) All files \0*.*\0",
@@ -198,7 +252,7 @@ namespace TR
 			return;
 
 		m_project.m_entries_path = new_path;
-		_save_entries( _loc_data );
+		save_entries( _loc_data );
 	}
 
 	/**
@@ -206,7 +260,7 @@ namespace TR
 	* @param [in,out] _root The json root to fill with the data.
 	* @param _loc_data The localisation data to use.
 	**/
-	void FileManager::_write_languages( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const
+	void FileManager::write_languages( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const
 	{
 		// "available_languages" : ["english","french","spanish"],
 
@@ -221,7 +275,7 @@ namespace TR
 	* @param [in,out] _root The json root to fill with the data.
 	* @param _loc_data The localisation data to use.
 	**/
-	void FileManager::_write_entries( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const
+	void FileManager::write_entries( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const
 	{
 		/*{
 			"name" : "yes",
@@ -261,7 +315,7 @@ namespace TR
 	* @brief Close the current entries file, clearing all entries and the path to their file.
 	* @param [out] _loc_data The localisation data to be cleared.
 	**/
-	void FileManager::_close_entries( fzn::Localisation::LocalisationData& _loc_data )
+	void FileManager::close_entries( fzn::Localisation::LocalisationData& _loc_data )
 	{
 		_loc_data.clear();
 		m_project.m_entries_path.clear();
@@ -276,7 +330,7 @@ namespace TR
 	* @brief Generate the enum file using the given localisation data to the previously selected path.
 	* @param [out] _loc_data The localisation data to be used.
 	**/
-	void FileManager::_generate_enum_file( fzn::Localisation::LocalisationData& _loc_data )
+	void FileManager::generate_enum_file( fzn::Localisation::LocalisationData& _loc_data )
 	{
 		if( m_project.m_enum_file_path.empty() || _loc_data.m_entries.empty() )
 			return;
@@ -305,7 +359,7 @@ namespace TR
 	* @brief Show a fave ile dialog to select where to generate the enum file using the given localisation data.
 	* @param [out] _loc_data The localisation data to be used.
 	**/
-	void FileManager::_generate_enum_file_as( fzn::Localisation::LocalisationData& _loc_data )
+	void FileManager::generate_enum_file_as( fzn::Localisation::LocalisationData& _loc_data )
 	{
 		std::string path = fzn::Tools::save_file_as( "(*.h) Header File\0*.h\0"
 			"(*.*) All files \0*.*\0",
@@ -319,28 +373,34 @@ namespace TR
 	}
 
 
-	void FileManager::_generate_enum_file_as( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data )
-	{
-		m_project.m_enum_file_path = _path;
-		_generate_enum_file( _loc_data );
-	}
-
 	/************************************************************************
-	* PROJECT
+	* MISC
 	************************************************************************/
 
 	/**
-	* @brief Show an open file dialog to select the project file and load the corresponding entries file to fill the given localisation data with it.
-	* @param [out] _loc_data The localisation data to be filled.
+	* @brief Get the current project name from its path.
+	* @return The project name
 	**/
-	void FileManager::_open_project_file( fzn::Localisation::LocalisationData& _loc_data )
+	const std::string FileManager::get_current_project_name() const
 	{
-		const std::string path = fzn::Tools::open_file( "(*.trproj) TranslatR Project\0*.trproj\0"
-			"(*.*) All files \0*.*\0" );
+		if( m_project.m_project_path.empty() )
+			return {};
 
-		_open_project_file( path, _loc_data );
-		_add_recent_path( FileType::project, path );
+		size_t last_slash_pos{ m_project.m_project_path.find_last_of( '\\' ) };
+
+		if( last_slash_pos == std::string::npos )
+			return {};
+
+		++last_slash_pos;
+		const size_t last_dot_pos{ m_project.m_project_path.find_last_of( '.' ) };
+
+		return m_project.m_project_path.substr( last_slash_pos, last_dot_pos - last_slash_pos );
 	}
+
+
+	/************************************************************************
+	* PRIVATE
+	************************************************************************/
 
 	/**
 	* @brief Show an open file dialog to select the project file and load the corresponding entries file to fill the given localisation data with it.
@@ -365,44 +425,29 @@ namespace TR
 		m_project.m_enum_file_path = root[ "enum_file_path" ].asString();
 
 		fzn::Localisation::Manager::load_entries( m_project.m_entries_path, _loc_data );
+		_set_window_title_from_project();
 	}
 
 	/**
-	* @brief Save the current project to the previously selected path.
+	* @brief Show an open file dialog to select the entries file and fill the given localisation data with it.
+	* @param _path The path to the entries file.
+	* @param [out] _loc_data The localisation data to be filled.
 	**/
-	void FileManager::_save_project()
+	void FileManager::_open_entries_file( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data )
 	{
-		if( m_project.m_project_path.empty() )
-			return;
-
-		auto file = std::ofstream{ m_project.m_project_path };
-		auto root = Json::Value{};
-		Json::StreamWriterBuilder writer_builder;
-
-		writer_builder.settings_[ "emitUTF8" ] = true;
-		std::unique_ptr<Json::StreamWriter> writer( writer_builder.newStreamWriter() );
-
-		root[ "entries_path" ] = m_project.m_entries_path.c_str();
-		root[ "enum_file_path" ] = m_project.m_enum_file_path.c_str();
-
-		writer->write( root, &file );
-		_add_recent_path( FileType::project, m_project.m_project_path );
+		m_project.m_entries_path = _path;
+		fzn::Localisation::Manager::load_entries( m_project.m_entries_path, _loc_data );
 	}
 
 	/**
-	* @brief Show a save file dialog to select where to save the current project.
+	* @brief Show a fave ile dialog to select where to generate the enum file using the given localisation data.
+	* @param _path The path to the enum file.
+	* @param [out] _loc_data The localisation data to be used.
 	**/
-	void FileManager::_save_project_as()
+	void FileManager::_generate_enum_file_as( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data )
 	{
-		std::string new_path = fzn::Tools::save_file_as( "(*.trproj) TranslatR Project\0*.trproj\0"
-			"(*.*) All files \0*.*\0",
-			".trproj" );
-
-		if( new_path.empty() )
-			return;
-
-		m_project.m_project_path = new_path;
-		_save_project();
+		m_project.m_enum_file_path = _path;
+		generate_enum_file( _loc_data );
 	}
 
 	/**
@@ -413,6 +458,7 @@ namespace TR
 	{
 		m_project.clear();
 		_loc_data.clear();
+		_set_window_title_from_project();
 	}
 
 
@@ -592,5 +638,21 @@ namespace TR
 		ImGui::Separator();
 		if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_red, "Clear All" ) )
 			_clear_history( _file_type );
+	}
+
+	/**
+	* @brief Rename the window according to the current project. Remove it if no project.
+	**/
+	void FileManager::_set_window_title_from_project() const
+	{
+		const std::string project_name{ get_current_project_name() };
+
+		if( project_name.empty() )
+		{
+			g_pFZN_WindowMgr->SetWindowTitle( "TranslatR" );
+			return;
+		}
+
+		g_pFZN_WindowMgr->SetWindowTitle( fzn::Tools::Sprintf( "TranslatR - %s", project_name.c_str() ) );
 	}
 }

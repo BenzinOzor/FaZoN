@@ -34,6 +34,7 @@ namespace TR
 		**/
 		void on_event();
 
+
 		/************************************************************************
 		* INTERFACE
 		************************************************************************/
@@ -44,6 +45,89 @@ namespace TR
 		**/
 		void display_menu_bar_items( fzn::Localisation::LocalisationData& _loc_data );
 
+
+		/************************************************************************
+		* PROJECT
+		************************************************************************/
+
+		/**
+		* @brief Show an open file dialog to select the project file and load the corresponding entries file to fill the given localisation data with it.
+		* @param [out] _loc_data The localisation data to be filled.
+		**/
+		void open_project_file( fzn::Localisation::LocalisationData& _loc_data );
+		/**
+		* @brief Save the current project to the previously selected path.
+		**/
+		void save_project();
+		/**
+		* @brief Show a save file dialog to select where to save the current project.
+		**/
+		void save_project_as();
+
+
+		/************************************************************************
+		* ENTRIES
+		************************************************************************/
+
+		/**
+		* @brief Show an open file dialog to select the entries file and fill the given localisation data with it.
+		* @param [out] _loc_data The localisation data to be filled.
+		**/
+		void open_entries_file( fzn::Localisation::LocalisationData& _loc_data );
+		/**
+		* @brief Save the given localisation data to the previously selected path.
+		* @param [out] _loc_data The localisation data to be saved.
+		**/
+		void save_entries( fzn::Localisation::LocalisationData& _loc_data );
+		/**
+		* @brief Show a save file dialog to select where to save the given localisation data.
+		* @param [out] _loc_data The localisation data to be saved.
+		**/
+		void save_entries_as( fzn::Localisation::LocalisationData& _loc_data );
+		/**
+		* @brief Write the languages section of the given localisation data in the given json root.
+		* @param [in,out] _root The json root to fill with the data.
+		* @param _loc_data The localisation data to use.
+		**/
+		void write_languages( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const;
+		/**
+		* @brief Write the entries section of the given localisation data in the given json root.
+		* @param [in,out] _root The json root to fill with the data.
+		* @param _loc_data The localisation data to use.
+		**/
+		void write_entries( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const;
+		/**
+		* @brief Close the current entries file, clearing all entries and the path to their file.
+		* @param [out] _loc_data The localisation data to be cleared.
+		**/
+		void close_entries( fzn::Localisation::LocalisationData& _loc_data );
+
+
+		/************************************************************************
+		* ENUM FILE
+		************************************************************************/
+
+		/**
+		* @brief Generate the enum file using the given localisation data to the previously selected path.
+		* @param [out] _loc_data The localisation data to be used.
+		**/
+		void generate_enum_file( fzn::Localisation::LocalisationData& _loc_data );
+		/**
+		* @brief Show a fave ile dialog to select where to generate the enum file using the given localisation data.
+		* @param [out] _loc_data The localisation data to be used.
+		**/
+		void generate_enum_file_as( fzn::Localisation::LocalisationData& _loc_data );
+
+
+		/************************************************************************
+		* MISC
+		************************************************************************/
+
+		/**
+		* @brief Get the current project name from its path.
+		* @return The project name
+		**/
+		const std::string get_current_project_name() const;
 
 	private:
 		enum FileType
@@ -57,81 +141,6 @@ namespace TR
 		using PathArray = std::array< PathDeque, FileType::COUNT >;
 
 
-		/************************************************************************
-		* ENTRIES
-		************************************************************************/
-
-		/**
-		* @brief Show an open file dialog to select the entries file and fill the given localisation data with it.
-		* @param [out] _loc_data The localisation data to be filled.
-		**/
-		void _open_entries_file( fzn::Localisation::LocalisationData& _loc_data );
-		/**
-		* @brief Show an open file dialog to select the entries file and fill the given localisation data with it.
-		* @param _path The path to the entries file.
-		* @param [out] _loc_data The localisation data to be filled.
-		**/
-		void _open_entries_file( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data );
-		/**
-		* @brief Save the given localisation data to the previously selected path.
-		* @param [out] _loc_data The localisation data to be saved.
-		**/
-		void _save_entries( fzn::Localisation::LocalisationData& _loc_data );
-		/**
-		* @brief Show a save file dialog to select where to save the given localisation data.
-		* @param [out] _loc_data The localisation data to be saved.
-		**/
-		void _save_entries_as( fzn::Localisation::LocalisationData& _loc_data );
-		/**
-		* @brief Write the languages section of the given localisation data in the given json root.
-		* @param [in,out] _root The json root to fill with the data.
-		* @param _loc_data The localisation data to use.
-		**/
-		void _write_languages( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const;
-		/**
-		* @brief Write the entries section of the given localisation data in the given json root.
-		* @param [in,out] _root The json root to fill with the data.
-		* @param _loc_data The localisation data to use.
-		**/
-		void _write_entries( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const;
-		/**
-		* @brief Close the current entries file, clearing all entries and the path to their file.
-		* @param [out] _loc_data The localisation data to be cleared.
-		**/
-		void _close_entries( fzn::Localisation::LocalisationData& _loc_data );
-
-
-		/************************************************************************
-		* ENUM FILE
-		************************************************************************/
-
-		/**
-		* @brief Generate the enum file using the given localisation data to the previously selected path.
-		* @param [out] _loc_data The localisation data to be used.
-		**/
-		void _generate_enum_file( fzn::Localisation::LocalisationData& _loc_data );
-		/**
-		* @brief Show a fave ile dialog to select where to generate the enum file using the given localisation data.
-		* @param [out] _loc_data The localisation data to be used.
-		**/
-		void _generate_enum_file_as( fzn::Localisation::LocalisationData& _loc_data );
-		/**
-		* @brief Show a fave ile dialog to select where to generate the enum file using the given localisation data.
-		* @param _path The path to the enum file.
-		* @param [out] _loc_data The localisation data to be used.
-		**/
-		void _generate_enum_file_as( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data );
-
-
-		/************************************************************************
-		* PROJECT
-		************************************************************************/
-
-		/**
-		* @brief Show an open file dialog to select the project file and load the corresponding entries file to fill the given localisation data with it.
-		* @param [out] _loc_data The localisation data to be filled.
-		**/
-		void _open_project_file( fzn::Localisation::LocalisationData& _loc_data );
 		/**
 		* @brief Show an open file dialog to select the project file and load the corresponding entries file to fill the given localisation data with it.
 		* @param _path The path to the project file.
@@ -139,13 +148,17 @@ namespace TR
 		**/
 		void _open_project_file( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data );
 		/**
-		* @brief Save the current project to the previously selected path.
+		* @brief Show an open file dialog to select the entries file and fill the given localisation data with it.
+		* @param _path The path to the entries file.
+		* @param [out] _loc_data The localisation data to be filled.
 		**/
-		void _save_project();
+		void _open_entries_file( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data );
 		/**
-		* @brief Show a save file dialog to select where to save the current project.
+		* @brief Show a fave ile dialog to select where to generate the enum file using the given localisation data.
+		* @param _path The path to the enum file.
+		* @param [out] _loc_data The localisation data to be used.
 		**/
-		void _save_project_as();
+		void _generate_enum_file_as( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data );
 		/**
 		* @brief Close the current project, clearing all save paths and loc data.
 		* @param [out] _loc_data The localisation data to be cleared.
@@ -194,6 +207,11 @@ namespace TR
 		* @param _loc_data The localisation data to manage.
 		**/
 		void _display_recent_paths( FileType _file_type, fzn::Localisation::LocalisationData& _loc_data );
+		
+		/**
+		* @brief Rename the window according to the current project. Remove it if no project.
+		**/
+		void _set_window_title_from_project() const;
 
 	public:
 		Project		m_project;					// The currently opened project.
