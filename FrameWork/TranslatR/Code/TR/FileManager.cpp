@@ -5,7 +5,6 @@
 #include <FZN/Tools/Event.h>
 
 #include "TR/FileManager.h"
-#include "TR/Event.h"
 
 
 namespace TR
