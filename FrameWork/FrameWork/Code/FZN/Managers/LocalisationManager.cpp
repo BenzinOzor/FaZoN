@@ -47,6 +47,12 @@ namespace fzn
 			auto root = Json::Value{};
 			file >> root;
 
+			if( root[ "entries" ].isNull() )
+			{
+				FZN_COLOR_LOG( fzn::DBG_MSG_COL_RED, "Invalid localisation file: %s", _path.data() );
+				return;
+			}
+
 			_localisation_data.m_entries.clear();
 			_localisation_data.m_languages.clear();
 

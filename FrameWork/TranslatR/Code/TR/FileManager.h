@@ -26,6 +26,14 @@ namespace TR
 	class FileManager
 	{
 	public:
+		FileManager();
+		~FileManager();
+
+		/**
+		* @brief Event handling.
+		**/
+		void on_event();
+
 		/************************************************************************
 		* INTERFACE
 		************************************************************************/
@@ -38,6 +46,17 @@ namespace TR
 
 
 	private:
+		enum FileType
+		{
+			project,
+			entries,
+			enum_file,
+			COUNT
+		};
+		using PathDeque = std::deque< std::string >;
+		using PathArray = std::array< PathDeque, FileType::COUNT >;
+
+
 		/************************************************************************
 		* ENTRIES
 		************************************************************************/
@@ -48,10 +67,16 @@ namespace TR
 		**/
 		void _open_entries_file( fzn::Localisation::LocalisationData& _loc_data );
 		/**
+		* @brief Show an open file dialog to select the entries file and fill the given localisation data with it.
+		* @param _path The path to the entries file.
+		* @param [out] _loc_data The localisation data to be filled.
+		**/
+		void _open_entries_file( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data );
+		/**
 		* @brief Save the given localisation data to the previously selected path.
 		* @param [out] _loc_data The localisation data to be saved.
 		**/
-		void _save_entries( fzn::Localisation::LocalisationData& _loc_data ) const;
+		void _save_entries( fzn::Localisation::LocalisationData& _loc_data );
 		/**
 		* @brief Show a save file dialog to select where to save the given localisation data.
 		* @param [out] _loc_data The localisation data to be saved.
@@ -84,12 +109,18 @@ namespace TR
 		* @brief Generate the enum file using the given localisation data to the previously selected path.
 		* @param [out] _loc_data The localisation data to be used.
 		**/
-		void _generate_enum_file( fzn::Localisation::LocalisationData& _loc_data ) const;
+		void _generate_enum_file( fzn::Localisation::LocalisationData& _loc_data );
 		/**
 		* @brief Show a fave ile dialog to select where to generate the enum file using the given localisation data.
 		* @param [out] _loc_data The localisation data to be used.
 		**/
 		void _generate_enum_file_as( fzn::Localisation::LocalisationData& _loc_data );
+		/**
+		* @brief Show a fave ile dialog to select where to generate the enum file using the given localisation data.
+		* @param _path The path to the enum file.
+		* @param [out] _loc_data The localisation data to be used.
+		**/
+		void _generate_enum_file_as( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data );
 
 
 		/************************************************************************
@@ -102,9 +133,15 @@ namespace TR
 		**/
 		void _open_project_file( fzn::Localisation::LocalisationData& _loc_data );
 		/**
+		* @brief Show an open file dialog to select the project file and load the corresponding entries file to fill the given localisation data with it.
+		* @param _path The path to the project file.
+		* @param [out] _loc_data The localisation data to be filled.
+		**/
+		void _open_project_file( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data );
+		/**
 		* @brief Save the current project to the previously selected path.
 		**/
-		void _save_project() const;
+		void _save_project();
 		/**
 		* @brief Show a save file dialog to select where to save the current project.
 		**/
@@ -115,10 +152,53 @@ namespace TR
 		**/
 		void _close_project( fzn::Localisation::LocalisationData& _loc_data );
 
-	public:
-		Project			m_project;					// The currently opened project.
 
-		StringVector	m_recent_entries_paths;		// The last opened entries files path.
-		StringVector	m_recent_enum_file_paths;	// The last generated enum files path.
+		/************************************************************************
+		* RECENT PATHS
+		************************************************************************/
+
+		/**
+		* @brief Add a path to the history.
+		* @param _file_type The file type of the path.
+		* @param _path The path to add.
+		**/
+		void _add_recent_path( FileType _file_type, std::string_view _path );
+		/**
+		* @brief Save the recent paths to the file.
+		**/
+		void _save_recent_paths() const;
+		/**
+		* @brief Open the recent paths file to retrieve them.
+		**/
+		void _load_recent_paths();
+		/**
+		* @brief Remove a path from its corresponding deque.
+		* @param _file_type The file type of the path.
+		* @param _path_id The id of the path in the deque.
+		**/
+		void _remove_recent_path( FileType _file_type, uint32_t _path_id );
+		/**
+		* @brief Remove all paths from history.
+		* @param _type_to_clear The type of file that needs clearing. COUNT will clear everything.
+		**/
+		void _clear_history( FileType _type_to_clear );
+
+
+		/************************************************************************
+		* MISC
+		************************************************************************/
+
+		/**
+		* @brief Generic function that display recent paths of a given type and manage them.
+		* @param _file_type The type of recent paths to display.
+		* @param _loc_data The localisation data to manage.
+		**/
+		void _display_recent_paths( FileType _file_type, fzn::Localisation::LocalisationData& _loc_data );
+
+	public:
+		Project		m_project;					// The currently opened project.
+
+		uint32_t	m_max_recent_paths{ 10 };	// The maximum number of recent path to keep in memory for each type of path (project, entries, enum file).
+		PathArray	m_recent_paths;				// Array containing the recent paths used for each type of file.
 	};
 }
