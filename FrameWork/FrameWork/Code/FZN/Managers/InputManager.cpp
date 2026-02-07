@@ -2717,11 +2717,11 @@ namespace fzn
 		else if( _key == "8" )			return sf::Keyboard::Num8;
 		else if( _key == "9" )			return sf::Keyboard::Num9;
 		else if( _key == "Escape" )		return sf::Keyboard::Escape;
-		else if( _key == "LControl" )	return sf::Keyboard::LControl;
+		else if( _key == "LCtrl" )		return sf::Keyboard::LControl;
 		else if( _key == "LShift" )		return sf::Keyboard::LShift;
 		else if( _key == "LAlt" )		return sf::Keyboard::LAlt;
 		else if( _key == "LSystem" )	return sf::Keyboard::LSystem;
-		else if( _key == "RControl" )	return sf::Keyboard::RControl;
+		else if( _key == "RCtrl" )		return sf::Keyboard::RControl;
 		else if( _key == "RShift" )		return sf::Keyboard::RShift;
 		else if( _key == "RAlt" )		return sf::Keyboard::RAlt;
 		else if( _key == "RSystem" )	return sf::Keyboard::RSystem;
@@ -2827,11 +2827,11 @@ namespace fzn
 		else if( _key == "8" )			return sf::Keyboard::Num8;
 		else if( _key == "9" )			return sf::Keyboard::Num9;
 		else if( _key == "Escape" )		return sf::Keyboard::Escape;
-		else if( _key == "LControl" )	return sf::Keyboard::LControl;
+		else if( _key == "LCtrl" )		return sf::Keyboard::LControl;
 		else if( _key == "LShift" )		return sf::Keyboard::LShift;
 		else if( _key == "LAlt" )		return sf::Keyboard::LAlt;
 		else if( _key == "LSystem" )	return sf::Keyboard::LSystem;
-		else if( _key == "RControl" )	return sf::Keyboard::RControl;
+		else if( _key == "RCtrl" )		return sf::Keyboard::RControl;
 		else if( _key == "RShift" )		return sf::Keyboard::RShift;
 		else if( _key == "RAlt" )		return sf::Keyboard::RAlt;
 		else if( _key == "RSystem" )	return sf::Keyboard::RSystem;
@@ -2938,11 +2938,11 @@ namespace fzn
 		case sf::Keyboard::Num7:		return "7";
 		case sf::Keyboard::Num8:		return "8";
 		case sf::Keyboard::Num9:		return "9";
-		case sf::Keyboard::LControl:	return "LControl";
+		case sf::Keyboard::LControl:	return "LCtrl";
 		case sf::Keyboard::LShift:		return "LShift";
 		case sf::Keyboard::LAlt:		return "LAlt";
 		case sf::Keyboard::LSystem:		return "LSystem";
-		case sf::Keyboard::RControl:	return "RControl";
+		case sf::Keyboard::RControl:	return "RCtrl";
 		case sf::Keyboard::RShift:		return "RShift";
 		case sf::Keyboard::RAlt:		return "RAlt";
 		case sf::Keyboard::RSystem:		return "RSystem";
@@ -3015,7 +3015,7 @@ namespace fzn
 			key_string = KeyToString( _key );
 
 			if( key_string.empty() == false )
-				result += ( result.empty() ? "" : " + " ) + key_string;
+				result += ( result.empty() ? "" : "+" ) + key_string;
 		};
 
 		for( sf::Keyboard::Key key : _key_bind.m_modifiers )
