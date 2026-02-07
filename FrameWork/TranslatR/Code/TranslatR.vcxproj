@@ -265,6 +265,7 @@
     <ResourceCompile Include="..\Data\res.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="TR\Event.h" />
     <ClInclude Include="TR\FileManager.h" />
     <ClInclude Include="TR\TranslatR.h" />
   </ItemGroup>

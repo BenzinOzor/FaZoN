@@ -30,10 +30,6 @@ namespace TR
 		**/
 		void _display_menu_bar();
 		/**
-		* @brief Display and manage available languages.
-		**/
-		void _display_languages();
-		/**
 		* @brief Display and manage localisation entries.
 		**/
 		void _display_entries();
@@ -60,6 +56,10 @@ namespace TR
 		* @param _language_id The ID of the language in the languages vector.
 		**/
 		void _remove_language( uint32_t _language_id );
+		/**
+		* @brief Remove all the languages from the project and clear them from all the entries.
+		**/
+		void _remove_all_languages();
 
 	private:
 		fzn::Localisation::LocalisationData	m_loc_data;			// Current project localisation data.

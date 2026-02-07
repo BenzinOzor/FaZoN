@@ -326,4 +326,44 @@ namespace ImGui_fzn
 		return ret;
 	}
 
+	/**
+	* @brief ImGui menu item with custom bazckground color.
+	* @param _bg_color Color displayed when hovering the item.
+	* @param _label The displayed name of the item.
+	* @param _shortcut A string indicating the shortcut to the item.
+	* @param _p_selected A pointer to a bool containing the selection state of the item.
+	* @param _enabled Is this item active or not.
+	* @return True if the item has been clicked, false otherwise.
+	**/
+	bool colored_menu_item( const ImVec4& _bg_color, const std::string_view _label, const std::string_view _shortcut, bool* _p_selected, bool _enabled /*= true*/ )
+	{
+		ImGui::PushStyleColor( ImGuiCol_HeaderHovered, _bg_color );
+
+		const bool clicked = ImGui::MenuItem( _label.data(), _shortcut.data(), _p_selected, _enabled );
+
+		ImGui::PopStyleColor();
+
+		return clicked;
+	}
+
+	/**
+	* @brief ImGui menu item with custom bazckground color.
+	* @param _bg_color Color displayed when hovering the item.
+	* @param _label The displayed name of the item.
+	* @param _shortcut A string indicating the shortcut to the item.
+	* @param _selected Is the item selected. The background will stay displayed of that's the case.
+	* @param _enabled Is this item active or not.
+	* @return True if the item has been clicked, false otherwise.
+	**/
+	bool colored_menu_item( const ImVec4& _bg_color, const std::string_view _label, const std::string_view _shortcut /*= {}*/, bool _selected /*= false*/, bool _enabled /*= true*/ )
+	{
+		ImGui::PushStyleColor( ImGuiCol_HeaderHovered, _bg_color );
+
+		const bool clicked = ImGui::MenuItem( _label.data(), _shortcut.data(), _selected, _enabled );
+
+		ImGui::PopStyleColor();
+
+		return clicked;
+	}
+
 }

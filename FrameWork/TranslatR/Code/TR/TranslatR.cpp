@@ -9,6 +9,7 @@
 #include <FZN/UI/ImGui.h>
 
 #include "TR/TranslatR.h"
+#include "TR/Event.h"
 
 namespace TR
 {
@@ -77,11 +78,7 @@ namespace TR
 
 		_display_menu_bar();
 
-		if( m_loc_data.m_entries.empty() == false )
-		{
-			_display_languages();
-			_display_entries();
-		}
+		_display_entries();
 
 		_add_language_popup();
 
@@ -96,12 +93,6 @@ namespace TR
 	**/
 	void TranslatR::_display_menu_bar()
 	{
-		auto menu_item = [ & ]( const char* _label, bool _disable, std::function< void( void ) > _fct )
-			{
-				if( ImGui::MenuItem( _label, nullptr, false, !_disable ) )
-					_fct();
-			};
-
 		if( ImGui::BeginMainMenuBar() )
 		{
 			m_file_manager.display_menu_bar_items( m_loc_data );
@@ -112,7 +103,20 @@ namespace TR
 					_show_new_language_popup();
 
 				ImGui::Separator();
-				menu_item( "Options...", false, [ & ]() {} );
+				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_red, "Clear All Entries", "", false, m_loc_data.has_entries() ) )
+					m_loc_data.m_entries.clear();
+				ImGui_fzn::simple_tooltip_on_hover( "Clear all entries from the table, keep the available languages" );
+
+				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_red, "Remove All Languages", "", false, m_loc_data.has_entries() ) )
+					_remove_all_languages();
+				ImGui_fzn::simple_tooltip_on_hover( "Remove all available languages, keep the entries" );
+
+				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_red, "Clear All", "", false, m_loc_data.has_entries() ) )
+					m_loc_data.clear();
+				ImGui_fzn::simple_tooltip_on_hover( "Clear everything, entries and languages" );
+
+				ImGui::Separator();
+				if( ImGui::MenuItem( "Options..." ) ) {}
 
 				ImGui::EndMenu();
 			}
@@ -126,14 +130,6 @@ namespace TR
 
 			ImGui::EndMainMenuBar();
 		}
-	}
-
-	/**
-	* @brief Display and manage available languages.
-	**/
-	void TranslatR::_display_languages()
-	{
-
 	}
 
 	static float get_max_entry_width( float _letter_width, const fzn::Localisation::Entries& _entries )
@@ -504,4 +500,19 @@ namespace TR
 
 		FZN_DBLOG( "'%s' removed successfully.", language_to_remove.c_str() );
 	}
+
+	/**
+	* @brief Remove all the languages from the project and clear them from all the entries.
+	**/
+	void TranslatR::_remove_all_languages()
+	{
+		if( m_loc_data.m_languages.empty() )
+			return;
+
+		for( fzn::Localisation::Entry& entry : m_loc_data.m_entries )
+			entry.m_translations.clear();
+
+		m_loc_data.m_languages.clear();
+	}
+
 } // namespace TR

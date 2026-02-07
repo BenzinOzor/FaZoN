@@ -29,6 +29,16 @@ namespace fzn
 		************************************************************************/
 		struct LocalisationData
 		{
+			/**
+			* @brief Clear all data (entries and languages).
+			**/
+			void clear()				{ m_entries.clear(); m_languages.clear(); }
+			/**
+			* @brief Check if there are entries in the data.
+			* @return True if there are entries, false if empty.
+			**/
+			bool has_entries() const	{ return m_entries.size() > 0; }
+
 			Entries			m_entries;		// All the translated entries.
 			StringVector	m_languages;	// All the languages available.
 		};

@@ -15,7 +15,7 @@ namespace fzn
 
 		Manager::~Manager()
 		{
-			m_loc_data.m_entries.clear();
+			m_loc_data.clear();
 		}
 
 		/**
