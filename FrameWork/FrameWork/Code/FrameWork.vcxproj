@@ -297,6 +297,7 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
     <ClInclude Include="Externals\json\value.h" />
     <ClInclude Include="Externals\json\version.h" />
     <ClInclude Include="Externals\json\writer.h" />
+    <ClInclude Include="FZN\Application\AppOptions.h" />
     <ClInclude Include="FZN\DataStructure\Variant.h" />
     <ClInclude Include="FZN\Defines.h" />
     <ClInclude Include="FZN\Display\AnimatedProgressBar.h" />
@@ -366,6 +367,7 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
     <ClCompile Include="Externals\json\json_reader.cpp" />
     <ClCompile Include="Externals\json\json_value.cpp" />
     <ClCompile Include="Externals\json\json_writer.cpp" />
+    <ClCompile Include="FZN\Application\AppOptions.cpp" />
     <ClCompile Include="FZN\Display\AnimatedProgressBar.cpp" />
     <ClCompile Include="FZN\Display\Animation.cpp" />
     <ClCompile Include="FZN\Audio\AudioObject.cpp" />

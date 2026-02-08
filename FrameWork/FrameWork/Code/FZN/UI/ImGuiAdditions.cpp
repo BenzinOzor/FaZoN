@@ -366,4 +366,30 @@ namespace ImGui_fzn
 		return clicked;
 	}
 
+	/**
+	* @brief Display a table at the bottom right of the current window. The first column is empty, allowing the rest of the content to be aligned to the right.
+	* @param _nb_items The number of items to display, not counting the first column.
+	* @param _table_content_fct The function used to display the custom content of the table.
+	**/
+	void window_bottom_table( uint8_t _nb_items, std::function<void( void )> _table_content_fct )
+	{
+		ImGui::NewLine();
+		ImGui::NewLine();
+
+		if( ImGui::BeginTable( "bottom_table", _nb_items + 1 ) )
+		{
+			ImGui::TableSetupColumn( "empty", ImGuiTableColumnFlags_WidthStretch );
+
+			for( uint8_t column{ 1 }; column < _nb_items + 1; ++column )
+				ImGui::TableSetupColumn( fzn::Tools::Sprintf( "button_%u", column ).c_str(), ImGuiTableColumnFlags_WidthFixed );
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex( 1 );
+
+			_table_content_fct();
+
+			ImGui::EndTable();
+		}
+	}
+
 }

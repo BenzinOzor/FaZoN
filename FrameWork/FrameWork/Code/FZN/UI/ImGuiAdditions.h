@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "Externals/ImGui/imgui.h"
 
 #include "FZN/Defines.h"
@@ -86,8 +88,9 @@ namespace ImGui_fzn
 		ImFont* m_pFontItalic = nullptr;
 	};
 
-
 	extern FZN_EXPORT ImGuiFormatOptions s_ImGuiFormatOptions;
+
+	static constexpr ImVec2 default_widget_size{ 150.f, 0.f };
 
 	FZN_EXPORT bool InputText( std::string_view _label, std::string& _buffer, ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = nullptr, void* user_data = nullptr );
 	FZN_EXPORT bool InputTextTable( std::string_view _label, std::string& _buffer, ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = nullptr, void* user_data = nullptr );
@@ -192,4 +195,11 @@ namespace ImGui_fzn
 	* @return True if the item has been clicked, false otherwise.
 	**/
 	FZN_EXPORT bool colored_menu_item( const ImVec4& _bg_color, const std::string_view _label, const std::string_view _shortcut = {}, bool _selected = false, bool _enabled = true );
+
+	/**
+	* @brief Display a table at the bottom right of the current window. The first column is empty, allowing the rest of the content to be aligned to the right.
+	* @param _nb_items The number of items to display, not counting the first column.
+	* @param _table_content_fct The function used to display the custom content of the table.
+	**/
+	FZN_EXPORT void window_bottom_table( uint8_t _nb_items, std::function<void( void )> _table_content_fct );
 }

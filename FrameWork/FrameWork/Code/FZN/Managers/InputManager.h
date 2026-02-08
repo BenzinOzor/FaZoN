@@ -560,6 +560,7 @@ namespace fzn
 		bool replace_action_key_bind( const std::string& _action_key, BindTypeMask _mask, size_t _index, bool _same_category_only = true );
 		bool RemoveActionKeyBind( const std::string& _sActionKey, BindType _eBind, uint32_t _uIndex = 0 );
 		bool IsWaitingActionKeyBind() const;
+		void cancel_action_key_rebind();
 		bool IsWaitingInputForType( const BindType& _eBind ) const;
 		void BackupActionKeys();
 		void ResetActionKeys();

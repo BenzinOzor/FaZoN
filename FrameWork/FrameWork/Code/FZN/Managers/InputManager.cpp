@@ -1301,6 +1301,11 @@ namespace fzn
 		return m_oActionKeyBindInfo.m_action_key != nullptr && m_oActionKeyBindInfo.m_bind_index >= 0 && m_oActionKeyBindInfo.m_mask != 0;
 	}
 
+	void InputManager::cancel_action_key_rebind()
+	{
+		m_oActionKeyBindInfo.reset();
+	}
+
 	bool InputManager::IsWaitingInputForType( const BindType& _eBind ) const
 	{
 		return ( m_oActionKeyBindInfo.m_mask & 1 << _eBind ) != 0;
