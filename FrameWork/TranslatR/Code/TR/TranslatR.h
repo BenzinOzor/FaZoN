@@ -5,7 +5,8 @@
 #include <FZN/Defines.h>
 #include <FZN/Managers/LocalisationManager.h>
 
-#include "FileManager.h"
+#include "TR/FileManager.h"
+#include "TR/Options.h"
 
 
 namespace TR
@@ -70,6 +71,7 @@ namespace TR
 		fzn::Localisation::LocalisationData	m_loc_data;			// Current project localisation data.
 
 		FileManager		m_file_manager;
+		Options			m_options;
 
 		std::string		m_new_entry{};							// The empty entry displayed after the ones in the data. It will be added in the entries list once validated and cleared to allow for the next addition.
 		StringVector	m_new_languages{};						// The languages added by the popup.

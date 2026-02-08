@@ -81,6 +81,8 @@ namespace TR
 
 		_add_language_popup();
 
+		m_options.display();
+
 		ImGui::End();
 
 		ImGui::PopStyleVar( 1 );
@@ -144,7 +146,8 @@ namespace TR
 				ImGui_fzn::simple_tooltip_on_hover( "Clear everything, entries and languages" );
 
 				ImGui::Separator();
-				if( ImGui::MenuItem( "Options..." ) ) {}
+				if( ImGui::MenuItem( "Options..." ) )
+					m_options.open_options();
 
 				ImGui::EndMenu();
 			}
