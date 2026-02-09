@@ -159,6 +159,19 @@ namespace TR
 	}
 
 	/**
+	* @brief Open the most recently opened project if applicable.
+	* @param _loc_data The localisation data to be filled.
+	**/
+	void FileManager::open_most_recent_project( fzn::Localisation::LocalisationData& _loc_data )
+	{
+		if( m_recent_paths[ FileType::project ].empty() )
+			return;
+
+		_open_project_file( m_recent_paths[ FileType::project ].front(), _loc_data );
+		// We don't manage the recent paths as we're using the one that the most recent already.
+	}
+
+	/**
 	* @brief Save the current project to the previously selected path.
 	**/
 	void FileManager::save_project()

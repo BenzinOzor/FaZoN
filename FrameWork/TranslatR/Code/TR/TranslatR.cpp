@@ -37,6 +37,9 @@ namespace TR
 		ImGui_fzn::s_ImGuiFormatOptions.m_pFontRegular = oIO.Fonts->AddFontFromFileTTF( DATAPATH( "Display/CascadiaMono.ttf" ), 14.f );
 		ImGui_fzn::s_ImGuiFormatOptions.m_pFontBold = oIO.Fonts->AddFontFromFileTTF( DATAPATH( "Display/CascadiaMono-Bold.otf" ), 14.f );
 		ImGui_fzn::s_ImGuiFormatOptions.m_pFontItalic = oIO.Fonts->AddFontFromFileTTF( DATAPATH( "Display/CascadiaMono-Italic.otf" ), 14.f );
+
+		if( m_options.get_data().m_load_recent_project )
+			m_file_manager.open_most_recent_project( m_loc_data );
 	}
 
 	TranslatR::~TranslatR()

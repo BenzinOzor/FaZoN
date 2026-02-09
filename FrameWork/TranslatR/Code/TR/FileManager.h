@@ -56,6 +56,11 @@ namespace TR
 		**/
 		void open_project_file( fzn::Localisation::LocalisationData& _loc_data );
 		/**
+		* @brief Open the most recently opened project if applicable.
+		* @param _loc_data The localisation data to be filled.
+		**/
+		void open_most_recent_project( fzn::Localisation::LocalisationData& _loc_data );
+		/**
 		* @brief Save the current project to the previously selected path.
 		**/
 		void save_project();

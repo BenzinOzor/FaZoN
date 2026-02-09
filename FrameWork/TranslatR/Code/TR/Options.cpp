@@ -75,7 +75,7 @@ namespace TR
 	**/
 	void Options::_load_options_from_json( Json::Value& _root )
 	{
-
+		m_data.m_load_recent_project = _root[ "load_recent_project" ].asBool();
 	}
 
 	/**
@@ -84,6 +84,6 @@ namespace TR
 	**/
 	void Options::_save_options_to_json( Json::Value& _root )
 	{
-
+		_root[ "load_recent_project" ] = m_data.m_load_recent_project;
 	}
 } // TR

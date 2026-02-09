@@ -20,6 +20,12 @@ namespace TR
 		**/
 		void open_options() override;
 
+		/**
+		* @brief Retrieve current options data.
+		* @return The current options.
+		**/
+		const Data& get_data() const { return m_data; }
+
 	private:
 		/**
 		* @brief Main display function for custom options data. Called by display().
