@@ -639,6 +639,11 @@ namespace fzn
 		//Reads the XML file containing corresponding keys to each game action
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		void LoadActionKeysFromXML( ActionKeys& _oActionKeysArray, const std::string& _sXMLPath, bool _bCrypted );
+		/**
+		* @brief Check if there are differences between default and custom action keys and merge them.
+		* This can happen if the custom file is created but new keys were added to the default one in the game/application data folder.
+		**/
+		void _merge_action_keys();
 
 		void _AddKeyToActionKey( ActionKey& _action_key, sf::Keyboard::Key _key );
 		void _add_key_bind_to_action_key( ActionKey& _action_key, const std::string& _key_bind );
@@ -731,8 +736,9 @@ namespace fzn
 
 		/////////////////MEMBER VARIABLES/////////////////
 
-		ActionKeys		m_oBackupActionKeys;										//Array containing all the action keys of the game
-		ActionKeys		m_oCustomActionKeys;
+		ActionKeys		m_default_action_keys;					// Default action keys read from the xml in the application data.
+		ActionKeys		m_oCustomActionKeys;					// Action keys currently in use in the application, with potentially modified binds, read from the XML in the documents folder.
+		ActionKeys		m_oBackupActionKeys;					// Backup vector used in situation when we modify the custom bindings, in an options menu for example.
 		ActionKeyBindReplacementInfo	m_oActionKeyBindInfo;
 
 		bool							m_bUsingKeyboard;

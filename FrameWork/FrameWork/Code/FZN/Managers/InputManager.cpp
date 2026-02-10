@@ -43,22 +43,29 @@ namespace fzn
 		JoystickInit();
 
 		if( g_pFZN_Core->IsUsingCryptedData() )
-			LoadActionKeysFromXML( m_oBackupActionKeys, DATAPATH( "XMLFiles/actionKeys.cfg" ), true );
+			LoadActionKeysFromXML( m_default_action_keys, DATAPATH( "XMLFiles/actionKeys.cfg" ), true );
 		else
-			LoadActionKeysFromXML( m_oBackupActionKeys, DATAPATH( "XMLFiles/actionKeys.xml" ), false );
+			LoadActionKeysFromXML( m_default_action_keys, DATAPATH( "XMLFiles/actionKeys.xml" ), false );
 
 		if( g_pFZN_Core->FileExists( g_pFZN_Core->GetSaveFolderPath() + "/actionKeys.xml" ) )
 		{
 			LoadActionKeysFromXML( m_oCustomActionKeys, g_pFZN_Core->GetSaveFolderPath() + "/actionKeys.xml", false );
 
 			if( m_oCustomActionKeys.empty() )
-				m_oCustomActionKeys = m_oBackupActionKeys;
+				m_oCustomActionKeys = m_default_action_keys;
+			else
+			{
+				_merge_action_keys();
+				SaveCustomActionKeysToFile();
+			}
 		}
 		else
 		{
-			m_oCustomActionKeys = m_oBackupActionKeys;
+			m_oCustomActionKeys = m_default_action_keys;
 			SaveCustomActionKeysToFile();
 		}
+
+		m_oBackupActionKeys = m_oCustomActionKeys;
 
 		m_eInputSystem = g_pFZN_Core->IsModuleCreated( FazonCore::WindowModule ) ? EventSystem : ScanSystem;
 
@@ -2109,6 +2116,27 @@ namespace fzn
 
 			_oActionKeysArray.push_back( oNewActionKey );
 			Action = Action->NextSiblingElement();
+		}
+	}
+
+	/**
+	* @brief Check if there are differences between default and custom action keys and merge them.
+	* This can happen if the custom file is created but new keys were added to the default one in the game/application data folder.
+	**/
+	void InputManager::_merge_action_keys()
+	{
+		// We compare the two vectors.
+		for( uint32_t action_key_id{ 0 }; action_key_id < m_default_action_keys.size(); ++action_key_id )
+		{
+			const ActionKey& action_key{ m_default_action_keys[ action_key_id ] };
+			auto it_action_key = std::ranges::find( m_oCustomActionKeys, action_key.m_sName, &ActionKey::m_sName );
+
+			// If the action is in the custom vector, we do nothing. Even if the bindings are empty, we can't tell if the backup action is new, or if the user simply removed the bind from the action.
+			if( it_action_key != m_oCustomActionKeys.end() )
+				continue;
+
+			// If the action is not in the custom vector, we add it.
+			m_oCustomActionKeys.emplace( m_oCustomActionKeys.begin() + action_key_id, action_key );
 		}
 	}
 
