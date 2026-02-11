@@ -1269,7 +1269,7 @@ namespace fzn
 			_text.replace( word_pos, _word.size(), _new_word );
 		}
 
-		std::string open_file( std::string_view _filter /*= {} */ )
+		std::string open_file( std::string_view _filter /*= {} */, std::string_view _dialog_title /*= {}*/ )
 		{
 			char file[ 100 ];
 			OPENFILENAME open_file_name;
@@ -1283,6 +1283,7 @@ namespace fzn
 			open_file_name.lpstrFileTitle = NULL;
 			open_file_name.nMaxFileTitle = 0;
 			open_file_name.lpstrFilter = _filter.data();
+			open_file_name.lpstrTitle = _dialog_title.data();
 			GetOpenFileName( &open_file_name );
 
 			if( open_file_name.lpstrFile[ 0 ] != '\0' )
@@ -1291,7 +1292,7 @@ namespace fzn
 			return {};
 		}
 
-		std::string save_file_as( std::string_view _filter /*= {}*/, std::string_view _force_extension /*= {} */ )
+		std::string save_file_as( std::string_view _filter /*= {}*/, std::string_view _force_extension /*= {} */, std::string_view _dialog_title /*= {}*/ )
 		{
 			char file[ 100 ];
 			OPENFILENAME open_file_name;
@@ -1305,6 +1306,7 @@ namespace fzn
 			open_file_name.lpstrFileTitle = NULL;
 			open_file_name.nMaxFileTitle = 0;
 			open_file_name.lpstrFilter = _filter.data();
+			open_file_name.lpstrTitle = _dialog_title.data();
 			GetSaveFileName( &open_file_name );
 
 			if( open_file_name.lpstrFile[ 0 ] != '\0' )

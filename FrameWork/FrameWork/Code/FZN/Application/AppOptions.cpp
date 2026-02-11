@@ -130,9 +130,7 @@ namespace fzn
 				if( ImGui_fzn::deactivable_button( "Del.", no_binding, false, { ImGui::GetContentRegionAvail().x, 0.f } ) )
 				{
 					if( g_pFZN_InputMgr->RemoveActionKeyBind( action_key.m_sName, fzn::InputManager::BindType::eKey ) )
-					{
 						m_edited = true;
-					}
 				}
 
 				if( ImGui::IsItemHovered() )
