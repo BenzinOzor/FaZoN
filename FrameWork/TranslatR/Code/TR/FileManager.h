@@ -68,6 +68,11 @@ namespace TR
 		* @brief Show a save file dialog to select where to save the current project.
 		**/
 		void save_project_as();
+		/**
+		* @brief Close the current project, clearing all save paths and loc data.
+		* @param [out] _loc_data The localisation data to be cleared.
+		**/
+		void close_project( fzn::Localisation::LocalisationData& _loc_data );
 
 
 		/************************************************************************
@@ -164,11 +169,6 @@ namespace TR
 		* @param [out] _loc_data The localisation data to be used.
 		**/
 		void _generate_new_enum_file( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data );
-		/**
-		* @brief Close the current project, clearing all save paths and loc data.
-		* @param [out] _loc_data The localisation data to be cleared.
-		**/
-		void _close_project( fzn::Localisation::LocalisationData& _loc_data );
 
 
 		/************************************************************************

@@ -82,7 +82,7 @@ namespace TR
 
 				ImGui::Separator();
 				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_red, "Close", {}, false, project_path_valid ) )
-					_close_project( _loc_data );
+					close_project( _loc_data );
 
 				ImGui::EndMenu();
 			}
@@ -151,8 +151,7 @@ namespace TR
 	**/
 	void FileManager::open_project_file( fzn::Localisation::LocalisationData& _loc_data )
 	{
-		const std::string path = fzn::Tools::open_file( "(*.trproj) TranslatR Project\0*.trproj\0"
-			"(*.*) All files \0*.*\0" );
+		const std::string path = fzn::Tools::open_file( "(*.trproj) TranslatR Project\0*.trproj\0 (*.*) All files \0*.*\0", "Select Project" );
 
 		_open_project_file( path, _loc_data );
 		_add_recent_path( FileType::project, path );
@@ -198,15 +197,24 @@ namespace TR
 	**/
 	void FileManager::save_project_as()
 	{
-		std::string new_path = fzn::Tools::save_file_as( "(*.trproj) TranslatR Project\0*.trproj\0"
-			"(*.*) All files \0*.*\0",
-			".trproj" );
+		std::string new_path = fzn::Tools::save_file_as( "(*.trproj) TranslatR Project\0*.trproj\0 (*.*) All files \0*.*\0", ".trproj", "Save Project As" );
 
 		if( new_path.empty() )
 			return;
 
 		m_project.m_project_path = new_path;
 		save_project();
+	}
+
+	/**
+	* @brief Close the current project, clearing all save paths.
+	* @param [out] _loc_data The localisation data to be cleared.
+	**/
+	void FileManager::close_project( fzn::Localisation::LocalisationData& _loc_data )
+	{
+		m_project.clear();
+		_loc_data.clear();
+		_set_window_title_from_project();
 	}
 
 
@@ -220,8 +228,7 @@ namespace TR
 	**/
 	void FileManager::open_entries_file( fzn::Localisation::LocalisationData& _loc_data )
 	{
-		const std::string path = fzn::Tools::open_file( "(*.json) Localisation Entries List\0*.json\0"
-			"(*.*) All files \0*.*\0" );
+		const std::string path = fzn::Tools::open_file( "(*.json) Localisation Entries List\0*.json\0 (*.*) All files \0*.*\0", "Select Entries" );
 
 		if( path.empty() )
 			return;
@@ -257,9 +264,7 @@ namespace TR
 	**/
 	void FileManager::save_entries_as( fzn::Localisation::LocalisationData& _loc_data )
 	{
-		std::string new_path = fzn::Tools::save_file_as( "(*.json) Localisation Entries List\0*.json\0"
-			"(*.*) All files \0*.*\0",
-			".json" );
+		std::string new_path = fzn::Tools::save_file_as( "(*.json) Localisation Entries List\0*.json\0 (*.*) All files \0*.*\0", ".json", "Save Entries As" );
 
 		if( new_path.empty() )
 			return;
@@ -318,9 +323,7 @@ namespace TR
 	**/
 	void FileManager::generate_enum_file_as( fzn::Localisation::LocalisationData& _loc_data )
 	{
-		std::string path = fzn::Tools::save_file_as( "(*.h) Header File\0*.h\0"
-			"(*.*) All files \0*.*\0",
-			".h" );
+		std::string path = fzn::Tools::save_file_as( "(*.h) Header File\0*.h\0 (*.*) All files \0*.*\0", ".h", "Generate New Enum File" );
 
 		if( path.empty() )
 			return;
@@ -371,7 +374,7 @@ namespace TR
 		if( file.is_open() == false )
 			return;
 
-		_close_project( _loc_data );
+		close_project( _loc_data );
 
 		auto root = Json::Value{};
 
@@ -461,17 +464,6 @@ namespace TR
 	{
 		m_project.m_enum_file_path = _path;
 		generate_enum_file( _loc_data );
-	}
-
-	/**
-	* @brief Close the current project, clearing all save paths.
-	* @param [out] _loc_data The localisation data to be cleared.
-	**/
-	void FileManager::_close_project( fzn::Localisation::LocalisationData& _loc_data )
-	{
-		m_project.clear();
-		_loc_data.clear();
-		_set_window_title_from_project();
 	}
 
 

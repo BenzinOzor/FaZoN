@@ -103,6 +103,22 @@ namespace TR
 		{
 			m_file_manager.open_project_file( m_loc_data );
 		}
+		else if( g_pFZN_InputMgr->IsActionPressed( "Save Project" ) )
+		{
+			m_file_manager.save_project();
+		}
+		else if( g_pFZN_InputMgr->IsActionPressed( "Save Project As" ) )
+		{
+			m_file_manager.save_project_as();
+		}
+		else if( g_pFZN_InputMgr->IsActionPressed( "Close Project" ) )
+		{
+			m_file_manager.close_project( m_loc_data );
+		}
+		else if( g_pFZN_InputMgr->IsActionPressed( "Open Entries" ) )
+		{
+			m_file_manager.open_entries_file( m_loc_data );
+		}
 		else if( g_pFZN_InputMgr->IsActionPressed( "Save Entries" ) )
 		{
 			m_file_manager.save_entries( m_loc_data );
@@ -110,6 +126,10 @@ namespace TR
 		else if( g_pFZN_InputMgr->IsActionPressed( "Save Entries As" ) )
 		{
 			m_file_manager.save_entries_as( m_loc_data );
+		}
+		else if( g_pFZN_InputMgr->IsActionPressed( "Close Entries" ) )
+		{
+			m_file_manager.close_entries( m_loc_data );
 		}
 		else if( g_pFZN_InputMgr->IsActionPressed( "Generate Enum File" ) )
 		{
