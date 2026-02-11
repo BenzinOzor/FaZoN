@@ -91,6 +91,9 @@ namespace fzn
 			ImGui::TableSetupColumn( "##Bind", ImGuiTableColumnFlags_WidthStretch );
 			ImGui::TableSetupColumn( "##Del.", ImGuiTableColumnFlags_WidthFixed, ImGui::CalcTextSize( "Del." ).x + ImGui::GetStyle().FramePadding.x + ImGui::GetStyle().ItemSpacing.x );
 
+			std::string action_binding{};
+			bool no_binding{ false };
+
 			for( const fzn::ActionKey& action_key : g_pFZN_InputMgr->GetActionKeys() )
 			{
 				ImGui::PushID( &action_key );
@@ -98,17 +101,33 @@ namespace fzn
 				_first_column_label( action_key.m_sName.c_str() );
 				ImGui::TableNextColumn();
 
-				if( ImGui::Button( g_pFZN_InputMgr->GetActionKeyString( action_key.m_sName, true, 0, false ).c_str(), { ImGui::GetContentRegionAvail().x, 0.f } ) )
+				action_binding = g_pFZN_InputMgr->GetActionKeyString( action_key.m_sName, true, 0, false );
+
+				if( action_binding.empty() )
+				{
+					no_binding = true;
+					action_binding = "<Empty>";
+					ImGui::PushStyleColor( ImGuiCol_Text, ImGui_fzn::color::dark_gray );
+				}
+				else
+					no_binding = false;
+
+				if( ImGui::Button( action_binding.c_str(), { ImGui::GetContentRegionAvail().x, 0.f } ) )
 				{
 					g_pFZN_InputMgr->replace_action_key_bind( action_key.m_sName, fzn::InputManager::BindTypeFlag_All, 0 );
 					replaced_binding_name = action_key.m_sName;
 				}
 
+				if( no_binding )
+				{
+					ImGui::PopStyleColor();
+				}
+
 				if( ImGui::IsItemHovered() )
-					ImGui::SetTooltip( "Replace" );
+					ImGui::SetTooltip( no_binding ? "Set" : "Replace" );
 
 				ImGui::TableNextColumn();
-				if( ImGui::Button( "Del.", { ImGui::GetContentRegionAvail().x, 0.f } ) )
+				if( ImGui_fzn::deactivable_button( "Del.", no_binding, false, { ImGui::GetContentRegionAvail().x, 0.f } ) )
 				{
 					if( g_pFZN_InputMgr->RemoveActionKeyBind( action_key.m_sName, fzn::InputManager::BindType::eKey ) )
 					{
@@ -123,6 +142,28 @@ namespace fzn
 			}
 
 			ImGui::EndTable();
+		}
+
+		if( _begin_option_table() )
+		{
+			ImGui::PushStyleColor( ImGuiCol_Button, ImGui_fzn::color::dark_red );
+			ImGui::PushStyleColor( ImGuiCol_ButtonActive, ImGui_fzn::color::light_red );
+			ImGui::PushStyleColor( ImGuiCol_ButtonHovered, ImGui_fzn::color::red );
+
+			_second_column_widget( [ & ]() -> bool
+				{
+					if( ImGui::Button( "Reset To Default", { ImGui::GetContentRegionAvail().x, 0.f } ) )
+					{
+						g_pFZN_InputMgr->restore_default_action_keys();
+						return true;
+					}
+
+					return false;
+				});
+
+			ImGui::EndTable();
+
+			ImGui::PopStyleColor( 3 );
 		}
 
 		if( popup_open != g_pFZN_InputMgr->IsWaitingActionKeyBind() )
@@ -176,7 +217,7 @@ namespace fzn
 	void AppOptions::_cancel_options()
 	{
 		m_show_window = false;
-		g_pFZN_InputMgr->ResetActionKeys();
+		g_pFZN_InputMgr->RestoreBackupActionKeys();
 	}
 
 	/**

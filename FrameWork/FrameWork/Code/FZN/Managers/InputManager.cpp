@@ -1323,9 +1323,14 @@ namespace fzn
 		m_oBackupActionKeys = m_oCustomActionKeys;
 	}
 
-	void InputManager::ResetActionKeys()
+	void InputManager::RestoreBackupActionKeys()
 	{
 		m_oCustomActionKeys = m_oBackupActionKeys;
+	}
+
+	void InputManager::restore_default_action_keys()
+	{
+		m_oCustomActionKeys = m_default_action_keys;
 	}
 
 	void InputManager::SaveCustomActionKeysToFile()
@@ -2125,6 +2130,11 @@ namespace fzn
 	**/
 	void InputManager::_merge_action_keys()
 	{
+		std::erase_if( m_oCustomActionKeys, [&]( const ActionKey& _action_key )
+			{
+				return std::ranges::find( m_default_action_keys, _action_key.m_sName, &ActionKey::m_sName ) == m_default_action_keys.end();
+			} );
+
 		// We compare the two vectors.
 		for( uint32_t action_key_id{ 0 }; action_key_id < m_default_action_keys.size(); ++action_key_id )
 		{
@@ -2138,6 +2148,7 @@ namespace fzn
 			// If the action is not in the custom vector, we add it.
 			m_oCustomActionKeys.emplace( m_oCustomActionKeys.begin() + action_key_id, action_key );
 		}
+		// @todo Remove unused bindings.
 	}
 
 	void InputManager::_AddKeyToActionKey( ActionKey& _action_key, sf::Keyboard::Key _key )

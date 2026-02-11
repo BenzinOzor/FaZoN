@@ -563,7 +563,8 @@ namespace fzn
 		void cancel_action_key_rebind();
 		bool IsWaitingInputForType( const BindType& _eBind ) const;
 		void BackupActionKeys();
-		void ResetActionKeys();
+		void RestoreBackupActionKeys();
+		void restore_default_action_keys();
 		void SaveCustomActionKeysToFile();
 
 		InputSystems GetInputSystem() const;
