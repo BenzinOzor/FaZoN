@@ -90,18 +90,6 @@ namespace TR
 		**/
 		void save_entries_as( fzn::Localisation::LocalisationData& _loc_data );
 		/**
-		* @brief Write the languages section of the given localisation data in the given json root.
-		* @param [in,out] _root The json root to fill with the data.
-		* @param _loc_data The localisation data to use.
-		**/
-		void write_languages( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const;
-		/**
-		* @brief Write the entries section of the given localisation data in the given json root.
-		* @param [in,out] _root The json root to fill with the data.
-		* @param _loc_data The localisation data to use.
-		**/
-		void write_entries( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const;
-		/**
 		* @brief Close the current entries file, clearing all entries and the path to their file.
 		* @param [out] _loc_data The localisation data to be cleared.
 		**/
@@ -159,11 +147,23 @@ namespace TR
 		**/
 		void _open_entries_file( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data );
 		/**
+		* @brief Write the languages section of the given localisation data in the given json root.
+		* @param [in,out] _root The json root to fill with the data.
+		* @param _loc_data The localisation data to use.
+		**/
+		void _write_languages( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const;
+		/**
+		* @brief Write the entries section of the given localisation data in the given json root.
+		* @param [in,out] _root The json root to fill with the data.
+		* @param _loc_data The localisation data to use.
+		**/
+		void _write_entries( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const;
+		/**
 		* @brief Show a fave ile dialog to select where to generate the enum file using the given localisation data.
 		* @param _path The path to the enum file.
 		* @param [out] _loc_data The localisation data to be used.
 		**/
-		void _generate_enum_file_as( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data );
+		void _generate_new_enum_file( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data );
 		/**
 		* @brief Close the current project, clearing all save paths and loc data.
 		* @param [out] _loc_data The localisation data to be cleared.

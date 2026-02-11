@@ -1,17 +1,22 @@
 <Actions>
+	<Action Name="Open Project">
+		<Input Type="Keyboard" Map="LCtrl+O"/>
+	</Action>
+	<Action Name="Save Project"/>
+	<Action Name="Save Project As"/>
+	<Action Name="Close Project"/>
+	<Action Name="Open Entries"/>
 	<Action Name="Save Entries">
 		 <Input Type="Keyboard" Map="LCtrl+S"/>
 	</Action>
 	<Action Name="Save Entries As">
 		<Input Type="Keyboard" Map="LCtrl+LShift+S"/>
 	</Action>
-	<Action Name="Open Project">
-		<Input Type="Keyboard" Map="LCtrl+O"/>
-	</Action>
+	<Action Name="Close Entries"/>
 	<Action Name="Generate Enum File">
 		<Input Type="Keyboard" Map="LCtrl+G"/>
 	</Action>
-	<Action Name="Generate Enum File As">
+	<Action Name="Generate New Enum File">
 		<Input Type="Keyboard" Map="LCtrl+LShift+G"/>
 	</Action>
 </Actions>

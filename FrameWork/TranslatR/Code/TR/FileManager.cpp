@@ -124,7 +124,7 @@ namespace TR
 					generate_enum_file( _loc_data );
 				ImGui_fzn::simple_tooltip_on_hover( "Enum file path: %s", m_project.m_enum_file_path.c_str() );
 
-				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_green, "Generate New", g_pFZN_InputMgr->GetActionKeyString( "Generate Enum File As", true ), false, has_entries ) )
+				if( ImGui_fzn::colored_menu_item( ImGui_fzn::color::dark_green, "Generate New", g_pFZN_InputMgr->GetActionKeyString( "Generate New Enum File", true ), false, has_entries ) )
 					generate_enum_file_as( _loc_data );
 
 				if( ImGui::BeginMenu( "Generate From Recent Path", m_recent_paths[ FileType::enum_file ].size() > 0 ) )
@@ -244,8 +244,8 @@ namespace TR
 
 		Json::StyledWriter json_writer;
 
-		write_languages( root, _loc_data );
-		write_entries( root, _loc_data );
+		_write_languages( root, _loc_data );
+		_write_entries( root, _loc_data );
 		file << json_writer.write( root );
 
 		_add_recent_path( FileType::entries, m_project.m_entries_path );
@@ -266,62 +266,6 @@ namespace TR
 
 		m_project.m_entries_path = new_path;
 		save_entries( _loc_data );
-	}
-
-	/**
-	* @brief Write the languages section of the given localisation data in the given json root.
-	* @param [in,out] _root The json root to fill with the data.
-	* @param _loc_data The localisation data to use.
-	**/
-	void FileManager::write_languages( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const
-	{
-		// "available_languages" : ["english","french","spanish"],
-
-		for( uint32_t language_id{ 0 }; language_id < _loc_data.m_languages.size(); ++language_id )
-		{
-			_root[ "available_languages" ][ language_id ] = _loc_data.m_languages[ language_id ].c_str();
-		}
-	}
-
-	/**
-	* @brief Write the entries section of the given localisation data in the given json root.
-	* @param [in,out] _root The json root to fill with the data.
-	* @param _loc_data The localisation data to use.
-	**/
-	void FileManager::write_entries( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const
-	{
-		/*{
-			"name" : "yes",
-			"translations":
-			[
-				["english","yes"],
-				["french","oui"],
-				["spanish","si"]
-			]
-		},*/
-
-		for( uint32_t entry_index{ 0 }; entry_index < _loc_data.m_entries.size(); ++entry_index )
-		{
-			const fzn::Localisation::Entry& entry{ _loc_data.m_entries[ entry_index ] };
-			Json::Value json_entry{};
-
-			json_entry[ "name" ] = entry.m_name.c_str();
-
-			uint32_t translation_id{ 0 };
-			for( uint32_t language_id{ 0 }; language_id < entry.m_translations.size(); ++language_id )
-			{
-				const std::string& translation{ entry.m_translations[ language_id ] };
-
-				if( translation.empty() )
-					continue;
-
-				json_entry[ "translations" ][ translation_id ][ 0 ] = _loc_data.m_languages[ language_id ].c_str();
-				json_entry[ "translations" ][ translation_id ][ 1 ] = translation.c_str();
-				++translation_id;
-			}
-
-			_root[ "entries" ][ entry_index ] = json_entry;
-		}
 	}
 
 	/**
@@ -381,7 +325,7 @@ namespace TR
 		if( path.empty() )
 			return;
 
-		_generate_enum_file_as( path, _loc_data );
+		_generate_new_enum_file( path, _loc_data );
 		_add_recent_path( FileType::enum_file, path );
 	}
 
@@ -453,11 +397,67 @@ namespace TR
 	}
 
 	/**
+	* @brief Write the languages section of the given localisation data in the given json root.
+	* @param [in,out] _root The json root to fill with the data.
+	* @param _loc_data The localisation data to use.
+	**/
+	void FileManager::_write_languages( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const
+	{
+		// "available_languages" : ["english","french","spanish"],
+
+		for( uint32_t language_id{ 0 }; language_id < _loc_data.m_languages.size(); ++language_id )
+		{
+			_root[ "available_languages" ][ language_id ] = _loc_data.m_languages[ language_id ].c_str();
+		}
+	}
+
+	/**
+	* @brief Write the entries section of the given localisation data in the given json root.
+	* @param [in,out] _root The json root to fill with the data.
+	* @param _loc_data The localisation data to use.
+	**/
+	void FileManager::_write_entries( Json::Value& _root, const fzn::Localisation::LocalisationData& _loc_data ) const
+	{
+		/*{
+			"name" : "yes",
+			"translations":
+			[
+				["english","yes"],
+				["french","oui"],
+				["spanish","si"]
+			]
+		},*/
+
+		for( uint32_t entry_index{ 0 }; entry_index < _loc_data.m_entries.size(); ++entry_index )
+		{
+			const fzn::Localisation::Entry& entry{ _loc_data.m_entries[ entry_index ] };
+			Json::Value json_entry{};
+
+			json_entry[ "name" ] = entry.m_name.c_str();
+
+			uint32_t translation_id{ 0 };
+			for( uint32_t language_id{ 0 }; language_id < entry.m_translations.size(); ++language_id )
+			{
+				const std::string& translation{ entry.m_translations[ language_id ] };
+
+				if( translation.empty() )
+					continue;
+
+				json_entry[ "translations" ][ translation_id ][ 0 ] = _loc_data.m_languages[ language_id ].c_str();
+				json_entry[ "translations" ][ translation_id ][ 1 ] = translation.c_str();
+				++translation_id;
+			}
+
+			_root[ "entries" ][ entry_index ] = json_entry;
+		}
+	}
+
+	/**
 	* @brief Show a fave ile dialog to select where to generate the enum file using the given localisation data.
 	* @param _path The path to the enum file.
 	* @param [out] _loc_data The localisation data to be used.
 	**/
-	void FileManager::_generate_enum_file_as( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data )
+	void FileManager::_generate_new_enum_file( std::string_view _path, fzn::Localisation::LocalisationData& _loc_data )
 	{
 		m_project.m_enum_file_path = _path;
 		generate_enum_file( _loc_data );
@@ -627,7 +627,7 @@ namespace TR
 					}
 					case TR::FileManager::enum_file:
 					{
-						_generate_enum_file_as( path, _loc_data );
+						_generate_new_enum_file( path, _loc_data );
 						break;
 					}
 					case TR::FileManager::COUNT:
