@@ -299,7 +299,16 @@ namespace TR
 
 		std::ofstream output( m_project.m_enum_file_path );
 
-		output << "#pragma once\n\n" << enum_file_message << "\n\nenum class LocID\n{\n";
+		output << "#pragma once\n\n" << enum_file_message << "\n\nenum class Language\n{\n";
+
+		for( const std::string& language : _loc_data.m_languages )
+		{
+			output << "\t" << language << "," << std::endl;
+		}
+
+		output << "\tCOUNT\n};";
+
+		output << "\n\nenum class LocID\n{\n";
 
 		for( const fzn::Localisation::Entry& entry : _loc_data.m_entries )
 		{
