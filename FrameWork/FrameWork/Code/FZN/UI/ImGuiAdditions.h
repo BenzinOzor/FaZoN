@@ -149,6 +149,8 @@ namespace ImGui_fzn
 
 	FZN_EXPORT void rect_filled( const sf::FloatRect& _rect, const ImVec4& _color );
 
+	FZN_EXPORT void rect( const sf::FloatRect& _rect, const ImVec4& _color, float _thickness = 1.f );
+
 	FZN_EXPORT bool square_button( const char* _label, float _size = 0.f );
 
 	FZN_EXPORT bool deactivable_button( const char* _label, bool _disable, bool _bold_enable = false, const ImVec2& _size = { 0.f, 0.f } );

@@ -249,6 +249,19 @@ namespace ImGui_fzn
 		draw_list->AddRectFilled( rect_pos_min, rect_pos_max, ImGui::ColorConvertFloat4ToU32( _color ) );
 	}
 
+	void rect( const sf::FloatRect& _rect, const ImVec4& _color, float _thickness /*= 1.f */ )
+	{
+		auto* draw_list{ ImGui::GetWindowDrawList() };
+
+		if( draw_list == nullptr )
+			return;
+
+		const auto rect_pos_min = ImVec2{ _rect.left, _rect.top };
+		const auto rect_pos_max = ImVec2{ rect_pos_min.x + _rect.width, rect_pos_min.y + _rect.height };
+
+		draw_list->AddRect( rect_pos_min, rect_pos_max, ImGui::ColorConvertFloat4ToU32( _color ), 0.f, 0, _thickness );
+	}
+
 	bool square_button( const char* _label, float _size /*= 0.f */ )
 	{
 		return ImGui::Button( _label, { _size <= 0.f ? ImGui::GetFrameHeight() : _size, 0.f } );
