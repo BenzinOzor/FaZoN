@@ -290,7 +290,7 @@ namespace TR
 
 				if( nb_mmissing_translations > 0 )
 				{
-					missing_translations_ratio = static_cast< float >( nb_mmissing_translations ) / entry.m_translations.size();
+					missing_translations_ratio = static_cast< float >( nb_mmissing_translations - 1 ) / (entry.m_translations.size() - 1);
 					missing_translations_text_color = ImLerp( ImGui_fzn::color::light_yellow, ImGui_fzn::color::light_red, missing_translations_ratio );
 					ImGui::PushStyleColor( ImGuiCol_Text, missing_translations_text_color );
 					ImGui::PushFont( ImGui_fzn::s_ImGuiFormatOptions.m_pFontBold );
@@ -356,6 +356,7 @@ namespace TR
 			}
 
 			_display_new_entry( entry_id );
+			_test_entry( entry_id );
 
 			if( ImGui::TableGetHoveredRow() - 1 == entry_id )
 			{
@@ -418,6 +419,76 @@ namespace TR
 			m_loc_data.m_entries.push_back( std::move( new_entry ) );
 			m_new_entry.clear();
 		}
+	}
+
+	void TranslatR::_test_entry( uint32_t _row_id )
+	{
+		ImGui::PushID( "test_cell" );
+		_row_id += 2;
+		ImGui::TableNextRow();
+		static bool clicked{ false };
+		ImGui::TableNextColumn();
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text( "%d", _row_id );
+
+		if( clicked && g_pFZN_InputMgr->IsKeyboardHit() )
+		{
+			if( g_pFZN_InputMgr->GetLastChar() == '\0' )
+				clicked = false;
+			else
+			{
+				m_new_entry = g_pFZN_InputMgr->GetLastChar();
+			}
+		}
+
+		ImGui::TableNextColumn();
+			ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
+			ImGui::InputTextWithHint( "##EntryName", "<New Entry>", &m_new_entry );
+
+			if( clicked && g_pFZN_InputMgr->IsKeyboardHit() )
+			{
+				if( g_pFZN_InputMgr->GetLastChar() != '\0' )
+				{
+					// We need to mimic an input coming from the user in the input text state.
+					ImGuiInputTextState* state = ImGui:: GetInputTextState( ImGui::GetItemID() );
+
+
+					const char* buf_end = NULL;
+					size_t buf_size = m_new_entry.capacity() + 1;
+					state->ID = ImGui::GetItemID();
+					state->TextW.resize( buf_size + 1 );          // wchar count <= UTF-8 count. we use +1 to make sure that .Data is always pointing to at least an empty string.
+					state->TextA.resize( 0 );
+					state->TextAIsValid = false;                // TextA is not valid yet (we will display buf until then)
+					state->CurLenW = ImTextStrFromUtf8( state->TextW.Data, buf_size, m_new_entry.c_str(), NULL, &buf_end );
+					state->CurLenA = ( int )( buf_end - m_new_entry.c_str() );      // We can't get the result from ImStrncpy() above because it is not UTF-8 aware. Here we'll cut off malformed UTF-8.
+					state->Stb.cursor = state->CurLenA;
+				}
+
+				ImGui::SetActiveID( ImGui::GetItemID(), ImGui::GetCurrentWindow() );
+			}
+			else if( ImGui::IsItemClicked() && clicked == false )
+			{
+				ImGui::ClearActiveID();
+				clicked = true;
+			}
+			else if( ImGui::IsItemDeactivatedAfterEdit() && m_new_entry.empty() == false )
+			{
+				fzn::Localisation::Entry new_entry{ m_new_entry };
+				new_entry.m_translations.resize( m_loc_data.m_languages.size(), "" );
+				m_loc_data.m_entries.push_back( std::move( new_entry ) );
+				m_new_entry.clear();
+				clicked = false;
+			}
+		ImGui::PopID();
+
+		if( clicked == false )
+			return;
+
+		const ImVec2 rect_top_left{ ImGui::GetCursorScreenPos().x - ImGui::GetStyle().CellPadding.x, ImGui::GetCursorScreenPos().y - ImGui::GetFrameHeightWithSpacing() - ImGui::GetStyle().CellPadding.y };
+		ImVec2 rect_size{ ImGui::GetContentRegionAvail().x + ImGui::GetStyle().CellPadding.x * 2.f, ImGui::GetFrameHeightWithSpacing() };
+
+		ImGui_fzn::rect_filled( { rect_top_left , rect_size }, ImGui::GetStyleColorVec4( ImGuiCol_Header ) );
+		ImGui_fzn::rect( { rect_top_left , rect_size }, ImGui::GetStyleColorVec4( ImGuiCol_HeaderActive ) );
 	}
 
 	/**

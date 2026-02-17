@@ -44,6 +44,7 @@ namespace TR
 		* @param _row_id The last table row number
 		**/
 		void _display_new_entry( uint32_t _row_id );
+		void _test_entry( uint32_t _row_id );
 
 		/**
 		* @brief Enable the new language popup and clear new language strings.
