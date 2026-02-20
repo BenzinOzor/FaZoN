@@ -8,6 +8,7 @@
 #include <Externals/json/json.h>
 
 #include <FZN/Managers/InputManager.h>
+#include <FZN/Managers/LocalisationManager.h>
 #include <FZN/Tools/Event.h>
 
 
@@ -43,9 +44,30 @@ namespace fzn
 		**/
 		virtual void _on_custom_event( sf::Event& _sf_event, fzn::Event& _fzn_event ) {}
 		/**
-		* @brief Binding display function.
+		* @brief Fill the languages vectors with the languages we want to offer to the user in the options menu. Called by the constructor.
 		**/
-		void _display_bindings();
+		virtual void _fill_available_languages() {}
+		/**
+		* @brief Retrieve the string corresponding to the given language and put it in the list.
+		* @param _entry uint32_t castable entry ID for the language name.
+		* @param _language uint32_t castable language ID.
+		* @param _case_transform How to transform the case of the string. COUNT means to transformation is done.
+		**/
+		template< typename EntryType, typename LanguageType >
+		void _set_language_string( EntryType _entry, LanguageType _language, Localisation::Case _case_transform = Localisation::Case::COUNT )
+		{
+			std::string_view language{ g_pFZN_LocMgr->get_string( _entry, _language, _case_transform ) };
+
+			if( language.empty() )
+				return;
+
+			m_languages.push_back( language );
+		}
+
+
+		/************************************************************************
+		* @category CONFIRM/CANCEL SAVE/LOAD
+		************************************************************************/
 
 		/**
 		* @brief Validate edited options and close the window.
@@ -75,6 +97,50 @@ namespace fzn
 		**/
 		virtual void _save_options_to_json( Json::Value& _root ) = 0;
 		
+
+		/************************************************************************
+		* @category BUILT-IN WIDGETS
+		************************************************************************/
+
+		/**
+		* @brief Binding display function.
+		**/
+		void _display_bindings();
+		/**
+		* @brief Display a combo box with all the languages available to the user.
+		* @param _entry uint32_t castable entry ID for the language setting title.
+		**/
+		template< typename EntryType >
+		void _display_language_setting( EntryType _language_setting_title )
+		{
+			if( m_languages.empty() )
+				_fill_available_languages();
+
+			_first_column_label( g_pFZN_LocMgr->get_string( _language_setting_title ) );
+			_second_column_widget( [ & ]() -> bool
+				{
+					if( ImGui::BeginCombo( "##LanguageCombo", m_languages[ g_pFZN_LocMgr->get_current_language_id() ].data() ) )
+					{
+						for( uint32_t language{ 0 }; language < m_languages.size(); ++language )
+						{
+							if( ImGui::Selectable( m_languages[ language ].data(), language == g_pFZN_LocMgr->get_current_language_id() ) )
+							{
+								g_pFZN_LocMgr->set_current_language( language );
+								m_edited = true;
+							}
+						}
+
+						ImGui::EndCombo();
+					}
+
+					return m_edited;
+				}, m_second_column_width );
+		}
+
+
+		/************************************************************************
+		* @category UI UTILS
+		************************************************************************/
 
 		/**
 		* @brief Creation of the table containing the options fields.
@@ -116,5 +182,8 @@ namespace fzn
 		ImVec2	m_option_window_size{};					// The size of the option window.
 		float	m_table_first_column_ratio{ 0.45f };	// The first column of the option table will be the size of the window multiplied by this ratio.
 		float	m_first_column_width{ 0.f };			// The width of the first column, calculated each frame from the available space in the window and the ratio above.
+		float	m_second_column_width{ 0.f };			// The width of the second column, deduced from the first one.
+
+		StringViewVector m_languages;					// A list of all the available languages.
 	};
 } // fzn

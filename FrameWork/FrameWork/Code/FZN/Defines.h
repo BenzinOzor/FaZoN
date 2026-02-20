@@ -37,6 +37,7 @@ inline constexpr uint32_t	Uint32_Max{ std::numeric_limits<uint32_t>::max() };
 
 
 typedef std::vector< std::string > StringVector;
+typedef std::vector< std::string_view > StringViewVector;
 
 namespace sf
 {

@@ -78,6 +78,7 @@ namespace fzn
 			* @param _entry uint32_t castable entry ID.
 			* @param _language uint32_t castable language ID.
 			* @param _case_transform How to transform the case of the string. COUNT means to transformation is done.
+			* @return The string corresponding to the given ID and language. Empty if not found or couldn't be retrieved.
 			**/
 			template< typename EntryType, typename LanguageType >
 			std::string_view get_string( EntryType _entry, LanguageType _language, Case _case_transform = Case::COUNT )
@@ -113,6 +114,7 @@ namespace fzn
 			* @param _entry uint32_t castable entry ID.
 			* @param _language uint32_t castable language ID.
 			* @param _case_transform How to transform the case of the string. COUNT means to transformation is done.
+			* @return The string corresponding to the given ID and language. Empty if not found or couldn't be retrieved.
 			**/
 			template< typename EntryType >
 			std::string_view get_string( EntryType _entry, Case _case_transform = Case::COUNT )
@@ -141,7 +143,6 @@ namespace fzn
 
 				m_current_language = language_id;
 			}
-			uint32_t get_nb_languages() const { return m_loc_data.m_languages.size(); }
 
 			uint32_t get_language_id( std::string_view _language ) const;
 			static uint32_t get_language_id( std::string_view _language, const StringVector& _languages );

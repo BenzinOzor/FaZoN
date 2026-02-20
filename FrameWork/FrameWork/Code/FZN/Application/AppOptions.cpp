@@ -39,6 +39,9 @@ namespace fzn
 		{
 			m_first_column_width = ImGui::GetContentRegionAvail().x * m_table_first_column_ratio;
 
+			// We have to take cell padding in account
+			m_second_column_width = ImGui::GetContentRegionAvail().x - m_first_column_width - ImGui::GetStyle().CellPadding.x * 2.f;
+
 			// Calling the custom display to let the user set the window how they like.
 			_display_custom_options();
 		}
@@ -75,130 +78,10 @@ namespace fzn
 		_on_custom_event( sf_event, fzn_event );
 	}
 
-	/**
-	* @brief Binding display function.
-	**/
-	void AppOptions::_display_bindings()
-	{
-		const bool popup_open{ g_pFZN_InputMgr->IsWaitingActionKeyBind() };
-		std::string_view replaced_binding_name{};
-		static std::string popup_name{};
-		ImGui::SeparatorText( "Keybinds" );
 
-		if( ImGui::BeginTable( "Keybinds", 3 ) )
-		{
-			ImGui::TableSetupColumn( "##Action", ImGuiTableColumnFlags_WidthFixed, m_first_column_width );
-			ImGui::TableSetupColumn( "##Bind", ImGuiTableColumnFlags_WidthStretch );
-			ImGui::TableSetupColumn( "##Del.", ImGuiTableColumnFlags_WidthFixed, ImGui::CalcTextSize( "Del." ).x + ImGui::GetStyle().FramePadding.x + ImGui::GetStyle().ItemSpacing.x );
-
-			std::string action_binding{};
-			bool no_binding{ false };
-
-			for( const fzn::ActionKey& action_key : g_pFZN_InputMgr->GetActionKeys() )
-			{
-				ImGui::PushID( &action_key );
-				ImGui::TableNextRow();
-				_first_column_label( action_key.m_sName.c_str() );
-				ImGui::TableNextColumn();
-
-				action_binding = g_pFZN_InputMgr->GetActionKeyString( action_key.m_sName, true, 0, false );
-
-				if( action_binding.empty() )
-				{
-					no_binding = true;
-					action_binding = "<Empty>";
-					ImGui::PushStyleColor( ImGuiCol_Text, ImGui_fzn::color::dark_gray );
-				}
-				else
-					no_binding = false;
-
-				if( ImGui::Button( action_binding.c_str(), { ImGui::GetContentRegionAvail().x, 0.f } ) )
-				{
-					g_pFZN_InputMgr->replace_action_key_bind( action_key.m_sName, fzn::InputManager::BindTypeFlag_All, 0 );
-					replaced_binding_name = action_key.m_sName;
-				}
-
-				if( no_binding )
-				{
-					ImGui::PopStyleColor();
-				}
-
-				if( ImGui::IsItemHovered() )
-					ImGui::SetTooltip( no_binding ? "Set" : "Replace" );
-
-				ImGui::TableNextColumn();
-				if( ImGui_fzn::deactivable_button( "Del.", no_binding, false, { ImGui::GetContentRegionAvail().x, 0.f } ) )
-				{
-					if( g_pFZN_InputMgr->RemoveActionKeyBind( action_key.m_sName, fzn::InputManager::BindType::eKey ) )
-						m_edited = true;
-				}
-
-				if( ImGui::IsItemHovered() )
-					ImGui::SetTooltip( "Delete shortcut" );
-
-				ImGui::PopID();
-			}
-
-			ImGui::EndTable();
-		}
-
-		if( _begin_option_table() )
-		{
-			ImGui::PushStyleColor( ImGuiCol_Button, ImGui_fzn::color::dark_red );
-			ImGui::PushStyleColor( ImGuiCol_ButtonActive, ImGui_fzn::color::light_red );
-			ImGui::PushStyleColor( ImGuiCol_ButtonHovered, ImGui_fzn::color::red );
-
-			_second_column_widget( [ & ]() -> bool
-				{
-					if( ImGui::Button( "Reset To Default", { ImGui::GetContentRegionAvail().x, 0.f } ) )
-					{
-						g_pFZN_InputMgr->restore_default_action_keys();
-						return true;
-					}
-
-					return false;
-				});
-
-			ImGui::EndTable();
-
-			ImGui::PopStyleColor( 3 );
-		}
-
-		if( popup_open != g_pFZN_InputMgr->IsWaitingActionKeyBind() )
-		{
-			popup_name = fzn::Tools::Sprintf( "Replace binding: %s", replaced_binding_name.data() );
-			ImGui::OpenPopup( popup_name.c_str() );
-		}
-
-		if( g_pFZN_InputMgr->IsWaitingActionKeyBind() )
-		{
-			const ImVec2 title_size{ ImGui::CalcTextSize( popup_name.c_str() ) };
-			static const ImVec2 text_size{ ImGui::CalcTextSize( "Press any key to replace this binding" ) };
-
-			const float popup_width{ std::max( text_size.x, title_size.x ) + ImGui::GetStyle().WindowPadding.x * 2.f };
-			sf::Vector2u window_size = g_pFZN_WindowMgr->GetWindowSize();
-
-			ImGui::SetNextWindowPos( { window_size.x * 0.5f - popup_width * 0.5f, window_size.y * 0.5f - popup_width * 0.5f }, ImGuiCond_Appearing );
-			ImGui::SetNextWindowSize( { popup_width, ImGui::GetFrameHeightWithSpacing() * 4.f + ImGui::GetTextLineHeightWithSpacing() } );
-
-			if( ImGui::BeginPopupModal( popup_name.c_str(), nullptr, ImGuiWindowFlags_NoMove ) )
-			{
-				ImGui::NewLine();
-				ImGui::Text( "Press any key to replace this binding" );
-
-				ImGui::NewLine();
-				ImGui::NewLine();
-				ImGui::SameLine( ImGui::GetContentRegionAvail().x * 0.5f - ImGui_fzn::default_widget_size.x * 0.5f );
-
-				if( ImGui::Button( "Cancel", ImGui_fzn::default_widget_size ) )
-				{
-					g_pFZN_InputMgr->cancel_action_key_rebind();
-				}
-
-				ImGui::EndPopup();
-			}
-		}
-	}
+	/************************************************************************
+	* @category CONFIRM/CANCEL SAVE/LOAD
+	************************************************************************/
 
 	/**
 	* @brief Validate edited options and close the window.
@@ -277,6 +160,142 @@ namespace fzn
 		g_pFZN_InputMgr->SaveCustomActionKeysToFile();
 	}
 
+
+	/************************************************************************
+	* @category BUILT-IN WIDGETS
+	************************************************************************/
+
+	/**
+	* @brief Binding display function.
+	**/
+	void AppOptions::_display_bindings()
+	{
+		const bool popup_open{ g_pFZN_InputMgr->IsWaitingActionKeyBind() };
+		std::string_view replaced_binding_name{};
+		static std::string popup_name{};
+		ImGui::SeparatorText( "Keybinds" );
+
+		if( ImGui::BeginTable( "Keybinds", 3 ) )
+		{
+			ImGui::TableSetupColumn( "##Action", ImGuiTableColumnFlags_WidthFixed, m_first_column_width );
+			ImGui::TableSetupColumn( "##Bind", ImGuiTableColumnFlags_WidthStretch );
+			ImGui::TableSetupColumn( "##Del.", ImGuiTableColumnFlags_WidthFixed, ImGui::CalcTextSize( "Del." ).x + ImGui::GetStyle().FramePadding.x + ImGui::GetStyle().ItemSpacing.x );
+
+			std::string action_binding{};
+			bool no_binding{ false };
+
+			for( const fzn::ActionKey& action_key : g_pFZN_InputMgr->GetActionKeys() )
+			{
+				ImGui::PushID( &action_key );
+				ImGui::TableNextRow();
+				_first_column_label( action_key.m_sName.c_str() );
+				ImGui::TableNextColumn();
+
+				action_binding = g_pFZN_InputMgr->GetActionKeyString( action_key.m_sName, true, 0, false );
+
+				if( action_binding.empty() )
+				{
+					no_binding = true;
+					action_binding = "<Empty>";
+					ImGui::PushStyleColor( ImGuiCol_Text, ImGui_fzn::color::dark_gray );
+				}
+				else
+					no_binding = false;
+
+				if( ImGui::Button( action_binding.c_str(), { ImGui::GetContentRegionAvail().x, 0.f } ) )
+				{
+					g_pFZN_InputMgr->replace_action_key_bind( action_key.m_sName, fzn::InputManager::BindTypeFlag_All, 0 );
+					replaced_binding_name = action_key.m_sName;
+				}
+
+				if( no_binding )
+				{
+					ImGui::PopStyleColor();
+				}
+
+				if( ImGui::IsItemHovered() )
+					ImGui::SetTooltip( no_binding ? "Set" : "Replace" );
+
+				ImGui::TableNextColumn();
+				if( ImGui_fzn::deactivable_button( "Del.", no_binding, false, { ImGui::GetContentRegionAvail().x, 0.f } ) )
+				{
+					if( g_pFZN_InputMgr->RemoveActionKeyBind( action_key.m_sName, fzn::InputManager::BindType::eKey ) )
+						m_edited = true;
+				}
+
+				if( ImGui::IsItemHovered() )
+					ImGui::SetTooltip( "Delete shortcut" );
+
+				ImGui::PopID();
+			}
+
+			ImGui::EndTable();
+		}
+
+		if( _begin_option_table() )
+		{
+			ImGui::PushStyleColor( ImGuiCol_Button, ImGui_fzn::color::dark_red );
+			ImGui::PushStyleColor( ImGuiCol_ButtonActive, ImGui_fzn::color::light_red );
+			ImGui::PushStyleColor( ImGuiCol_ButtonHovered, ImGui_fzn::color::red );
+
+			ImGui::TableNextRow();
+			_second_column_widget( [ & ]() -> bool
+				{
+					if( ImGui::Button( "Reset To Default", { ImGui::GetContentRegionAvail().x, 0.f } ) )
+					{
+						g_pFZN_InputMgr->restore_default_action_keys();
+						return true;
+					}
+
+					return false;
+				} );
+
+			ImGui::EndTable();
+
+			ImGui::PopStyleColor( 3 );
+		}
+
+		if( popup_open != g_pFZN_InputMgr->IsWaitingActionKeyBind() )
+		{
+			popup_name = fzn::Tools::Sprintf( "Replace binding: %s", replaced_binding_name.data() );
+			ImGui::OpenPopup( popup_name.c_str() );
+		}
+
+		if( g_pFZN_InputMgr->IsWaitingActionKeyBind() )
+		{
+			const ImVec2 title_size{ ImGui::CalcTextSize( popup_name.c_str() ) };
+			static const ImVec2 text_size{ ImGui::CalcTextSize( "Press any key to replace this binding" ) };
+
+			const float popup_width{ std::max( text_size.x, title_size.x ) + ImGui::GetStyle().WindowPadding.x * 2.f };
+			sf::Vector2u window_size = g_pFZN_WindowMgr->GetWindowSize();
+
+			ImGui::SetNextWindowPos( { window_size.x * 0.5f - popup_width * 0.5f, window_size.y * 0.5f - popup_width * 0.5f }, ImGuiCond_Appearing );
+			ImGui::SetNextWindowSize( { popup_width, ImGui::GetFrameHeightWithSpacing() * 4.f + ImGui::GetTextLineHeightWithSpacing() } );
+
+			if( ImGui::BeginPopupModal( popup_name.c_str(), nullptr, ImGuiWindowFlags_NoMove ) )
+			{
+				ImGui::NewLine();
+				ImGui::Text( "Press any key to replace this binding" );
+
+				ImGui::NewLine();
+				ImGui::NewLine();
+				ImGui::SameLine( ImGui::GetContentRegionAvail().x * 0.5f - ImGui_fzn::default_widget_size.x * 0.5f );
+
+				if( ImGui::Button( "Cancel", ImGui_fzn::default_widget_size ) )
+				{
+					g_pFZN_InputMgr->cancel_action_key_rebind();
+				}
+
+				ImGui::EndPopup();
+			}
+		}
+	}
+
+
+	/************************************************************************
+	* @category UI UTILS
+	************************************************************************/
+
 	/**
 	* @brief Creation of the table containing the options fields.
 	* The size of the first column is a ratio of the option window size, both setable via member variables.
@@ -287,7 +306,6 @@ namespace fzn
 		const bool ret = ImGui::BeginTable( "options_table", 2 );
 
 		ImGui::TableSetupColumn( "label", ImGuiTableColumnFlags_WidthFixed, m_first_column_width );
-		ImGui::TableNextRow();
 
 		return ret;
 	}
@@ -310,6 +328,7 @@ namespace fzn
 	**/
 	void AppOptions::_first_column_colored_label( const ImVec4& _color, std::string_view _label, std::string_view _tooltip /*= {} */ )
 	{
+		ImGui::TableNextRow();
 		ImGui::TableSetColumnIndex( 0 );
 		ImGui::SameLine( ImGui::GetStyle().IndentSpacing * 0.5f );
 		ImGui::AlignTextToFramePadding();
@@ -329,6 +348,7 @@ namespace fzn
 	**/
 	void AppOptions::_first_column_widget( std::function<bool( void )> _widget_fct, std::string_view _tooltip /*= {} */ )
 	{
+		ImGui::TableNextRow();
 		ImGui::TableSetColumnIndex( 0 );
 		ImGui::SameLine( ImGui::GetStyle().IndentSpacing * 0.5f );
 		
@@ -355,7 +375,5 @@ namespace fzn
 			ImGui::SetNextItemWidth( _width );
 
 		m_edited |= _widget_fct();
-
-		ImGui::TableNextRow();
 	}
 } // fzn
