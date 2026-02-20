@@ -312,6 +312,7 @@ namespace fzn
 	{
 		ImGui::TableSetColumnIndex( 0 );
 		ImGui::SameLine( ImGui::GetStyle().IndentSpacing * 0.5f );
+		ImGui::AlignTextToFramePadding();
 		ImGui::TextColored( _color, _label.data() );
 
 		if( _tooltip.empty() == false )
@@ -326,20 +327,18 @@ namespace fzn
 	* @param _widget_fct The widget to display.
 	* @param _tooltip The tooltip to display when hovering the helper. If no tooltip is given, the helper won't be displayed.
 	**/
-	bool AppOptions::_first_column_widget( std::function<bool( void )> _widget_fct, std::string_view _tooltip /*= {} */ )
+	void AppOptions::_first_column_widget( std::function<bool( void )> _widget_fct, std::string_view _tooltip /*= {} */ )
 	{
 		ImGui::TableSetColumnIndex( 0 );
 		ImGui::SameLine( ImGui::GetStyle().IndentSpacing * 0.5f );
 		
-		const bool ret = _widget_fct();
+		_widget_fct();
 
 		if( _tooltip.empty() == false )
 		{
 			ImGui::SameLine();
 			ImGui_fzn::helper_simple_tooltip( _tooltip.data() );
 		}
-
-		return ret;
 	}
 
 	/**
@@ -348,19 +347,15 @@ namespace fzn
 	* @param _width The custom width of the widget. 0 will use the default size set by ImGui.
 	* @param _tooltip The tooltip to display when hovering the helper. If no tooltip is given, the helper won't be displayed.
 	**/
-	bool AppOptions::_second_column_widget( std::function<bool( void )> _widget_fct, float _width /*= 0.f*/, std::string_view _tooltip /*= {} */ )
+	void AppOptions::_second_column_widget( std::function<bool( void )> _widget_fct, float _width /*= 0.f*/, std::string_view _tooltip /*= {} */ )
 	{
 		ImGui::TableSetColumnIndex( 1 );
 
 		if( _width > 0.f )
 			ImGui::SetNextItemWidth( _width );
 
-		const bool ret = _widget_fct();
+		m_edited |= _widget_fct();
 
-		if( ret )
-			m_edited = true;
-
-		return ret;
+		ImGui::TableNextRow();
 	}
-
 } // fzn

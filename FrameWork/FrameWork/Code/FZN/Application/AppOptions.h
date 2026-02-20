@@ -100,14 +100,14 @@ namespace fzn
 		* @param _widget_fct The widget to display.
 		* @param _tooltip The tooltip to display when hovering the helper. If no tooltip is given, the helper won't be displayed.
 		**/
-		bool _first_column_widget( std::function<bool( void )> _widget_fct, std::string_view _tooltip = {} );
+		void _first_column_widget( std::function<bool( void )> _widget_fct, std::string_view _tooltip = {} );
 		/**
 		* @brief Display a widget in the second column, with or without a helper tooltip.
 		* @param _widget_fct The widget to display.
 		* @param _width The custom width of the widget. 0 will use the default size set by ImGui.
 		* @param _tooltip The tooltip to display when hovering the helper. If no tooltip is given, the helper won't be displayed.
 		**/
-		bool _second_column_widget( std::function<bool( void )> _widget_fct, float _width = 0.f, std::string_view _tooltip = {} );
+		void _second_column_widget( std::function<bool( void )> _widget_fct, float _width = 0.f, std::string_view _tooltip = {} );
 
 	protected:
 		bool	m_show_window{ false };					// Bool indicating if the option window must be shown or not. Set true by open_options() and false by display() when the user closes the window.
