@@ -43,27 +43,9 @@ namespace fzn
 		JoystickInit();
 
 		if( g_pFZN_Core->IsUsingCryptedData() )
-			LoadActionKeysFromXML( m_default_action_keys, DATAPATH( "XMLFiles/actionKeys.cfg" ), true );
+			load_default_action_keys_from_xml( DATAPATH( "XMLFiles/actionKeys.cfg" ), true );
 		else
-			LoadActionKeysFromXML( m_default_action_keys, DATAPATH( "XMLFiles/actionKeys.xml" ), false );
-
-		if( g_pFZN_Core->FileExists( g_pFZN_Core->GetSaveFolderPath() + "/actionKeys.xml" ) )
-		{
-			LoadActionKeysFromXML( m_oCustomActionKeys, g_pFZN_Core->GetSaveFolderPath() + "/actionKeys.xml", false );
-
-			if( m_oCustomActionKeys.empty() )
-				m_oCustomActionKeys = m_default_action_keys;
-			else
-			{
-				_merge_action_keys();
-				SaveCustomActionKeysToFile();
-			}
-		}
-		else
-		{
-			m_oCustomActionKeys = m_default_action_keys;
-			SaveCustomActionKeysToFile();
-		}
+			load_default_action_keys_from_xml( DATAPATH( "XMLFiles/actionKeys.xml" ), false );
 
 		m_oBackupActionKeys = m_oCustomActionKeys;
 
@@ -288,6 +270,40 @@ namespace fzn
 		if( oEvent.m_eType == Event::Type::eToggleFullScreen )
 		{
 			ReinitAllDevicesStates();
+		}
+	}
+
+	/**
+	* @brief Load the action keys contained in the given file as the default action keys and handles custom keys merging.
+	* @param _path The path to the action key xml file.
+	* @param _crypted True if the file is cryped.
+	**/
+	void InputManager::load_default_action_keys_from_xml( std::string_view _path, bool _crypted /*= false */ )
+	{
+		LoadActionKeysFromXML( m_default_action_keys, _path.data(), _crypted );
+
+		if( m_default_action_keys.empty() )
+		{
+			FZN_COLOR_LOG( DBG_MSG_COL_RED, "Failed to load default action keys at '%s'", _path.data() );
+			return;
+		}
+
+		if( g_pFZN_Core->FileExists( g_pFZN_Core->GetSaveFolderPath() + "/actionKeys.xml" ) )
+		{
+			LoadActionKeysFromXML( m_oCustomActionKeys, g_pFZN_Core->GetSaveFolderPath() + "/actionKeys.xml", false );
+
+			if( m_oCustomActionKeys.empty() )
+				m_oCustomActionKeys = m_default_action_keys;
+			else
+			{
+				_merge_action_keys();
+				SaveCustomActionKeysToFile();
+			}
+		}
+		else
+		{
+			m_oCustomActionKeys = m_default_action_keys;
+			SaveCustomActionKeysToFile();
 		}
 	}
 

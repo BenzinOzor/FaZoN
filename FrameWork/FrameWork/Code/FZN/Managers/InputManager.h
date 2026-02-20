@@ -196,6 +196,12 @@ namespace fzn
 		//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		void ManageInputEvent( sf::Event& _event );
 		void OnEvent();
+		/**
+		* @brief Load the action keys contained in the given file as the default action keys and handles custom keys merging.
+		* @param _path The path to the action key xml file.
+		* @param _crypted True if the file is cryped.
+		**/
+		void load_default_action_keys_from_xml( std::string_view _path, bool _crypted = false );
 
 
 		/////////////////KEYBOARD/////////////////

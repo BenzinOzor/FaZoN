@@ -14,6 +14,15 @@ namespace fzn
 {
 	namespace Localisation
 	{
+		enum class Case
+		{
+			all_lower,						// Turn all characters to lower case.
+			all_upper,						// Turn all characters to upper case.
+			first_letter_upper,				// Turn the first letter of the string to upper case.
+			first_letter_upper_all_words,	// Turn the first letter of each word in the string to upper case.
+			COUNT
+		};
+
 		/************************************************************************
 		* @brief All the informations about a word or sentence entered in the localisation file. (ID, name, translations)
 		************************************************************************/
@@ -68,9 +77,10 @@ namespace fzn
 			* @brief Retrieve an entry translation from its ID. The two params will be casted in uint32_t in the function, allowing to use project local types to call the function.
 			* @param _entry uint32_t castable entry ID.
 			* @param _language uint32_t castable language ID.
+			* @param _case_transform How to transform the case of the string. COUNT means to transformation is done.
 			**/
 			template< typename EntryType, typename LanguageType >
-			std::string_view get_string( EntryType _entry, LanguageType _language )
+			std::string_view get_string( EntryType _entry, LanguageType _language, Case _case_transform = Case::COUNT )
 			{
 				auto entry_id = static_cast< uint32_t >( _entry );
 				auto language_id = static_cast< uint32_t >( _language );
@@ -102,11 +112,12 @@ namespace fzn
 			* @brief Retrieve an entry translation from its ID. The two params will be casted in uint32_t in the function, allowing to use project local types to call the function.
 			* @param _entry uint32_t castable entry ID.
 			* @param _language uint32_t castable language ID.
+			* @param _case_transform How to transform the case of the string. COUNT means to transformation is done.
 			**/
 			template< typename EntryType >
-			std::string_view get_string( EntryType _entry )
+			std::string_view get_string( EntryType _entry, Case _case_transform = Case::COUNT )
 			{
-				return get_string( _entry, m_current_language );
+				return get_string( _entry, m_current_language, _case_transform );
 			}
 
 			/**
@@ -120,6 +131,17 @@ namespace fzn
 			**/
 			template< typename LanguageType >
 			LanguageType get_current_language() const { return static_cast<LanguageType>( m_current_language ); }
+			template< typename LanguageType >
+			void set_current_language( LanguageType _language )
+			{
+				auto language_id = static_cast< uint32_t >( _language );
+
+				if( language_id >= m_loc_data.m_languages.size() )
+					return;
+
+				m_current_language = language_id;
+			}
+			uint32_t get_nb_languages() const { return m_loc_data.m_languages.size(); }
 
 			uint32_t get_language_id( std::string_view _language ) const;
 			static uint32_t get_language_id( std::string_view _language, const StringVector& _languages );
