@@ -1244,7 +1244,7 @@ namespace fzn
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	const ActionKey* InputManager::GetActionKey( const std::string& _sActionKey ) const
 	{
-		auto& actionKey = std::ranges::find( m_oCustomActionKeys, _sActionKey, &ActionKey::m_sName );
+		const auto& actionKey = std::ranges::find( m_oCustomActionKeys, _sActionKey, &ActionKey::m_sName );
 
 		if( actionKey == m_oCustomActionKeys.end() )
 			return nullptr;
@@ -1254,7 +1254,7 @@ namespace fzn
 
 	ActionKey* InputManager::GetActionKey( const std::string& _sActionKey )
 	{
-		auto& actionKey = std::ranges::find( m_oCustomActionKeys, _sActionKey, &ActionKey::m_sName );
+		const auto& actionKey = std::ranges::find( m_oCustomActionKeys, _sActionKey, &ActionKey::m_sName );
 
 		if( actionKey == m_oCustomActionKeys.end() )
 			return nullptr;
