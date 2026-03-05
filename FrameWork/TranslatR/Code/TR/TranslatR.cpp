@@ -86,8 +86,6 @@ namespace TR
 
 		m_options.display();
 
-		m_active_item = ImGui::GetActiveID();
-
 		ImGui::End();
 
 		ImGui::PopStyleVar( 1 );
@@ -215,7 +213,6 @@ namespace TR
 		static int hovered_row{ -1 };
 		int language_id_to_erase{ -1 };
 		static std::string last_hovered_language{};
-		selection_moved = false;
 
 		ImGui::PushStyleColor( ImGuiCol_FrameBg, ImGui_fzn::color::transparent );
 
@@ -263,21 +260,17 @@ namespace TR
 			ImVec4 missing_translations_text_color{};
 			ImVec4 missing_translations_bg_color{};
 			float missing_translations_ratio{ 0.f };
-			Cell current_cell{};
 
 			for( fzn::Localisation::Entry& entry : m_loc_data.m_entries )
 			{
 				missing_translations.clear();
 				missing_translations_tooltip.clear();
 
-				current_cell.m_row = ImGui::TableGetRowIndex();
-				current_cell.m_column = ImGui::TableGetColumnIndex();
-
 				ImGui::PushID( &entry );
 
 				ImGui::TableNextColumn();
 				ImGui::AlignTextToFramePadding();
-				ImGui::Text( "%d", current_cell.m_row );
+				ImGui::Text( "%d", entry_id );
 
 				ImGui::TableNextColumn();
 				ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
@@ -303,8 +296,6 @@ namespace TR
 					ImGui::PushFont( ImGui_fzn::s_ImGuiFormatOptions.m_pFontBold );
 				}
 
-				current_cell.m_column = ImGui::TableGetColumnIndex();
-				//table_cell( current_cell, m_selected_cell, entry.m_name, "<Entry Name>", false );
 				ImGui::InputTextWithHint( "##EntryName", "<Entry Name>", &entry.m_name );
 
 				if( nb_mmissing_translations > 0 )
@@ -326,8 +317,6 @@ namespace TR
 					if( no_translation )
 						ImGui::PushFont( ImGui_fzn::s_ImGuiFormatOptions.m_pFontItalic );
 
-					current_cell.m_column = ImGui::TableGetColumnIndex();
-					//table_cell( current_cell, m_selected_cell, translation, "<No Translation>", false );
 					ImGui::InputTextWithHint( fzn::Tools::Sprintf( "##%s_translation_%d", entry.m_name.c_str(), translation_id ).c_str(), "<No Translation>", &translation );
 
 					if( no_translation )
@@ -367,19 +356,7 @@ namespace TR
 			}
 
 			_display_new_entry( entry_id );
-			//_test_entry( entry_id );
-
-			/*ImGui::TableNextRow();
-			static bool clicked{ false };
-			ImGui::TableNextColumn();
-			ImGui::AlignTextToFramePadding();
-			current_cell.m_row = ImGui::TableGetRowIndex();
-			current_cell.m_column = ImGui::TableGetColumnIndex();
-			ImGui::Text( "%d", current_cell.m_row );
-
-			ImGui::TableNextColumn();
-			current_cell.m_column = ImGui::TableGetColumnIndex();
-			table_cell( current_cell, m_selected_cell, m_new_entry, "<New Entry>", true );*/
+			_test_entry( entry_id );
 
 			if( ImGui::TableGetHoveredRow() - 1 == entry_id )
 			{
@@ -444,90 +421,6 @@ namespace TR
 		}
 	}
 
-	/**
-	* @brief Have each cell of the ImGui table act like an excell cell, first select it, then set it active by clicking again or starting typing.
-	* @param _current_cell The cell we're currently handling
-	* @param _selected_cell The cell currently selected by the user
-	* @param _cell_text The text to display in the cell, the string to modify in the input text
-	* @param _empty_text The hint to display when the cell is empty
-	* @param _new_entry True if this cell the new (and last) entry of the table
-	**/
-	bool TranslatR::table_cell( const Cell& _current_cell, Cell& _selected_cell, std::string& _cell_text, std::string_view _hint, bool _new_entry )
-	{
-		ImGui::PushID( fzn::Tools::Sprintf( "cell_%03d%03d", _current_cell.m_column, _current_cell.m_row ).c_str() );
-
-		const char last_char{ g_pFZN_InputMgr->GetLastChar() };
-		const bool last_char_is_alpha{ std::isalpha( last_char ) != 0 };
-		const bool selected{ _selected_cell == _current_cell };
-		const bool enter_pressed{ g_pFZN_InputMgr->IsKeyPressed( sf::Keyboard::Return ) };
-
-		ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
-		ImGui::InputTextWithHint( "##CellText", _hint.data(), &_cell_text );
-
-		// The cell isn't selected and the user clicks on it (by clicking on the input text).
-		if( ImGui::IsItemClicked() && selected == false )
-		{
-			// Deactivate the input text, we don't want to use it yet, only select its cell.
-			ImGui::ClearActiveID();
-			_selected_cell = _current_cell;
-		}
-		// The cell is selected and the user starts typing.
-		else if( selected && m_active_item != ImGui::GetItemID() && ( last_char_is_alpha || enter_pressed ) && selection_moved == false )
-		{
-			auto* state = ImGui::GetInputTextState( ImGui::GetItemID() );
-
-			if( last_char_is_alpha && state != nullptr )
-			{
-				_cell_text = last_char;
-
-				const char* buffer_end{ nullptr };
-				size_t buffer_size{ _cell_text.capacity() + 1 };
-				state->TextW.resize( buffer_size + 1 );
-				state->TextA.resize( 0 );
-				state->TextAIsValid = false;
-				state->CurLenW = ImTextStrFromUtf8( state->TextW.Data, buffer_size, _cell_text.c_str(), nullptr, &buffer_end );
-				state->CurLenA = static_cast< int >( buffer_end - _cell_text.c_str() );
-				state->Stb.cursor = state->CurLenA;	// Placing the cursor at the end of the string we gave to the input text.
-			}
-
-			ImGui::SetActiveID( ImGui::GetItemID(), ImGui::GetCurrentWindow() );
-		}
-		// The input text was being used and the user finished using it.
-		else if( ImGui::IsItemDeactivatedAfterEdit() )
-		{
-			if( _new_entry && _cell_text.empty() == false )
-			{
-				fzn::Localisation::Entry new_entry{ _cell_text };
-				new_entry.m_translations.resize( m_loc_data.m_languages.size(), "" );
-				m_loc_data.m_entries.push_back( std::move( new_entry ) );
-				_cell_text.clear();
-				_selected_cell.reset();
-			}
-			/*else if( enter_pressed )
-			{
-				++_selected_cell.m_row;
-				selection_moved = true;
-			}*/
-		}
-		// The cell is selected but the user clicks somewhere else.
-		else if( selected && ImGui::IsItemHovered() == false && ImGui::IsMouseClicked( ImGuiMouseButton_Left ) )
-			_selected_cell.reset();
-
-		ImGui::PopID();
-
-		// Move this outside of cell code ? Especially if we're managing ranges in the future.
-		if( selected == false )
-			return true;
-
-		const ImVec2 rect_top_left{ ImGui::GetCursorScreenPos().x - ImGui::GetStyle().CellPadding.x, ImGui::GetCursorScreenPos().y - ImGui::GetFrameHeightWithSpacing() - ImGui::GetStyle().CellPadding.y };
-		ImVec2 rect_size{ ImGui::GetContentRegionAvail().x + ImGui::GetStyle().CellPadding.x * 2.f, ImGui::GetFrameHeightWithSpacing() };
-
-		ImGui_fzn::rect_filled( { rect_top_left , rect_size }, ImGui::GetStyleColorVec4( ImGuiCol_Header ) );
-		ImGui_fzn::rect( { rect_top_left , rect_size }, ImGui::GetStyleColorVec4( ImGuiCol_HeaderActive ) );
-
-		return true;
-	}
-
 	void TranslatR::_test_entry( uint32_t _row_id )
 	{
 		ImGui::PushID( "test_cell" );
@@ -538,7 +431,7 @@ namespace TR
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text( "%d", _row_id );
 
-		/*if( clicked && g_pFZN_InputMgr->IsKeyboardHit() )
+		if( clicked && g_pFZN_InputMgr->IsKeyboardHit() )
 		{
 			if( g_pFZN_InputMgr->GetLastChar() == '\0' )
 				clicked = false;
@@ -546,7 +439,7 @@ namespace TR
 			{
 				m_new_entry = g_pFZN_InputMgr->GetLastChar();
 			}
-		}*/
+		}
 
 		ImGui::TableNextColumn();
 			ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
@@ -556,10 +449,8 @@ namespace TR
 			{
 				if( g_pFZN_InputMgr->GetLastChar() != '\0' )
 				{
-					m_new_entry = g_pFZN_InputMgr->GetLastChar();
-
 					// We need to mimic an input coming from the user in the input text state.
-					ImGuiInputTextState* state = ImGui::GetInputTextState( ImGui::GetItemID() );
+					ImGuiInputTextState* state = ImGui:: GetInputTextState( ImGui::GetItemID() );
 
 
 					const char* buf_end = NULL;
@@ -572,8 +463,6 @@ namespace TR
 					state->CurLenA = ( int )( buf_end - m_new_entry.c_str() );      // We can't get the result from ImStrncpy() above because it is not UTF-8 aware. Here we'll cut off malformed UTF-8.
 					state->Stb.cursor = state->CurLenA;
 				}
-				else
-					clicked = false;
 
 				ImGui::SetActiveID( ImGui::GetItemID(), ImGui::GetCurrentWindow() );
 			}
