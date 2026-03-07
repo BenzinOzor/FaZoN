@@ -12,6 +12,7 @@
 #include "FZN/Includes.h"
 #include "FZN/Managers/FazonCore.h"
 #include "FZN/Managers/DataManager.h"
+#include "FZN/Managers/LocalisationManager.h"
 #include "FZN/Managers/WindowManager.h"
 #include "FZN/Display/Animation.h"
 #include "FZN/DataStructure/Vector.h"
@@ -1368,6 +1369,9 @@ namespace fzn
 			if( action_key.m_bFullAxis == false )
 				action->SetAttribute( "FullAxis", action_key.m_bFullAxis );
 
+			if( action_key.m_loc_ID != Uint32_Max )
+				action->SetAttribute( "LocID", g_pFZN_LocMgr->get_entry_name_from_id( action_key.m_loc_ID ).data() );
+
 			for( const ActionKey::BindInput& bind_input : action_key.m_oKeyboardBinds )
 			{
 				tinyxml2::XMLElement* input = dest_file.NewElement( "Input" );
@@ -2109,6 +2113,7 @@ namespace fzn
 			oNewActionKey.m_sName = Tools::XMLStringAttribute( Action, "Name" );
 			oNewActionKey.m_iCategory = Action->IntAttribute( "Category" );
 			oNewActionKey.m_bFullAxis = Action->BoolAttribute( "FullAxis", true );
+			oNewActionKey.m_loc_ID = g_pFZN_LocMgr->get_localisation_id_from_name( Tools::XMLStringAttribute( Action, "LocID" ) );
 
 			ActionInput = Action->FirstChildElement( "Input" );
 
@@ -2157,9 +2162,16 @@ namespace fzn
 			const ActionKey& action_key{ m_default_action_keys[ action_key_id ] };
 			auto it_action_key = std::ranges::find( m_oCustomActionKeys, action_key.m_sName, &ActionKey::m_sName );
 
-			// If the action is in the custom vector, we do nothing. Even if the bindings are empty, we can't tell if the backup action is new, or if the user simply removed the bind from the action.
+			// If the action is in the custom vector, we don't replace or modify it. Even if the bindings are empty, we can't tell if the backup action is new, or if the user simply removed the bind from the action.
 			if( it_action_key != m_oCustomActionKeys.end() )
+			{
+				// If the actions loc ID doesn't match, it must mean it has changed in the code, so we need to refresh the user one.
+				// @todo maybe a force refresh ? In the unlikely scenario the ID match but due to removing and such, aren't the same.
+				if( it_action_key->m_loc_ID != action_key.m_loc_ID )
+					it_action_key->m_loc_ID = action_key.m_loc_ID;
+
 				continue;
+			}
 
 			// If the action is not in the custom vector, we add it.
 			m_oCustomActionKeys.emplace( m_oCustomActionKeys.begin() + action_key_id, action_key );

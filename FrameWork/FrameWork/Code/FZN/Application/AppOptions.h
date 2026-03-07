@@ -16,6 +16,24 @@ namespace fzn
 {
 	class FZN_EXPORT AppOptions
 	{
+	protected:
+		/************************************************************************
+		* @brief List of the localisation entries that have to be given in order to translate texts that are used in this class and are innaccessible to the inherited classes.
+		************************************************************************/
+		enum class OptionsLocEntry
+		{
+			bindings_title,				// Title of the bindings section of the options.
+			bindings_empty,				// Text displayed when there is no bind.
+			bindings_set,				// Tooltip when hovering an empty keybind.
+			bindings_replace,			// Tooltip when hovering a set keybind.
+			bindings_replace_title,		// Title of the popup showed when setting a keybind.
+			bindings_replace_text,		// Text of the popup showed when setting a keybind.
+			bindings_replace_cancel,	// Cancel button when setting a keybind.
+			bindings_delete_tooltip,	// Tooltip when hovering the delete button of a keybind.
+			bindings_reset_default,		// Reset to default button.
+			COUNT
+		};
+
 	public:
 		AppOptions();
 
@@ -63,6 +81,25 @@ namespace fzn
 
 			m_languages.push_back( language );
 		}
+		/**
+		* @brief Attribute a localisation entry to the option entry to translate.
+		* @param _option_entry The options entry to translate.
+		* @param _loc_entry uint32_t castable entry ID.
+		**/
+		template< typename EntryType >
+		void _set_option_loc_entry( OptionsLocEntry _option_entry, EntryType _loc_entry )
+		{
+			if( _option_entry >= OptionsLocEntry::COUNT )
+				return;
+
+			m_loc_entries[ static_cast< uint32_t >( _option_entry ) ] = static_cast< uint32_t >( _loc_entry );
+		}
+		/**
+		* @brief Helper function to retrieve a localised string from an option entry.
+		* @param _option_entry The option entry to translate.
+		* @return The translated option entry. Empty if it couldn't be found.
+		**/
+		std::string_view _get_loc_string( OptionsLocEntry _option_entry );
 
 
 		/************************************************************************
@@ -185,5 +222,6 @@ namespace fzn
 		float	m_second_column_width{ 0.f };			// The width of the second column, deduced from the first one.
 
 		StringViewVector m_languages;					// A list of all the available languages.
+		std::array< uint32_t, static_cast< size_t >( OptionsLocEntry::COUNT ) > m_loc_entries;
 	};
 } // fzn

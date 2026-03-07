@@ -108,6 +108,34 @@ namespace fzn
 		}
 
 		/**
+		* @brief Retrieve an entry ID from its name.
+		* @param _name The name of the entry.
+		* @return The ID of the entry. Uint32_Max if not found.
+		**/
+		uint32_t Manager::get_localisation_id_from_name( std::string_view _name ) const
+		{
+			auto it_entry = std::ranges::find( m_loc_data.m_entries, _name.data(), &Entry::m_name );
+
+			if( it_entry == m_loc_data.m_entries.end() )
+				return Uint32_Max;
+
+			return std::distance( m_loc_data.m_entries.begin(), it_entry );
+		}
+
+		/**
+		* @brief Retrieve an entry name from its ID.
+		* @param _entry_id The ID of the entry.
+		* @return The name of the entry.
+		**/
+		std::string_view Manager::get_entry_name_from_id( uint32_t _entry_id ) const
+		{
+			if( _entry_id >= m_loc_data.m_entries.size() )
+				return {};
+
+			return m_loc_data.m_entries[ _entry_id ].m_name;
+		}
+
+		/**
 		* @brief Retrieve the data of a single localisation entry.
 		* @param _entry						The json value the data come from.
 		* @param [out] _localisation_data	The localisation data to be filled.

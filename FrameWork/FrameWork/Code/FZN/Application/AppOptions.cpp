@@ -11,10 +11,10 @@
 
 namespace fzn
 {
-
 	AppOptions::AppOptions():
 		m_option_window_size( 400.f, 0.f )
 	{
+		m_loc_entries.fill( Uint32_Max );
 	}
 
 	/**
@@ -79,6 +79,19 @@ namespace fzn
 
 		// Calling user custom event if there are any.
 		_on_custom_event( sf_event, fzn_event );
+	}
+
+	/**
+	* @brief Helper function to retrieve a localised string from an option entry.
+	* @param _option_entry The option entry to translate.
+	* @return The translated option entry. Empty if it couldn't be found.
+	**/
+	std::string_view AppOptions::_get_loc_string( OptionsLocEntry _option_entry )
+	{
+		if( _option_entry >= OptionsLocEntry::COUNT )
+			return {};
+
+		return g_pFZN_LocMgr->get_string( m_loc_entries[ static_cast< uint32_t >( _option_entry ) ] );
 	}
 
 
@@ -176,22 +189,26 @@ namespace fzn
 		const bool popup_open{ g_pFZN_InputMgr->IsWaitingActionKeyBind() };
 		std::string_view replaced_binding_name{};
 		static std::string popup_name{};
-		ImGui::SeparatorText( "Keybinds" );
+		static const std::string bind_empty_text{ fzn::Tools::Sprintf( "<%s>", _get_loc_string( OptionsLocEntry::bindings_empty ).data() ) };
+		static const std::string bind_replace_text{ _get_loc_string( OptionsLocEntry::bindings_replace_text ).data() };
+		ImGui::SeparatorText( _get_loc_string( OptionsLocEntry::bindings_title ).data() );
 
 		if( ImGui::BeginTable( "Keybinds", 3 ) )
 		{
 			ImGui::TableSetupColumn( "##Action", ImGuiTableColumnFlags_WidthFixed, m_first_column_width );
 			ImGui::TableSetupColumn( "##Bind", ImGuiTableColumnFlags_WidthStretch );
-			ImGui::TableSetupColumn( "##Del.", ImGuiTableColumnFlags_WidthFixed, ImGui::GetFrameHeight() );
+			ImGui::TableSetupColumn( "##Delete", ImGuiTableColumnFlags_WidthFixed, ImGui::GetFrameHeight() );
 
 			std::string action_binding{};
+			std::string_view action_name{};
 			bool no_binding{ false };
 
 			for( const fzn::ActionKey& action_key : g_pFZN_InputMgr->GetActionKeys() )
 			{
 				ImGui::PushID( &action_key );
 				ImGui::TableNextRow();
-				_first_column_label( action_key.m_sName.c_str() );
+				action_name = action_key.m_loc_ID < Uint32_Max ? g_pFZN_LocMgr->get_string( action_key.m_loc_ID ).data() : action_key.m_sName.c_str();
+				_first_column_label( action_name.data() );
 				ImGui::TableNextColumn();
 
 				action_binding = g_pFZN_InputMgr->GetActionKeyString( action_key.m_sName, true, 0, false );
@@ -199,7 +216,7 @@ namespace fzn
 				if( action_binding.empty() )
 				{
 					no_binding = true;
-					action_binding = "<Empty>";
+					action_binding = bind_empty_text;
 					ImGui::PushStyleColor( ImGuiCol_Text, ImGui_fzn::color::dark_gray );
 				}
 				else
@@ -208,7 +225,7 @@ namespace fzn
 				if( ImGui::Button( action_binding.c_str(), { ImGui::GetContentRegionAvail().x, 0.f } ) )
 				{
 					g_pFZN_InputMgr->replace_action_key_bind( action_key.m_sName, fzn::InputManager::BindTypeFlag_All, 0 );
-					replaced_binding_name = action_key.m_sName;
+					replaced_binding_name = action_name;
 				}
 
 				if( no_binding )
@@ -217,7 +234,7 @@ namespace fzn
 				}
 
 				if( ImGui::IsItemHovered() )
-					ImGui::SetTooltip( no_binding ? "Set" : "Replace" );
+					ImGui::SetTooltip( no_binding ? _get_loc_string( OptionsLocEntry::bindings_set ).data() : _get_loc_string( OptionsLocEntry::bindings_replace ).data() );
 
 				ImGui::TableNextColumn();
 				if( ImGui_fzn::deactivable_image_button( no_binding, "TrashCanIcon", 3, "x" ) )
@@ -227,7 +244,7 @@ namespace fzn
 				}
 
 				if( ImGui::IsItemHovered() )
-					ImGui::SetTooltip( "Delete shortcut" );
+					ImGui::SetTooltip( _get_loc_string( OptionsLocEntry::bindings_delete_tooltip ).data() );
 
 				ImGui::PopID();
 			}
@@ -244,7 +261,7 @@ namespace fzn
 			ImGui::TableNextRow();
 			_second_column_widget( [ & ]() -> bool
 				{
-					if( ImGui::Button( "Reset To Default", { ImGui::GetContentRegionAvail().x, 0.f } ) )
+					if( ImGui::Button( _get_loc_string( OptionsLocEntry::bindings_reset_default ).data(), { ImGui::GetContentRegionAvail().x, 0.f } ) )
 					{
 						g_pFZN_InputMgr->restore_default_action_keys();
 						return true;
@@ -260,14 +277,14 @@ namespace fzn
 
 		if( popup_open != g_pFZN_InputMgr->IsWaitingActionKeyBind() )
 		{
-			popup_name = fzn::Tools::Sprintf( "Replace binding: %s", replaced_binding_name.data() );
+			popup_name = fzn::Tools::Sprintf( "%s: %s", _get_loc_string( OptionsLocEntry::bindings_replace_title ).data(), replaced_binding_name.data() );
 			ImGui::OpenPopup( popup_name.c_str() );
 		}
 
 		if( g_pFZN_InputMgr->IsWaitingActionKeyBind() )
 		{
 			const ImVec2 title_size{ ImGui::CalcTextSize( popup_name.c_str() ) };
-			static const ImVec2 text_size{ ImGui::CalcTextSize( "Press any key to replace this binding" ) };
+			static const ImVec2 text_size{ ImGui::CalcTextSize( bind_replace_text.c_str() ) };
 
 			const float popup_width{ std::max( text_size.x, title_size.x ) + ImGui::GetStyle().WindowPadding.x * 2.f };
 			sf::Vector2u window_size = g_pFZN_WindowMgr->GetWindowSize();
@@ -278,13 +295,13 @@ namespace fzn
 			if( ImGui::BeginPopupModal( popup_name.c_str(), nullptr, ImGuiWindowFlags_NoMove ) )
 			{
 				ImGui::NewLine();
-				ImGui::Text( "Press any key to replace this binding" );
+				ImGui::Text( bind_replace_text.c_str() );
 
 				ImGui::NewLine();
 				ImGui::NewLine();
 				ImGui::SameLine( ImGui::GetContentRegionAvail().x * 0.5f - ImGui_fzn::default_widget_size.x * 0.5f );
 
-				if( ImGui::Button( "Cancel", ImGui_fzn::default_widget_size ) )
+				if( ImGui::Button( _get_loc_string( OptionsLocEntry::bindings_replace_cancel ).data(), ImGui_fzn::default_widget_size ) )
 				{
 					g_pFZN_InputMgr->cancel_action_key_rebind();
 				}

@@ -149,6 +149,19 @@ namespace fzn
 			std::string_view get_language_name( uint32_t _language_id ) const;
 			static std::string_view get_language_name( uint32_t _language_id, const StringVector& _languages );
 
+			/**
+			* @brief Retrieve an entry ID from its name.
+			* @param _name The name of the entry.
+			* @return The ID of the entry. Uint32_Max if not found.
+			**/
+			uint32_t get_localisation_id_from_name( std::string_view _name ) const;
+			/**
+			* @brief Retrieve an entry name from its ID.
+			* @param _entry_id The ID of the entry.
+			* @return The name of the entry.
+			**/
+			std::string_view get_entry_name_from_id( uint32_t _entry_id ) const;
+
 		private:
 			/**
 			* @brief Retrieve the data of a single localisation entry.

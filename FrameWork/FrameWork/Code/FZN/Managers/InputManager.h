@@ -73,6 +73,7 @@ namespace fzn
 		std::string			m_sName;
 		int					m_iCategory{ 0 };
 		bool				m_bFullAxis{ true };	// The action is using the complete axis (true) or only half of it.
+		uint32_t			m_loc_ID{ Uint32_Max };	// The action localisation ID if available.
 		Binds				m_oKeyboardBinds;
 		Binds				m_oControllerBinds;
 	};
