@@ -2,9 +2,11 @@
 
 #include "Externals/ImGui/imgui.h"
 #include "Externals/ImGui/imgui_stdlib.h"
+#include "Externals/ImGui/imgui-SFML.h"
 
 #include "FZN/Tools/Tools.h"
 #include "FZN/Managers/WindowManager.h"
+#include "FZN/Managers/DataManager.h"
 
 #include "ImGuiAdditions.h"
 
@@ -282,6 +284,46 @@ namespace ImGui_fzn
 			ImGui::PopFont();
 
 		return result;
+	}
+
+	/**
+	* @brief Button with an image on it, a normal square button will be used if the texture for the image isn't found.
+	* @param _texture_name The name of the texture to search and display on the button.
+	* @param _padding The space between the image and the borders of the button in pixels.
+	* @param _backup_label The text to display if the image can't be displayed.
+	* @param _backup_size The size of the square button if the image can't be displayed.
+	* @param _tint The color of the image.
+	* @return True if the button has been clicked.
+	**/
+	bool image_button( std::string_view _texture_name, int _padding /*= -1*/, std::string_view _backup_label /*= {}*/, float _backup_size /*= 0.f */, const sf::Color& _tint /*= color::white*/ )
+	{
+		if( const sf::Texture* texture = g_pFZN_DataMgr->GetTexture( _texture_name.data() ) )
+			return ImGui::ImageButton( *texture, _padding, color::transparent, _tint );
+
+		return ImGui_fzn::square_button( _backup_label.data(), _backup_size );
+	}
+
+	/**
+	* @brief Deactivable button with an image on it, a normal square button will be used if the texture for the image isn't found.
+	* @param _disable Disable the button.
+	* @param _texture_name The name of the texture to search and display on the button.
+	* @param _padding The space between the image and the borders of the button in pixels.
+	* @param _backup_label The text to display if the image can't be displayed.
+	* @param _backup_size The size of the square button if the image can't be displayed.
+	* @param _tint The color of the image.
+	* @return True if the button has been clicked.
+	**/
+	bool deactivable_image_button( bool _disable, std::string_view _texture_name, int _padding /*= -1*/, std::string_view _backup_label /*= {}*/, float _backup_size /*= 0.f*/, const sf::Color& _tint /*= color::white */ )
+	{
+		if( _disable )
+			ImGui::BeginDisabled();
+
+		const bool button_clicked = image_button( _texture_name, _padding, _backup_label, _backup_size, _tint );
+
+		if( _disable )
+			ImGui::EndDisabled();
+
+		return button_clicked;
 	}
 
 	ImVec4 color_diff_alpha( const ImVec4& _color, float _new_alpha )

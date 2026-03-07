@@ -155,6 +155,29 @@ namespace ImGui_fzn
 
 	FZN_EXPORT bool deactivable_button( const char* _label, bool _disable, bool _bold_enable = false, const ImVec2& _size = { 0.f, 0.f } );
 
+	/**
+	* @brief Button with an image on it, a normal square button will be used if the texture for the image isn't found.
+	* @param _texture_name The name of the texture to search and display on the button.
+	* @param _padding The space between the image and the borders of the button in pixels.
+	* @param _backup_label The text to display if the image can't be displayed.
+	* @param _backup_size The size of the square button if the image can't be displayed.
+	* @param _tint The color of the image.
+	* @return True if the button has been clicked.
+	**/
+	FZN_EXPORT bool image_button( std::string_view _texture_name, int _padding = -1, std::string_view _backup_label = {}, float _backup_size = 0.f, const sf::Color& _tint = color::white );
+
+	/**
+	* @brief Deactivable button with an image on it, a normal square button will be used if the texture for the image isn't found.
+	* @param _disable Disable the button.
+	* @param _texture_name The name of the texture to search and display on the button.
+	* @param _padding The space between the image and the borders of the button in pixels.
+	* @param _backup_label The text to display if the image can't be displayed.
+	* @param _backup_size The size of the square button if the image can't be displayed.
+	* @param _tint The color of the image.
+	* @return True if the button has been clicked.
+	**/
+	FZN_EXPORT bool deactivable_image_button( bool _disable, std::string_view _texture_name, int _padding = -1, std::string_view _backup_label = {}, float _backup_size = 0.f, const sf::Color& _tint = color::white );
+
 	FZN_EXPORT ImVec4 color_diff_alpha( const ImVec4& _color, float _new_alpha );
 
 	FZN_EXPORT bool Filter( std::string& _buffer, const char* _hint );

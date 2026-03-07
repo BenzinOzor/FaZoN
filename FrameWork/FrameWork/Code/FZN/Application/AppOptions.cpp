@@ -1,7 +1,10 @@
 #include <fstream>
 #include <filesystem>
 
+#include <Externals/ImGui/imgui-SFML.h>
+
 #include <FZN/Managers/FazonCore.h>
+#include <FZN/Managers/DataManager.h>
 
 #include "FZN/Application/AppOptions.h"
 
@@ -179,7 +182,7 @@ namespace fzn
 		{
 			ImGui::TableSetupColumn( "##Action", ImGuiTableColumnFlags_WidthFixed, m_first_column_width );
 			ImGui::TableSetupColumn( "##Bind", ImGuiTableColumnFlags_WidthStretch );
-			ImGui::TableSetupColumn( "##Del.", ImGuiTableColumnFlags_WidthFixed, ImGui::CalcTextSize( "Del." ).x + ImGui::GetStyle().FramePadding.x + ImGui::GetStyle().ItemSpacing.x );
+			ImGui::TableSetupColumn( "##Del.", ImGuiTableColumnFlags_WidthFixed, ImGui::GetFrameHeight() );
 
 			std::string action_binding{};
 			bool no_binding{ false };
@@ -217,7 +220,7 @@ namespace fzn
 					ImGui::SetTooltip( no_binding ? "Set" : "Replace" );
 
 				ImGui::TableNextColumn();
-				if( ImGui_fzn::deactivable_button( "Del.", no_binding, false, { ImGui::GetContentRegionAvail().x, 0.f } ) )
+				if( ImGui_fzn::deactivable_image_button( no_binding, "TrashCanIcon", 3, "x" ) )
 				{
 					if( g_pFZN_InputMgr->RemoveActionKeyBind( action_key.m_sName, fzn::InputManager::BindType::eKey ) )
 						m_edited = true;
