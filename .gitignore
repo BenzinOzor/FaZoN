@@ -12,7 +12,6 @@
 *.opendb
 *.db-shm
 *.db-wal
-*.json
 *.sqlite
 *.tlog
 *.obj
@@ -23,6 +22,7 @@
 *.ilk
 
 /.vs
+/.vscode
 
 /FrameWork/DllLauncher/Bin
 /FrameWork/DllLauncher/Intermediate
@@ -51,6 +51,7 @@
 /FrameWork/ProjectCreator/obj
 /FrameWork/FileEncrypter/obj
 /FrameWork/FrameWork/Code/FZN/.VSCodeCounter
+/FrameWork/FrameWork/Code/vcpkg/vcpkg_installed
 /FrameWork/ExternalWrapper/Code/x64/Debug
 /FrameWork/desktop.ini
 /Samples/desktop.ini

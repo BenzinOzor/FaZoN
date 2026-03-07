@@ -431,6 +431,8 @@
     <None Include="Externals\json\json_valueiterator.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="vcpkg\vcpkg-configuration.json" />
+    <None Include="vcpkg\vcpkg.json" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Externals\ImGui\LICENSE.txt" />

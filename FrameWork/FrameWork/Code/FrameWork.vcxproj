@@ -133,6 +133,17 @@
     <IntDir>$(SolutionDir)FrameWork\$(ProjectName)\Intermediate\FrameWork\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_r</TargetName>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgXUseBuiltInApplocalDeps>true</VcpkgXUseBuiltInApplocalDeps>
+    <VcpkgManifestRoot>$(SolutionDir)FrameWork\FrameWork\Code\vcpkg\</VcpkgManifestRoot>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <VcpkgInstalledDir>
+    </VcpkgInstalledDir>
+    <VcpkgAdditionalInstallOptions>
+    </VcpkgAdditionalInstallOptions>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -419,6 +430,8 @@ call "$(SolutionDir)FrameWork\Scripts\CopyProjectLibsToDependencies.bat" $(Solut
     <None Include="FZN\DataStructure\FixedSizeAllocator.inl" />
     <None Include="FZN\DataStructure\Vector.inl" />
     <None Include="FZN\Game\PathFinding\STLAstar.inl" />
+    <None Include="vcpkg\vcpkg-configuration.json" />
+    <None Include="vcpkg\vcpkg.json" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Externals\ImGui\LICENSE.txt" />
