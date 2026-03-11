@@ -44,6 +44,7 @@ namespace fzn
 	class InputManager;
 	class MessageManager;
 	class SteeringManager;
+	class VersionsManager;
 	
 	namespace Localisation
 	{
@@ -56,7 +57,7 @@ namespace fzn
 	class FZN_EXPORT FazonCore : public sf::NonCopyable
 	{
 	public:
-		enum CoreModules : INT8
+		enum CoreModules : uint16_t
 		{
 			InputModule,
 			DataModule,
@@ -66,10 +67,11 @@ namespace fzn
 			SteeringModule,
 			MessageModule,
 			LocalisationModule,
+			VersionsModule,
 			CoreModulesCount
 		};
 
-		enum CoreModuleFlags_ : uint8_t
+		enum CoreModuleFlags_ : uint16_t
 		{
 			CoreModuleFlags_InputModule			= 1 << CoreModules::InputModule,
 			CoreModuleFlags_DataModule			= 1 << CoreModules::DataModule,
@@ -79,11 +81,12 @@ namespace fzn
 			CoreModuleFlags_SteeringModule		= 1 << CoreModules::SteeringModule,
 			CoreModuleFlags_MessageModule		= 1 << CoreModules::MessageModule,
 			CoreModuleFlags_LocalisationModule	= 1 << CoreModules::LocalisationModule,
+			CoreModuleFlags_VersionsModule		= 1 << CoreModules::VersionsModule,
 		};
 
-		using CoreModulesMask = uint8_t;
-		static constexpr uint8_t CoreModulesMask_Game			= CoreModuleFlags_InputModule | CoreModuleFlags_DataModule | CoreModuleFlags_AnimModule | CoreModuleFlags_WindowModule | CoreModuleFlags_AudioModule;
-		static constexpr uint8_t CoreModulesMask_Application	= CoreModuleFlags_DataModule | CoreModuleFlags_WindowModule;
+		using CoreModulesMask = uint16_t;
+		static constexpr uint16_t CoreModulesMask_Game			= CoreModuleFlags_InputModule | CoreModuleFlags_DataModule | CoreModuleFlags_AnimModule | CoreModuleFlags_WindowModule | CoreModuleFlags_AudioModule;
+		static constexpr uint16_t CoreModulesMask_Application	= CoreModuleFlags_DataModule | CoreModuleFlags_WindowModule;
 
 		struct ProjectDesc
 		{
@@ -268,6 +271,7 @@ namespace fzn
 		bool IsUsingFMOD() const;
 
 		const std::string& GetProjectName() const;
+		const std::string get_project_version() const;
 		bool IsUsingCryptedData() const;
 
 		std::string& GetDataFolder();
@@ -338,6 +342,7 @@ namespace fzn
 		AIManager*				m_pAIManager{ nullptr };
 		MessageManager*			m_pMessageManager{ nullptr };
 		Localisation::Manager*	m_localisation_manager{ nullptr };
+		VersionsManager*		m_versions_manager{ nullptr };
 		
 		DataCallbacksHolder		m_oCallbacksHolder;
 		bool					m_bExitApp{ false };

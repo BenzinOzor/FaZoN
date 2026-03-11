@@ -19,6 +19,7 @@
 #include "FZN/Managers/MessageManager.h"
 #include "FZN/Managers/AIManager.h"
 #include "FZN/Managers/LocalisationManager.h"
+#include "FZN/Managers/VersionsManager.h"
 #include "FZN/Managers/FazonCore.h"
 #include "FZN/Tools/Callbacks.h"
 
@@ -168,6 +169,12 @@ namespace fzn
 			m_localisation_manager = new Localisation::Manager();
 			m_iActivatedModulesNbr++;
 		}
+
+		if( Tools::mask_has_flag_raised( _oDesc.m_uModules, CoreModuleFlags_VersionsModule ) && m_versions_manager == nullptr )
+		{
+			m_versions_manager = new VersionsManager();
+			m_iActivatedModulesNbr++;
+		}
 	}
 
 	void FazonCore::InitModule( CoreModules eModule )
@@ -230,6 +237,13 @@ namespace fzn
 			if( m_localisation_manager == nullptr )
 			{
 				m_localisation_manager = new Localisation::Manager;
+				m_iActivatedModulesNbr++;
+			}
+			break;
+		case CoreModules::VersionsModule:
+			if( m_versions_manager == nullptr )
+			{
+				m_versions_manager = new VersionsManager;
 				m_iActivatedModulesNbr++;
 			}
 			break;
@@ -326,6 +340,13 @@ namespace fzn
 			m_localisation_manager = nullptr;
 			if( m_iActivatedModulesNbr > 0 ) m_iActivatedModulesNbr--;
 		}
+
+		if( m_versions_manager != nullptr )
+		{
+			delete m_versions_manager;
+			m_versions_manager = nullptr;
+			if( m_iActivatedModulesNbr > 0 ) m_iActivatedModulesNbr--;
+		}
 	}
 
 	void FazonCore::DeinitModule( CoreModules eModule )
@@ -404,6 +425,14 @@ namespace fzn
 			{
 				delete m_localisation_manager;
 				m_localisation_manager = nullptr;
+				m_iActivatedModulesNbr--;
+			}
+			break;
+		case CoreModules::VersionsModule:
+			if( m_versions_manager != nullptr )
+			{
+				delete m_versions_manager;
+				m_versions_manager = nullptr;
 				m_iActivatedModulesNbr--;
 			}
 			break;
@@ -777,6 +806,17 @@ namespace fzn
 	const std::string& FazonCore::GetProjectName() const
 	{
 		return m_sProjectName;
+	}
+
+	const std::string FazonCore::get_project_version() const
+	{
+		if( m_versions_manager == nullptr || m_sProjectName.empty() )
+			return {};
+
+		if( const fzn::Version* project_version = g_pFZN_VersionsMgr->get_version( g_pFZN_Core->GetProjectName() ) )
+			return project_version->get_version();
+
+		return {};
 	}
 
 	bool FazonCore::IsUsingCryptedData() const
