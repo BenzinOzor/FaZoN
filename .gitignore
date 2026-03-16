@@ -61,4 +61,8 @@
 
 /FrameWork/ProjectSetuper/Debug
 /FrameWork/ProjectSetuper/Release
-/FaZoN Suite/ProjectManager/Bin/Debug
+
+/FaZoN Suite/ProjectManager/Bin
+/FaZoN Suite/ProjectManager/Intermediate
+
+desktop.ini

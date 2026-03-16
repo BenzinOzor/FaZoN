@@ -252,6 +252,12 @@
     <ClInclude Include="FZN\Managers\VersionsManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FZN\Application\Application.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FZN\Application\FazonSuiteApp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FZN\Managers\AIManager.cpp">
@@ -420,6 +426,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FZN\Managers\VersionsManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FZN\Application\Application.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FZN\Application\FazonSuiteApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
