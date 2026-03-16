@@ -1,0 +1,15 @@
+{
+	"versions":
+	[
+		{
+			"name":"FaZoN",
+			"version":"Unknown"
+		},
+		{
+			"name":"Project Manager",
+			"major":0,
+			"minor":1,
+			"patch":0
+		}
+	]
+}
