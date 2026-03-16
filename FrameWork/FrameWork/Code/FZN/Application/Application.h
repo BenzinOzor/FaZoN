@@ -37,8 +37,5 @@ namespace fzn
 
 	protected:
 		ImGuiWindowFlags m_window_flags;
-
-	private:
-		bool m_pop_default_style_vars{ false };
 	};
 } // fzn

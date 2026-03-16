@@ -140,7 +140,7 @@
       </Command>
     </PostBuildEvent>
     <CustomBuildStep>
-      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyDllsToBinaries.bat" $(SolutionDir) FrameWork FrameWork FrameWork $(ProjectName) $(Configuration)</Command>
+      <Command>call "$(SolutionDir)FrameWork\Scripts\CopyDllsToBinaries.bat" $(SolutionDir) FrameWork FrameWork "FaZoN Suite" $(ProjectName) $(Configuration)</Command>
       <Outputs>?</Outputs>
     </CustomBuildStep>
   </ItemDefinitionGroup>

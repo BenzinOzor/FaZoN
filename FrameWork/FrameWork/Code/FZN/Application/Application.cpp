@@ -28,9 +28,6 @@ namespace fzn
 
 		ImGui::Begin( g_pFZN_Core->GetProjectName().c_str(), nullptr, m_window_flags );
 
-		if( m_pop_default_style_vars )
-			ImGui::PopStyleVar( 3 );
-
 		_display_menu_bar();
 		_custom_display();
 
@@ -64,18 +61,13 @@ namespace fzn
 
 	void Application::_push_style_vars_and_colors()
 	{
-		ImGui::PushStyleVar( ImGuiStyleVar_::ImGuiStyleVar_WindowRounding, 0.f );
-		ImGui::PushStyleVar( ImGuiStyleVar_::ImGuiStyleVar_WindowBorderSize, 0.f );
-		ImGui::PushStyleVar( ImGuiStyleVar_::ImGuiStyleVar_WindowPadding, ImVec2( 0.0f, 0.0f ) );
 		ImGui::PushStyleColor( ImGuiCol_WindowBg, ImVec4( 0.10f, 0.16f, 0.22f, 1.f ) );
 		ImGui::PushStyleColor( ImGuiCol_CheckMark, ImVec4( 0.f, 1.f, 0.f, 1.f ) );
-
-		m_pop_default_style_vars = true;
 	}
 
 	void Application::_display_menu_bar()
 	{
-		if( ImGui::BeginMainMenuBar() )
+		if( fzn::Tools::mask_has_flag_raised( m_window_flags, ImGuiWindowFlags_MenuBar ) && ImGui::BeginMainMenuBar() )
 		{
 			_custom_menu_bar();
 			_display_version();
